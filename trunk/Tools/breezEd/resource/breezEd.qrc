@@ -1,0 +1,53 @@
+<RCC>
+    <qresource prefix="/breezEd/icons/file">
+        <file alias="new">icons/file/NewDocumentHS.png</file>
+        <file alias="open">icons/file/openHS.png</file>
+        <file alias="save">icons/file/saveHS.png</file>
+    </qresource>
+    <qresource prefix="/breezEd/icons/transform">
+        <file alias="select">icons/transform/select.png</file>
+        <file alias="object">icons/transform/object.png</file>
+        <file alias="world">icons/transform/world.png</file>
+        <file alias="move">icons/transform/move.png</file>
+        <file alias="rotate">icons/transform/rotate.png</file>
+        <file alias="scale">icons/transform/scale.png</file>
+    </qresource>
+    <qresource prefix="/breezEd/icons/window">
+        <file alias="windows">icons/window/WindowsHS.png</file>
+        <file alias="cascade">icons/window/CascadeWindowsHS.png</file>
+        <file alias="tile">icons/window/TileWindowsHorizontallyHS.png</file>
+    </qresource>
+    <qresource prefix="/breezEd/icons/edit">
+        <file alias="delete">icons/edit/DeleteHS.png</file>
+        <file alias="edit">icons/edit/EditHS.png</file>
+        <file alias="copy">icons/edit/CopyHS.png</file>
+        <file alias="cut">icons/edit/CutHS.png</file>
+        <file alias="paste">icons/edit/PasteHS.png</file>
+        <file alias="redo">icons/edit/Edit_RedoHS.png</file>
+        <file alias="undo">icons/edit/Edit_UndoHS.png</file>
+        <file alias="moveDown">icons/edit/MoveDownHS.png</file>
+        <file alias="moveUp">icons/edit/MoveUpHS.png</file>
+    </qresource>
+    <qresource prefix="/breezEd/images/documentType">
+        <file alias="scene">images/documentType/1403_Globe.png</file>
+        <file alias="code">images/documentType/Text.png</file>
+        <file alias="document">images/documentType/Document.png</file>
+    </qresource>
+    <qresource prefix="/breezEd/images/banners">
+        <file alias="assimp">images/banners/assimpsm.png</file>
+    </qresource>
+    <qresource prefix="/breezEd/icons/tree">
+        <file alias="minus">icons/tree/minus.png</file>
+        <file alias="plus">icons/tree/plus.png</file>
+        <file alias="star">icons/tree/FavoriteStar_16x16.png</file>
+        <file alias="folder">icons/tree/Folder_16x16.png</file>
+        <file alias="openFolder">icons/tree/FolderOpen_16x16_72.png</file>
+        <file alias="asset">icons/tree/1496_wall_16x16.png</file>
+    </qresource>
+    <qresource prefix="/breezEd/icons/specific">
+        <file alias="properties">icons/specific/1435_ClipBoard.png</file>
+    </qresource>
+    <qresource prefix="/breezEd/icons">
+        <file alias="app">icons/app/breezEd.ico</file>
+    </qresource>
+</RCC>

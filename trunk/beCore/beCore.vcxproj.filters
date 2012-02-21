@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Resource Management">
+      <UniqueIdentifier>{938ec8e3-695a-4d0a-846f-e3a49ad5b8c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Reflection">
+      <UniqueIdentifier>{f6177db4-03ac-4d52-b6c9-882f52ccd196}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Serialization">
+      <UniqueIdentifier>{e703b412-0c36-46c3-aee3-ec95020ed5c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Serialization">
+      <UniqueIdentifier>{e395644b-bf2c-4df4-a470-b5c0aea67eed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Reflection">
+      <UniqueIdentifier>{01313570-ac1c-4b16-a396-cc7b805bf244}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Resource Management">
+      <UniqueIdentifier>{16731e99-06fb-419d-ae6c-42ac0b1802d9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="header\beCoreInternal\targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCoreInternal\stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beCore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beJob.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beThreadPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beTask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beExchangeContainers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beShared.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beQueryResult.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beVectorQueryResult.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beFileSystem.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beFileWatch.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beFileSystemPathResolver.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beDependencies.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beDependenciesImpl.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beDataVisitor.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beDefaultPathResolver.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beParameters.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beParameterSet.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\bePropertyProvider.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\bePropertyVisitor.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\bePathResolver.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beReflectionProperties.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beReflectionPropertyProvider.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beTypeIndex.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beIdentifiers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beGenericSerialization.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beGenericTextSerializer.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beGenericTextSerialization.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\bePropertySerialization.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beTextSerialization.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beTextSerializer.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\bePersistentIDs.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beContent.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beFileContent.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beContentProvider.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beDefaultContentProvider.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beFileContentProvider.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beOpaqueHandle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\beCore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\lean.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beJob.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beThreadPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beIdentifiers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beFileSystem.cpp">
+      <Filter>Source Files\Resource Management</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beFileSystemPathResolver.cpp">
+      <Filter>Source Files\Resource Management</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beFileWatch.cpp">
+      <Filter>Source Files\Resource Management</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beGenericSerialization.cpp">
+      <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\bePropertySerialization.cpp">
+      <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beTextSerialization.cpp">
+      <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beReflectionProperties.cpp">
+      <Filter>Source Files\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="source\bePersistentIDs.cpp">
+      <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beTypeIndex.cpp">
+      <Filter>Source Files\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beParameters.cpp">
+      <Filter>Source Files\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beDefaultPathResolver.cpp">
+      <Filter>Source Files\Resource Management</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beFileContentProvider.cpp">
+      <Filter>Source Files\Resource Management</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

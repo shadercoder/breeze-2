@@ -1,0 +1,19 @@
+#ifndef BERC_HEADER
+#define BERC_HEADER
+
+/// Command line tool interface.
+class CommandLineTool
+{
+public:
+	virtual ~CommandLineTool() { }
+
+	/// Runs the command line tool.
+	virtual int Run(int argc, const char* argv[]) const = 0;
+};
+
+/// Registers the given command line tool.
+void RegisterTool(const char *name, const CommandLineTool *pTool);
+/// Unregisters the given command line tool.
+void UnregisterTool(const char *name);
+
+#endif

@@ -1,0 +1,819 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>breezEd</string>
+  </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="margin">
+     <number>0</number>
+    </property>
+    <item row="0" column="0">
+     <widget class="QMdiArea" name="mdiArea">
+      <property name="background">
+       <brush brushstyle="NoBrush">
+        <color alpha="255">
+         <red>227</red>
+         <green>233</green>
+         <blue>239</blue>
+        </color>
+       </brush>
+      </property>
+      <property name="viewMode">
+       <enum>QMdiArea::TabbedView</enum>
+      </property>
+      <property name="documentMode">
+       <bool>true</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+      <property name="tabsMovable">
+       <bool>true</bool>
+      </property>
+      <property name="tabShape">
+       <enum>QTabWidget::Rounded</enum>
+      </property>
+      <property name="tabPosition">
+       <enum>QTabWidget::North</enum>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>600</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionNew"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpen"/>
+    <addaction name="actionOpen_As"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSave_As"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+    <addaction name="separator"/>
+    <addaction name="actionCopy"/>
+    <addaction name="actionPaste"/>
+    <addaction name="actionCut"/>
+    <addaction name="separator"/>
+    <addaction name="actionDeselect"/>
+    <addaction name="separator"/>
+    <addaction name="actionSelectFrom"/>
+   </widget>
+   <widget class="QMenu" name="menuWindows">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <widget class="QMenu" name="menuLayout">
+     <property name="title">
+      <string>Layout</string>
+     </property>
+     <addaction name="actionSave_Layout"/>
+     <addaction name="actionRestore_Layout"/>
+     <addaction name="separator"/>
+     <addaction name="actionSave_Layout_As"/>
+     <addaction name="actionLoad_Layout_From"/>
+     <addaction name="separator"/>
+     <addaction name="actionRestore_Default_Layout"/>
+    </widget>
+    <widget class="QMenu" name="menuAssets">
+     <property name="title">
+      <string>Assets</string>
+     </property>
+     <addaction name="actionAsset_Browser"/>
+     <addaction name="actionEntity_Builder"/>
+    </widget>
+    <widget class="QMenu" name="menuScene">
+     <property name="title">
+      <string>Scene</string>
+     </property>
+     <addaction name="actionAdd_Scene_View"/>
+    </widget>
+    <widget class="QMenu" name="menuOther">
+     <property name="title">
+      <string>Other</string>
+     </property>
+     <addaction name="actionUndo_History"/>
+     <addaction name="actionConsole"/>
+    </widget>
+    <widget class="QMenu" name="menuProperties">
+     <property name="title">
+      <string>Properties</string>
+     </property>
+     <addaction name="actionEntity_Properties"/>
+     <addaction name="actionMaterial_Properties"/>
+    </widget>
+    <addaction name="menuLayout"/>
+    <addaction name="separator"/>
+    <addaction name="menuScene"/>
+    <addaction name="menuAssets"/>
+    <addaction name="menuProperties"/>
+    <addaction name="menuOther"/>
+   </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <widget class="QMenu" name="menuArrange">
+     <property name="title">
+      <string>Arrange</string>
+     </property>
+     <addaction name="actionTile_Windows"/>
+     <addaction name="actionCascade_Windows"/>
+    </widget>
+    <addaction name="menuArrange"/>
+    <addaction name="separator"/>
+    <addaction name="actionNext_Window"/>
+    <addaction name="actionPrevious_Window"/>
+    <addaction name="actionAll_Windows"/>
+    <addaction name="separator"/>
+    <addaction name="actionClose_Window"/>
+    <addaction name="actionClose_All_Windows"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuWindows"/>
+   <addaction name="menuWindow"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="fileToolBar">
+   <property name="windowTitle">
+    <string>File Bar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>16</width>
+     <height>16</height>
+    </size>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNew"/>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QToolBar" name="editToolBar">
+   <property name="windowTitle">
+    <string>Edit Bar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>16</width>
+     <height>16</height>
+    </size>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionUndo"/>
+   <addaction name="actionRedo"/>
+   <addaction name="separator"/>
+   <addaction name="actionCopy"/>
+   <addaction name="actionPaste"/>
+   <addaction name="actionCut"/>
+  </widget>
+  <widget class="QToolBar" name="transformToolBar">
+   <property name="windowTitle">
+    <string>Transform Bar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>16</width>
+     <height>16</height>
+    </size>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionSelect"/>
+   <addaction name="actionTranslate"/>
+   <addaction name="actionRotate"/>
+   <addaction name="actionScale"/>
+   <addaction name="separator"/>
+   <addaction name="actionWorld_Transform"/>
+   <addaction name="actionObject_Transform"/>
+  </widget>
+  <widget class="QToolBar" name="assetToolBar">
+   <property name="windowTitle">
+    <string>Entity Bar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>16</width>
+     <height>16</height>
+    </size>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionAsset_Browser"/>
+   <addaction name="actionEntity_Builder"/>
+   <addaction name="actionEntity_Properties"/>
+  </widget>
+  <action name="actionNew">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/file/new</normaloff>:/breezEd/icons/file/new</iconset>
+   </property>
+   <property name="text">
+    <string>New</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/file/open</normaloff>:/breezEd/icons/file/open</iconset>
+   </property>
+   <property name="text">
+    <string>Open</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/file/save</normaloff>:/breezEd/icons/file/save</iconset>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionSave_As">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save As</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionSelectFrom">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Select...</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
+  <action name="actionDeselect">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Deselect</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/edit/copy</normaloff>:/breezEd/icons/edit/copy</iconset>
+   </property>
+   <property name="text">
+    <string>Copy</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/edit/paste</normaloff>:/breezEd/icons/edit/paste</iconset>
+   </property>
+   <property name="text">
+    <string>Paste</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="actionCut">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/edit/cut</normaloff>:/breezEd/icons/edit/cut</iconset>
+   </property>
+   <property name="text">
+    <string>Cut</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/edit/undo</normaloff>:/breezEd/icons/edit/undo</iconset>
+   </property>
+   <property name="text">
+    <string>Undo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/edit/redo</normaloff>:/breezEd/icons/edit/redo</iconset>
+   </property>
+   <property name="text">
+    <string>Redo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="actionRestore_Default_Layout">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Restore Default Layout</string>
+   </property>
+  </action>
+  <action name="actionRestore_Layout">
+   <property name="text">
+    <string>Restore Layout</string>
+   </property>
+  </action>
+  <action name="actionSave_Layout">
+   <property name="text">
+    <string>Save Layout</string>
+   </property>
+  </action>
+  <action name="actionSave_Layout_As">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save Layout As</string>
+   </property>
+  </action>
+  <action name="actionLoad_Layout_From">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Load Layout From</string>
+   </property>
+  </action>
+  <action name="actionTile_Windows">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/window/tile</normaloff>:/breezEd/icons/window/tile</iconset>
+   </property>
+   <property name="text">
+    <string>Tile Windows</string>
+   </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+  </action>
+  <action name="actionCascade_Windows">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/window/cascade</normaloff>:/breezEd/icons/window/cascade</iconset>
+   </property>
+   <property name="text">
+    <string>Cascade Windows</string>
+   </property>
+  </action>
+  <action name="actionClose_Window">
+   <property name="text">
+    <string>Close Window</string>
+   </property>
+  </action>
+  <action name="actionClose_All_Windows">
+   <property name="text">
+    <string>Close All Windows</string>
+   </property>
+  </action>
+  <action name="actionNext_Window">
+   <property name="text">
+    <string>Next Window</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
+   </property>
+  </action>
+  <action name="actionPrevious_Window">
+   <property name="text">
+    <string>Previous Window</string>
+   </property>
+   <property name="shortcut">
+    <string>F9</string>
+   </property>
+  </action>
+  <action name="actionAll_Windows">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/window/windows</normaloff>:/breezEd/icons/window/windows</iconset>
+   </property>
+   <property name="text">
+    <string>All Windows...</string>
+   </property>
+  </action>
+  <action name="actionWorld_Transform">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/transform/world</normaloff>:/breezEd/icons/transform/world</iconset>
+   </property>
+   <property name="text">
+    <string>World Transform</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionObject_Transform">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/transform/object</normaloff>:/breezEd/icons/transform/object</iconset>
+   </property>
+   <property name="text">
+    <string>Object Transform</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionTranslate">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/transform/move</normaloff>:/breezEd/icons/transform/move</iconset>
+   </property>
+   <property name="text">
+    <string>Translate</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
+   </property>
+  </action>
+  <action name="actionRotate">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/transform/rotate</normaloff>:/breezEd/icons/transform/rotate</iconset>
+   </property>
+   <property name="text">
+    <string>Rotate</string>
+   </property>
+  </action>
+  <action name="actionScale">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/transform/scale</normaloff>:/breezEd/icons/transform/scale</iconset>
+   </property>
+   <property name="text">
+    <string>Scale</string>
+   </property>
+  </action>
+  <action name="actionSelect">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/transform/select</normaloff>:/breezEd/icons/transform/select</iconset>
+   </property>
+   <property name="text">
+    <string>Select</string>
+   </property>
+  </action>
+  <action name="actionOpen_As">
+   <property name="text">
+    <string>Open As</string>
+   </property>
+  </action>
+  <action name="actionEntity_Builder">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/tree/star</normaloff>:/breezEd/icons/tree/star</iconset>
+   </property>
+   <property name="text">
+    <string>Entity Builder</string>
+   </property>
+  </action>
+  <action name="actionAsset_Browser">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/tree/asset</normaloff>:/breezEd/icons/tree/asset</iconset>
+   </property>
+   <property name="text">
+    <string>Asset Browser</string>
+   </property>
+  </action>
+  <action name="actionUndo_History">
+   <property name="text">
+    <string>Undo History</string>
+   </property>
+  </action>
+  <action name="actionConsole">
+   <property name="text">
+    <string>Console</string>
+   </property>
+  </action>
+  <action name="actionAdd_Scene_View">
+   <property name="text">
+    <string>Add Scene View</string>
+   </property>
+  </action>
+  <action name="actionEntity_Properties">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/specific/properties</normaloff>:/breezEd/icons/specific/properties</iconset>
+   </property>
+   <property name="text">
+    <string>Entity Properties</string>
+   </property>
+  </action>
+  <action name="actionMaterial_Properties">
+   <property name="text">
+    <string>Material Properties</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="../resource/breezEd.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionQuit</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRestore_Layout</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>restoreLayout()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSave_Layout</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>saveLayout()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCascade_Windows</sender>
+   <signal>triggered()</signal>
+   <receiver>mdiArea</receiver>
+   <slot>cascadeSubWindows()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>213</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionTile_Windows</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>tileWindows()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionClose_Window</sender>
+   <signal>triggered()</signal>
+   <receiver>mdiArea</receiver>
+   <slot>closeActiveSubWindow()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>213</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionClose_All_Windows</sender>
+   <signal>triggered()</signal>
+   <receiver>mdiArea</receiver>
+   <slot>closeAllSubWindows()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>213</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPrevious_Window</sender>
+   <signal>triggered()</signal>
+   <receiver>mdiArea</receiver>
+   <slot>activatePreviousSubWindow()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>213</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionNext_Window</sender>
+   <signal>triggered()</signal>
+   <receiver>mdiArea</receiver>
+   <slot>activateNextSubWindow()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>213</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionAll_Windows</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>showWindowsDialog()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>saveLayout()</slot>
+  <slot>restoreLayout()</slot>
+  <slot>showWindowsDialog()</slot>
+  <slot>tileWindows()</slot>
+  <slot>addView()</slot>
+ </slots>
+</ui>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>UndoHistoryWidget</class>
+ <widget class="QWidget" name="UndoHistoryWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Undo History</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../resource/breezEd.qrc">
+    <normaloff>:/breezEd/icons/edit/undo</normaloff>:/breezEd/icons/edit/undo</iconset>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="margin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QUndoView" name="undoView"/>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QUndoView</class>
+   <extends>QListView</extends>
+   <header location="global">QUndoView</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../resource/breezEd.qrc"/>
+ </resources>
+ <connections/>
+</ui>
