@@ -1,0 +1,827 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;cxx;c;def</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>moc;h;cpp</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Generated Files\Debug">
+      <UniqueIdentifier>{2b4273e6-bf6f-4749-81f8-e570e0adf36a}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Generated Files\Release">
+      <UniqueIdentifier>{2f7fee93-1e42-4aec-a52a-73730b7400b1}</UniqueIdentifier>
+      <Extensions>cpp;moc</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Header Files\Windows">
+      <UniqueIdentifier>{0aec56c0-c39f-4387-ba58-8a5bbcbf0faa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Documents">
+      <UniqueIdentifier>{8532b13f-f34f-4cb1-817e-2f5b05f15864}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Plugins">
+      <UniqueIdentifier>{7429a9a1-9de9-4dec-8b94-be0f90d5477d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Documents">
+      <UniqueIdentifier>{6f54c220-63f5-4540-a159-bf8c2afddc2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Windows">
+      <UniqueIdentifier>{0e13a0f7-ac27-480a-b8e2-212385aa4f79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Views">
+      <UniqueIdentifier>{5adc4b19-c46e-43d9-b37b-41a562094a1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Views">
+      <UniqueIdentifier>{a2bbef60-0eb7-4c57-b083-a4e66f37c1a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Modes">
+      <UniqueIdentifier>{56c9c4a9-d1d8-4757-afaf-8df264c488d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modes">
+      <UniqueIdentifier>{dcba753b-7d9b-437a-a177-25e62085f8b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utility">
+      <UniqueIdentifier>{d41011da-7f5b-4e26-97ea-33dac9f070c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tiles">
+      <UniqueIdentifier>{eb026d5a-2703-4341-8be5-883284f80e41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tiles">
+      <UniqueIdentifier>{82613d4e-a45f-4cbb-a84e-0b5d92fc368a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Widgets">
+      <UniqueIdentifier>{a4ae770f-702f-4281-a52d-b1c2877becac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Widgets">
+      <UniqueIdentifier>{8124e487-4475-4833-a0fb-9445c57ed179}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utility">
+      <UniqueIdentifier>{187ddd8d-300a-47b7-b1e9-31cad954d8b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Interaction">
+      <UniqueIdentifier>{c2cdf9f4-50ef-49a4-aee1-b330f846f1f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Interaction">
+      <UniqueIdentifier>{ae1b4f3e-9376-417e-854b-9d5c5bfa0d6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Commands">
+      <UniqueIdentifier>{7e898f4b-7931-4d27-8886-631901078507}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Commands">
+      <UniqueIdentifier>{88ba11bc-77c0-4158-95c3-f662b5f2c99e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Binders">
+      <UniqueIdentifier>{e535ae1c-ddff-49fb-8869-a23ac4eb7f4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Binders">
+      <UniqueIdentifier>{313ab64e-6ed2-4212-afb9-4bf5345d8bce}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GeneratedFiles\qrc_breezEd.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Editor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MainWindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MainWindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Windows\MainWindow.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_AbstractDocument.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_AbstractDocument.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_AbstractDocumentFactory.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_AbstractDocumentFactory.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Documents\AbstractDocument.cpp">
+      <Filter>Source Files\Documents</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Documents\DocumentManager.cpp">
+      <Filter>Source Files\Documents</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_CodeView.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_CodeView.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Views\CodeView.cpp">
+      <Filter>Source Files\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Documents\CodeDocument.cpp">
+      <Filter>Source Files\Documents</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_CodeDocument.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_CodeDocument.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_NewDocumentDialog.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_NewDocumentDialog.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Windows\NewDocumentDialog.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MdiDocumentWindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MdiDocumentWindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Windows\MdiDocumentWindow.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_DocumentModeState.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_DocumentModeState.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ModeState.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ModeState.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_AbstractModeState.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_AbstractModeState.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_Mode.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_Mode.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Modes\ModeState.cpp">
+      <Filter>Source Files\Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Modes\DocumentModeState.cpp">
+      <Filter>Source Files\Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Modes\Mode.cpp">
+      <Filter>Source Files\Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Modes\CodeModeState.cpp">
+      <Filter>Source Files\Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_CodeModeState.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_CodeModeState.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_CodeViewModeState.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_CodeViewModeState.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Modes\CodeViewModeState.cpp">
+      <Filter>Source Files\Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_CodeAutoFormatter.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_CodeAutoFormatter.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_WindowsDialog.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_WindowsDialog.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Windows\WindowsDialog.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_SceneDocument.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_SceneDocument.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Documents\SceneDocument.cpp">
+      <Filter>Source Files\Documents</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_SceneModeState.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_SceneModeState.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Modes\SceneModeState.cpp">
+      <Filter>Source Files\Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_SceneView.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_SceneView.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Views\SceneView.cpp">
+      <Filter>Source Files\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Tiles\EntityBuilderWidget.cpp">
+      <Filter>Source Files\Tiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_EntityBuilderWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_EntityBuilderWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_DragTreeWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_DragTreeWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_AssetBrowserWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_AssetBrowserWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Tiles\AssetBrowserWidget.cpp">
+      <Filter>Source Files\Tiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ExclusiveActionGroup.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ExclusiveActionGroup.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_EntityModeState.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_EntityModeState.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Modes\EntityModeState.cpp">
+      <Filter>Source Files\Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ConsoleWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ConsoleWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Tiles\ConsoleWidget.cpp">
+      <Filter>Source Files\Tiles</Filter>
+    </ClCompile>
+    <ClCompile Include="source\DeviceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ControllerBuilderWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ControllerBuilderWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\ControllerBuilderWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_BrowseWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_BrowseWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\BrowseWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\CreationParameterWidgetFactory.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\FileCreationParameterWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\MeshCreationParameterWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_FileCreationParameterWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_FileCreationParameterWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MeshCreationParameterWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MeshCreationParameterWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MeshImportDialog.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MeshImportDialog.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Windows\MeshImportDialog.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Utility\Files.cpp">
+      <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_GraphicsCanvas.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_GraphicsCanvas.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\GraphicsCanvas.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_FreeCamera.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_FreeCamera.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interaction\FreeCamera.cpp">
+      <Filter>Source Files\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_InputProvider.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_InputProvider.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Utility\InputProvider.cpp">
+      <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_AbstractView.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_AbstractView.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ParallelMode.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ParallelMode.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Modes\ParallelMode.cpp">
+      <Filter>Source Files\Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Commands\CreateEntity.cpp">
+      <Filter>Source Files\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_UndoHistoryWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_UndoHistoryWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Tiles\UndoHistoryWidget.cpp">
+      <Filter>Source Files\Tiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_EntityPropertyWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_EntityPropertyWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Tiles\EntityPropertyWidget.cpp">
+      <Filter>Source Files\Tiles</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Binders\GenericPropertyBinder.cpp">
+      <Filter>Source Files\Binders</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Binders\EntityPropertyBinder.cpp">
+      <Filter>Source Files\Binders</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_EntityPropertyBinder.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_EntityPropertyBinder.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_GenericPropertyBinder.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_GenericPropertyBinder.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_SelectInteraction.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_SelectInteraction.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interaction\SelectInteraction.cpp">
+      <Filter>Source Files\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interaction\TranslateInteraction.cpp">
+      <Filter>Source Files\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_TranslateInteraction.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_TranslateInteraction.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interaction\Queries.cpp">
+      <Filter>Source Files\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ScaleInteraction.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ScaleInteraction.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interaction\ScaleInteraction.cpp">
+      <Filter>Source Files\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interaction\RotateInteraction.cpp">
+      <Filter>Source Files\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_RotateInteraction.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_RotateInteraction.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Commands\TranslateEntity.cpp">
+      <Filter>Source Files\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Commands\RotateEntity.cpp">
+      <Filter>Source Files\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Commands\ScaleEntity.cpp">
+      <Filter>Source Files\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Windows\ShapeImportDialog.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ShapeImportDialog.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ShapeImportDialog.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\ShapeCreationParameterWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ShapeCreationParameterWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ShapeCreationParameterWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Plugins\AbstractPlugin.h">
+      <Filter>Header Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Plugins\PluginManager.h">
+      <Filter>Header Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="header\breezEd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_CodeView.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_NewDocumentDialog.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_WindowsDialog.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_SceneView.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_EntityBuilderWidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ControllerBuilderWidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_AssetBrowserWidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ConsoleWidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\DeviceManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Plugins\WidgetFactoryManager.h">
+      <Filter>Header Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_BrowseWidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Widgets\CreationParameterWidget.h">
+      <Filter>Header Files\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Widgets\CreationParameterWidgetFactory.h">
+      <Filter>Header Files\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_MeshImportDialog.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\Files.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\Strings.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Interaction\DropInteraction.h">
+      <Filter>Header Files\Interaction</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\CreateEntity.h">
+      <Filter>Header Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\Undo.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_UndoHistoryWidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_EntityPropertyWidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\AbstractItemModel.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Interaction\Widgets.h">
+      <Filter>Header Files\Interaction</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Interaction\Math.h">
+      <Filter>Header Files\Interaction</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\TranslateEntity.h">
+      <Filter>Header Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\RotateEntity.h">
+      <Filter>Header Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\ScaleEntity.h">
+      <Filter>Header Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ShapeImportDialog.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="resource\breezEd.qrc">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\MainWindow.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Editor.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Windows\MainWindow.h">
+      <Filter>Header Files\Windows</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Documents\AbstractDocument.h">
+      <Filter>Header Files\Documents</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Documents\AbstractDocumentFactory.h">
+      <Filter>Header Files\Documents</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Views\CodeView.h">
+      <Filter>Header Files\Views</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Documents\CodeDocument.h">
+      <Filter>Header Files\Documents</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\NewDocumentDialog.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\CodeView.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Windows\NewDocumentDialog.h">
+      <Filter>Header Files\Windows</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Documents\DocumentManager.h">
+      <Filter>Header Files\Documents</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Windows\MdiDocumentWindow.h">
+      <Filter>Header Files\Windows</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Modes\DocumentModeState.h">
+      <Filter>Header Files\Modes</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Modes\ModeState.h">
+      <Filter>Header Files\Modes</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Modes\AbstractModeState.h">
+      <Filter>Header Files\Modes</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Modes\Mode.h">
+      <Filter>Header Files\Modes</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Utility\Checked.h">
+      <Filter>Header Files\Utility</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Modes\CodeModeState.h">
+      <Filter>Header Files\Modes</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Modes\CodeViewModeState.h">
+      <Filter>Header Files\Modes</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Utility\CodeAutoFormatter.h">
+      <Filter>Header Files\Utility</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\WindowsDialog.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Windows\WindowsDialog.h">
+      <Filter>Header Files\Windows</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Documents\SceneDocument.h">
+      <Filter>Header Files\Documents</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Modes\SceneModeState.h">
+      <Filter>Header Files\Modes</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\SceneView.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Views\SceneView.h">
+      <Filter>Header Files\Views</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\EntityBuilderWidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\ControllerBuilderWidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Tiles\EntityBuilderWidget.h">
+      <Filter>Header Files\Tiles</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Utility\DragTreeWidget.h">
+      <Filter>Header Files\Utility</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\AssetBrowserWidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Tiles\AssetBrowserWidget.h">
+      <Filter>Header Files\Tiles</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Utility\ExclusiveActionGroup.h">
+      <Filter>Header Files\Utility</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Modes\EntityModeState.h">
+      <Filter>Header Files\Modes</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\ConsoleWidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Tiles\ConsoleWidget.h">
+      <Filter>Header Files\Tiles</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\ControllerBuilderWidget.h">
+      <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\BrowseWidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\BrowseWidget.h">
+      <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\FileCreationParameterWidget.h">
+      <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\MeshCreationParameterWidget.h">
+      <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\MeshImportDialog.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Windows\MeshImportDialog.h">
+      <Filter>Header Files\Windows</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\GraphicsCanvas.h">
+      <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Interaction\Interaction.h">
+      <Filter>Header Files\Interaction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Interaction\FreeCamera.h">
+      <Filter>Header Files\Interaction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Utility\InputProvider.h">
+      <Filter>Header Files\Utility</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Views\AbstractView.h">
+      <Filter>Header Files\Views</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Modes\ParallelMode.h">
+      <Filter>Header Files\Modes</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\UndoHistoryWidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Tiles\UndoHistoryWidget.h">
+      <Filter>Header Files\Tiles</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\EntityPropertyWidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Tiles\EntityPropertyWidget.h">
+      <Filter>Header Files\Tiles</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Binders\EntityPropertyBinder.h">
+      <Filter>Header Files\Binders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Binders\GenericPropertyBinder.h">
+      <Filter>Header Files\Binders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Interaction\SelectInteraction.h">
+      <Filter>Header Files\Interaction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Interaction\TranslateInteraction.h">
+      <Filter>Header Files\Interaction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Interaction\Queries.h">
+      <Filter>Header Files\Interaction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Interaction\ScaleInteraction.h">
+      <Filter>Header Files\Interaction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Interaction\RotateInteraction.h">
+      <Filter>Header Files\Interaction</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\ShapeImportDialog.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Windows\ShapeImportDialog.h">
+      <Filter>Header Files\Windows</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\ShapeCreationParameterWidget.h">
+      <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource\breezEd.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resource\icons\app\breezEd.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

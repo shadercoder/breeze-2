@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SceneView</class>
+ <widget class="QWidget" name="SceneView">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
+  <property name="windowTitle">
+   <string>Scene View</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../resource/breezEd.qrc">
+    <normaloff>:/breezEd/images/documentType/scene</normaloff>:/breezEd/images/documentType/scene</iconset>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="margin">
+    <number>3</number>
+   </property>
+   <item>
+    <widget class="GraphicsCanvas" name="canvas" native="true"/>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>GraphicsCanvas</class>
+   <extends>QWidget</extends>
+   <header>Widgets/GraphicsCanvas.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../resource/breezEd.qrc"/>
+ </resources>
+ <connections/>
+</ui>

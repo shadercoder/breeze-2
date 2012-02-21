@@ -1,0 +1,232 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{38C74D07-19D6-4CA4-9E34-D95FD3E92583}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>beResourceCompiler</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\global\Lean.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\beCore.Cpp.Win32.props" />
+    <Import Project="..\..\global\beMath.Cpp.Win32.props" />
+    <Import Project="..\..\global\beGraphics.Cpp.Win32.props" />
+    <Import Project="..\..\global\PhysX.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\bePhysics.Cpp.Win32.props" />
+    <Import Project="..\..\global\Assimp.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\beEntitySystem.Cpp.Win32.props" />
+    <Import Project="..\..\global\beScene.Cpp.Win32.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\global\Lean.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\beCore.Cpp.Win32.props" />
+    <Import Project="..\..\global\beMath.Cpp.Win32.props" />
+    <Import Project="..\..\global\beGraphics.Cpp.Win32.props" />
+    <Import Project="..\..\global\PhysX.Cpp.x64.user.props" />
+    <Import Project="..\..\global\bePhysics.Cpp.Win32.props" />
+    <Import Project="..\..\global\Assimp.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\beEntitySystem.Cpp.Win32.props" />
+    <Import Project="..\..\global\beScene.Cpp.Win32.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\global\Lean.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\beCore.Cpp.Win32.props" />
+    <Import Project="..\..\global\beMath.Cpp.Win32.props" />
+    <Import Project="..\..\global\beGraphics.Cpp.Win32.props" />
+    <Import Project="..\..\global\PhysX.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\bePhysics.Cpp.Win32.props" />
+    <Import Project="..\..\global\Assimp.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\beEntitySystem.Cpp.Win32.props" />
+    <Import Project="..\..\global\beScene.Cpp.Win32.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\global\Lean.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\beCore.Cpp.Win32.props" />
+    <Import Project="..\..\global\beMath.Cpp.Win32.props" />
+    <Import Project="..\..\global\beGraphics.Cpp.Win32.props" />
+    <Import Project="..\..\global\PhysX.Cpp.x64.user.props" />
+    <Import Project="..\..\global\bePhysics.Cpp.Win32.props" />
+    <Import Project="..\..\global\Assimp.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\beEntitySystem.Cpp.Win32.props" />
+    <Import Project="..\..\global\beScene.Cpp.Win32.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>$(ProjectName)_d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>$(ProjectName)_x64d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetName>$(ProjectName)_x64</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BERESOURCECOMPILER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>beResourceCompilerInternal/StdAfx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>assimp_x86_d.lib;PhysX3CookingCHECKED_x86.lib;PhysX3CHECKED_x86.lib;PhysX3CommonCHECKED_x86.lib;bePhysics_d.lib;beGraphics_d.lib;beCore_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
+copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).lib"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BERESOURCECOMPILER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>beResourceCompilerInternal/StdAfx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>assimp_x64_d.lib;PhysX3CookingCHECKED_x64.lib;PhysX3CHECKED_x64.lib;PhysX3CommonCHECKED_x64.lib;bePhysics_x64d.lib;beGraphics_x64d.lib;beCore_x64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
+copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).lib"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BERESOURCECOMPILER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>beResourceCompilerInternal/StdAfx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>assimp_x86.lib;PhysX3CookingCHECKED_x86.lib;PhysX3CHECKED_x86.lib;PhysX3CommonCHECKED_x86.lib;bePhysics.lib;beGraphics.lib;beCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
+copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).lib"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BERESOURCECOMPILER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>beResourceCompilerInternal/StdAfx.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>assimp_x64.lib;PhysX3CookingCHECKED_x64.lib;PhysX3CHECKED_x64.lib;PhysX3CommonCHECKED_x64.lib;bePhysics_x64.lib;beGraphics_x64.lib;beCore_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
+copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).lib"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="header\beResourceCompiler\beMeshImpl.h" />
+    <ClInclude Include="header\beResourceCompiler\beMeshImporter.h" />
+    <ClInclude Include="header\beResourceCompiler\beMesh.h" />
+    <ClInclude Include="header\beResourceCompiler\beMeshSerialization.h" />
+    <ClInclude Include="header\beResourceCompiler\bePhysicsCooker.h" />
+    <ClInclude Include="header\beResourceCompiler\bePhysicsCookerImpl.h" />
+    <ClInclude Include="header\beResourceCompiler\beResourceCompiler.h" />
+    <ClInclude Include="header\beResourceCompilerInternal\stdafx.h" />
+    <ClInclude Include="header\beResourceCompilerInternal\targetver.h" />
+    <ClInclude Include="header\beResourceCompiler\beScene.h" />
+    <ClInclude Include="header\beResourceCompiler\beSceneImpl.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="header\beResourceCompiler\dllmain.cpp" />
+    <ClCompile Include="source\beMeshImporter.cpp" />
+    <ClCompile Include="source\beMeshImpl.cpp" />
+    <ClCompile Include="source\beMeshWriter.cpp" />
+    <ClCompile Include="source\bePhysicsCooker.cpp" />
+    <ClCompile Include="source\bePhysXShapeWriter.cpp" />
+    <ClCompile Include="source\beResourceCompiler.cpp" />
+    <ClCompile Include="source\beSceneImpl.cpp" />
+    <ClCompile Include="source\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
