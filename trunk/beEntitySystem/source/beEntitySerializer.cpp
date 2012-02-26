@@ -57,6 +57,8 @@ lean::resource_ptr<Entity, true> EntitySerializer::Load(const rapidxml::xml_node
 void EntitySerializer::Load(Entity *pEntity, const rapidxml::xml_node<lean::utf8_t> &node,
 	beCore::ParameterSet &parameters, SerializationQueue<LoadJob> &queue) const
 {
+	pEntity->SetPersistentID( EntitySerializer::GetID(node) );
+
 	// Properties
 	LoadProperties(*pEntity, node);
 

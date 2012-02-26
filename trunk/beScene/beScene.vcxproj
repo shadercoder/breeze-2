@@ -325,6 +325,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClCompile Include="source\beSpotLightController.cpp" />
     <ClCompile Include="source\beStateEffectBinder.cpp" />
     <ClCompile Include="source\beStateQueueSetup.cpp" />
+    <ClCompile Include="source\beTextureComponent.cpp" />
     <ClCompile Include="source\dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>

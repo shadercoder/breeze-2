@@ -124,7 +124,7 @@ DirectionalLightController::DirectionalLightController(beEntitySystem::Entity *p
 	
 	m_attenuation(1.0f),
 	m_attenuationOffset(1.0f),
-	m_range(2.0e32f),
+	m_range(512.0f),
 
 	m_bConstantsChanged(true),
 
@@ -477,7 +477,7 @@ void DirectionalLightController::Flush()
 	m_position = m_pEntity->GetPosition();
 	m_orientation = m_pEntity->GetOrientation();
 
-	SetLocalBounds( beMath::fsphere3( beMath::fvec3(), m_range) );
+	SetLocalBounds( beMath::fsphere3( beMath::fvec3(), FLT_MAX * 0.5f) );
 
 	m_bConstantsChanged = true;
 

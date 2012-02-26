@@ -255,18 +255,12 @@ beCore::Exchange::utf8_string Material::GetComponentName(uint4 idx) const
 	return name;
 }
 
-// Gets the n-th child property provider.
-const beCore::PropertyProvider* Material::GetPropertyProvider(uint4 idx) const
+// Gets the n-th reflected child component, nullptr if not reflected.
+const beCore::ReflectedComponent* Material::GetReflectedComponent(uint4 idx) const
 {
 	return (idx < m_setups.size())
 		? m_setups[idx].setup
 		: nullptr;
-}
-
-// Gets the n-th reflected child component, nullptr if not reflected.
-const beCore::ReflectedComponent* Material::GetReflectedComponent(uint4 idx) const
-{
-	return nullptr;
 }
 
 } // namespace

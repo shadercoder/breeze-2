@@ -129,6 +129,9 @@ void MeshCache::SetMeshName(const lean::utf8_ntri &nameRange, MeshCompound *pMes
 	{
 		itMesh->second.pMesh = pMesh;
 
+		// Link back to mesh info
+		m->meshInfo[itMesh->second.pMesh] = &itMesh->second;
+
 		// Notify dependent listeners
 		m->dependencies.DependencyChanged(
 			itMesh->second.dependency,
