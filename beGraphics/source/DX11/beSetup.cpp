@@ -10,6 +10,8 @@
 #include <beCore/bePropertyVisitor.h>
 #include <beCore/beGenericSerialization.h>
 
+#include <lean/properties/property_types.h>
+
 #include <lean/logging/log.h>
 
 namespace beGraphics
@@ -21,13 +23,13 @@ namespace DX11
 namespace
 {
 
-/// Gets the ID of the given type.
-template <class Type>
-uint4 GetTypeID()
-{
-	static const uint4 typeID = beCore::RegisterType<Type>();
-	return typeID;
-}
+// Don't do this lazily, serialization might require type info before construction of first setup
+const uint4 BoolTypeID = beCore::RegisterType<BOOL>();
+const uint4 IntTypeID = beCore::RegisterType<INT>();
+const uint4 UintTypeID = beCore::RegisterType<UINT>();
+const uint4 UlongTypeID = beCore::RegisterType<UINT8>();
+const uint4 FloatTypeID = beCore::RegisterType<FLOAT>();
+const uint4 DoubleTypeID = beCore::RegisterType<DOUBLE>();
 
 /// Gets a property description from the given effect type description. Returns count of zero if unknown.
 PropertyDesc GetPropertyDesc(const D3DX11_EFFECT_TYPE_DESC &typeDesc)
@@ -39,22 +41,22 @@ PropertyDesc GetPropertyDesc(const D3DX11_EFFECT_TYPE_DESC &typeDesc)
 	switch (typeDesc.Type)
 	{
 	case D3D_SVT_BOOL:
-		return PropertyDesc(lean::get_type_info<BOOL>(), componentCount, GetTypeID<BOOL>());
+		return PropertyDesc(lean::get_property_type_info<BOOL>(), componentCount, BoolTypeID);
 
 	case D3D_SVT_INT:
-		return PropertyDesc(lean::get_type_info<INT>(), componentCount, GetTypeID<INT>());
+		return PropertyDesc(lean::get_property_type_info<INT>(), componentCount, IntTypeID);
 	case D3D_SVT_UINT:
-		return PropertyDesc(lean::get_type_info<UINT>(), componentCount, GetTypeID<UINT>());
+		return PropertyDesc(lean::get_property_type_info<UINT>(), componentCount, UintTypeID);
 	case D3D_SVT_UINT8:
-		return PropertyDesc(lean::get_type_info<UINT8>(), componentCount, GetTypeID<UINT8>());
+		return PropertyDesc(lean::get_property_type_info<UINT8>(), componentCount, UlongTypeID);
 
 	case D3D_SVT_FLOAT:
-		return PropertyDesc(lean::get_type_info<FLOAT>(), componentCount, GetTypeID<FLOAT>());
+		return PropertyDesc(lean::get_property_type_info<FLOAT>(), componentCount, FloatTypeID);
 	case D3D_SVT_DOUBLE:
-		return PropertyDesc(lean::get_type_info<DOUBLE>(), componentCount, GetTypeID<DOUBLE>());
+		return PropertyDesc(lean::get_property_type_info<DOUBLE>(), componentCount, DoubleTypeID);
 	}
 
-	return PropertyDesc(lean::get_type_info<void>(), 0, beCore::TypeIndex::InvalidID);
+	return PropertyDesc();
 }
 
 /// Gets the setup constant buffer.
@@ -376,6 +378,7 @@ bool Setup::SetProperty(uint4 id, const std::type_info &type, const void *values
 		{
 			memcpy(property.data.pData, values, min(count, property.desc.Count) * property.data.elementSize);
 			m_bPropertiesChanged |= property.data.IsBuffered();
+			EmitPropertyChanged();
 			return true;
 		}
 	}
@@ -410,7 +413,10 @@ bool Setup::WriteProperty(uint4 id, beCore::PropertyVisitor &visitor, bool bWrit
 			property.data.pData);
 
 		if (bModified)
+		{
 			m_bPropertiesChanged |= property.data.IsBuffered();
+			EmitPropertyChanged();
+		}
 
 		return true;
 	}
@@ -437,7 +443,7 @@ bool Setup::ReadProperty(uint4 id, beCore::PropertyVisitor &visitor) const
 }
 
 // Gets the type index.
-const beCore::TypeIndex* Setup::GetTypeIndex() const
+const beCore::TypeIndex* Setup::GetPropertyTypeIndex() const
 {
 	return &beCore::GetTypeIndex();
 }
@@ -471,7 +477,10 @@ utf8_ntr Setup::GetTextureName(uint4 id) const
 void Setup::SetTexture(uint4 id, const beGraphics::TextureView *pView)
 {
 	if (id < m_textures.size())
+	{
 		m_textures[id].pView = ToImpl(pView);
+		EmitPropertyChanged();
+	}
 }
 
 // Gets the given texture.

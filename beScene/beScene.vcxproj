@@ -278,6 +278,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
   <ItemGroup>
     <ClCompile Include="source\beCameraController.cpp" />
     <ClCompile Include="source\beDirectionalLightController.cpp" />
+    <ClCompile Include="source\beEffectComponent.cpp" />
     <ClCompile Include="source\beEffectDrivenRenderer.cpp" />
     <ClCompile Include="source\beEffectQueueSetup.cpp" />
     <ClCompile Include="source\beEntityController.cpp" />
@@ -287,6 +288,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClCompile Include="source\beLightControllerSerialization.cpp" />
     <ClCompile Include="source\beLightEffectBinder.cpp" />
     <ClCompile Include="source\beMaterial.cpp" />
+    <ClCompile Include="source\beMaterialComponents.cpp" />
     <ClCompile Include="source\beMaterialSerialization.cpp" />
     <ClCompile Include="source\beMeshCompound.cpp" />
     <ClCompile Include="source\beMeshController.cpp" />

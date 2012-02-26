@@ -47,7 +47,7 @@ lean::resource_ptr<RigidDynamic, true> CreateDynamicFromShape(Device &device, co
 	if (!physx::PxRigidBodyExt::setMassAndUpdateInertia(*pRigid, mass))
 		LEAN_THROW_ERROR_MSG("PxRigidBodyExt::setMassAndUpdateInertia()");
 
-	return lean::bind_resource<RigidDynamic>( new RigidDynamicPX(pRigid.detatch()) );
+	return lean::bind_resource<RigidDynamic>( new RigidDynamicPX(pRigid.detach()) );
 }
 
 // Creates a dynamic box actor.
@@ -67,7 +67,7 @@ lean::resource_ptr<RigidDynamic, true> CreateDynamicBox(Device &device, const be
 	if (!physx::PxRigidBodyExt::setMassAndUpdateInertia(*pRigid, mass))
 		LEAN_THROW_ERROR_MSG("PxRigidBodyExt::setMassAndUpdateInertia()");
 
-	return lean::bind_resource<RigidDynamic>( new RigidDynamicPX(pRigid.detatch()) );
+	return lean::bind_resource<RigidDynamic>( new RigidDynamicPX(pRigid.detach()) );
 }
 
 // Creates a dynamic sphere actor.
@@ -87,7 +87,7 @@ lean::resource_ptr<RigidDynamic, true> CreateDynamicSphere(Device &device, float
 	if (!physx::PxRigidBodyExt::setMassAndUpdateInertia(*pRigid, mass))
 		LEAN_THROW_ERROR_MSG("PxRigidBodyExt::setMassAndUpdateInertia()");
 
-	return lean::bind_resource<RigidDynamic>( new RigidDynamicPX(pRigid.detatch()) );
+	return lean::bind_resource<RigidDynamic>( new RigidDynamicPX(pRigid.detach()) );
 }
 
 // Creates a static actor from the given shape.
@@ -102,7 +102,7 @@ lean::resource_ptr<RigidStatic, true> CreateStaticFromShape(Device &device, cons
 
 	CreateShapesFromCompound(*pRigid, ToImpl(shape));
 
-	return lean::bind_resource<RigidStatic>( new RigidStaticPX(pRigid.detatch()) );
+	return lean::bind_resource<RigidStatic>( new RigidStaticPX(pRigid.detach()) );
 }
 
 // Creates a static box actor.
@@ -122,7 +122,7 @@ lean::resource_ptr<RigidStatic, true> CreateStaticBox(Device &device, const beMa
 	if (!pRigid)
 		LEAN_THROW_ERROR_MSG("physx::PxCreateStatic()");
 
-	return lean::bind_resource<RigidStatic>( new RigidStaticPX(pRigid.detatch()) );
+	return lean::bind_resource<RigidStatic>( new RigidStaticPX(pRigid.detach()) );
 }
 
 // Creates a static sphere actor.
@@ -142,7 +142,7 @@ lean::resource_ptr<RigidStatic, true> CreateStaticSphere(Device &device, float r
 	if (!pRigid)
 		LEAN_THROW_ERROR_MSG("physx::PxCreateStatic()");
 
-	return lean::bind_resource<RigidStatic>( new RigidStaticPX(pRigid.detatch()) );
+	return lean::bind_resource<RigidStatic>( new RigidStaticPX(pRigid.detach()) );
 }
 
 // Sets filter data for the given actor.

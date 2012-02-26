@@ -8,6 +8,9 @@
 #include <beGraphics/Any/beSetup.h>
 #include <beGraphics/DX/beError.h>
 
+#include <lean/io/filesystem.h>
+#include <lean/io/numeric.h>
+
 namespace beScene
 {
 
@@ -24,13 +27,23 @@ struct Material::Technique
 			setup(pSetup) { }
 };
 
+/// Setup.
+struct Material::Setup
+{
+	lean::resource_ptr<beGraphics::Any::Setup> setup;
+
+	/// Constructor.
+	explicit Setup(beGraphics::Any::Setup *pSetup)
+		: setup(pSetup) { }
+};
+
 namespace
 {
 
-void LoadTechniques(Material::technique_vector &techniques, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache);
+void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache);
 
 /// Adds the given technique.
-void AddTechnique(Material::technique_vector &techniques, const beGraphics::Effect *pEffect, beGraphics::Any::Setup *pSetup,
+void AddTechnique(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::Any::Setup *pSetup,
 	ID3DX11EffectTechnique *pTechniqueDX, beGraphics::EffectCache &effectCache)
 {
 	const char *includeEffect = "";
@@ -91,14 +104,17 @@ void AddTechnique(Material::technique_vector &techniques, const beGraphics::Effe
 
 			// Create new setup for material, if non existent, yet
 			if (!pNestedSetup)
+			{
 				pNestedSetup = lean::new_resource<beGraphics::Any::Setup>( &ToImpl(*pNestedEffect) );
+				setups.emplace_back( pNestedSetup );
+			}
 
 			// Add single technique
-			AddTechnique(techniques, pNestedEffect, pNestedSetup, pNestedTechniqueDX, effectCache);
+			AddTechnique(techniques, setups, pNestedEffect, pNestedSetup, pNestedTechniqueDX, effectCache);
 		}
 		else
 			// Add all techniques
-			LoadTechniques(techniques, pNestedEffect, effectCache); // TODO: Material sharing partly broken
+			LoadTechniques(techniques, setups, pNestedEffect, effectCache); // TODO: Material sharing partly broken
 	}
 	else
 		// Simply add the technique
@@ -111,7 +127,7 @@ void AddTechnique(Material::technique_vector &techniques, const beGraphics::Effe
 }
 
 /// Loads techniques from the given effect.
-void LoadTechniques(Material::technique_vector &techniques, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache)
+void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache)
 {
 	ID3DX11Effect *pEffectDX = ToImpl(*pEffect);
 
@@ -119,6 +135,7 @@ void LoadTechniques(Material::technique_vector &techniques, const beGraphics::Ef
 	lean::resource_ptr<beGraphics::Any::Setup> pSetup = lean::bind_resource(
 			new beGraphics::Any::Setup( &ToImpl(*pEffect) ) // TODO: Material sharing partly broken
 		);
+	setups.emplace_back( pSetup );
 
 	D3DX11_EFFECT_DESC effectDesc;
 	BE_THROW_DX_ERROR_MSG(pEffectDX->GetDesc(&effectDesc), "ID3DX11Effect::GetDesc()");
@@ -133,7 +150,7 @@ void LoadTechniques(Material::technique_vector &techniques, const beGraphics::Ef
 		if (!pTechniqueDX->IsValid())
 			LEAN_THROW_ERROR_MSG("ID3DX11Effect::GetTechniqueByIndex()");
 
-		AddTechnique(techniques, pEffect, pSetup, pTechniqueDX, effectCache);
+		AddTechnique(techniques, setups, pEffect, pSetup, pTechniqueDX, effectCache);
 	}
 }
 
@@ -144,7 +161,7 @@ Material::Material(const beGraphics::Effect *pEffect, beGraphics::EffectCache &e
 	: m_pEffect(pEffect),
 	m_pCache(pCache)
 {
-	LoadTechniques(m_techniques, m_pEffect, effectCache);
+	LoadTechniques(m_techniques, m_setups, m_pEffect, effectCache);
 }
 
 // Destructor.
@@ -204,6 +221,52 @@ const char* Material::GetInputSignature(uint4 &size, uint4 techniqueIdx, uint4 p
 
 	size = static_cast<uint4>(passDesc.IAInputSignatureSize);
 	return reinterpret_cast<const char*>(passDesc.pIAInputSignature);
+}
+
+// Gets the number of child components.
+uint4 Material::GetComponentCount() const
+{
+	return static_cast<uint4>( m_setups.size() );
+}
+
+// Gets the name of the n-th child component.
+beCore::Exchange::utf8_string Material::GetComponentName(uint4 idx) const
+{
+	beCore::Exchange::utf8_string name;
+
+	if (idx < m_setups.size())
+	{
+		const beGraphics::Effect *pEffect = m_setups[idx].setup->GetEffect();
+		beGraphics::EffectCache *pCache = pEffect->GetCache();
+
+		if (pCache)
+			name = lean::get_stem<beCore::Exchange::utf8_string>( pCache->GetFile(*pEffect) );
+	}
+
+	// Ugly default names
+	if (name.empty())
+	{
+		utf8_string num = lean::int_to_string(idx);
+		name.reserve(lean::ntarraylen("Setup ") + num.size());
+		name.append("Setup ");
+		name.append(num.c_str(), num.c_str() + num.size());
+	}
+	
+	return name;
+}
+
+// Gets the n-th child property provider.
+const beCore::PropertyProvider* Material::GetPropertyProvider(uint4 idx) const
+{
+	return (idx < m_setups.size())
+		? m_setups[idx].setup
+		: nullptr;
+}
+
+// Gets the n-th reflected child component, nullptr if not reflected.
+const beCore::ReflectedComponent* Material::GetReflectedComponent(uint4 idx) const
+{
+	return nullptr;
 }
 
 } // namespace

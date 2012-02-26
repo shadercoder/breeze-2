@@ -66,7 +66,7 @@ physx::PxFoundation* CreateFoundation()
 	if (!pFoundation)
 		LEAN_THROW_ERROR_MSG("physx::PxCreateFoundation()");
 
-	return pFoundation.detatch();
+	return pFoundation.detach();
 }
 
 // Creates a physics interface object.
@@ -86,7 +86,7 @@ physx::PxPhysics* CreatePhysics(physx::PxFoundation &foundation, const physx::Px
 		"127.0.0.1", 5425,
 		100);
 
-	return pPhysics.detatch();
+	return pPhysics.detach();
 }
 
 // Creates a CPU dispatcher.

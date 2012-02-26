@@ -25,7 +25,7 @@ PhysicsCooker::Data* CreateCookerData()
 	if (!pCooker)
 		LEAN_THROW_ERROR_MSG("PxCreateCooking()");
 
-	return new PhysicsCooker::Data(pPhysics.detatch(), pCooker.detatch());
+	return new PhysicsCooker::Data(pPhysics.detach(), pCooker.detach());
 }
 
 } // namespace

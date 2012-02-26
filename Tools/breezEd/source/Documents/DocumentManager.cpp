@@ -2,6 +2,8 @@
 #include "Documents/DocumentManager.h"
 
 #include "Documents/AbstractDocumentFactory.h"
+
+#include "Utility/Strings.h"
 #include <lean/logging/errors.h>
 
 // Constructor.
@@ -20,7 +22,7 @@ void DocumentManager::addDocumentType(const DocumentType &documentType)
 {
 	if(!documentType.valid())
 	{
-		LEAN_LOG_ERROR_CTX("Document type invalid", documentType.name.toUtf8().data());
+		LEAN_LOG_ERROR_CTX("Document type invalid", toUtf8Range(documentType.name));
 		return;
 	}
 

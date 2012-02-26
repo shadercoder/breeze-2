@@ -167,7 +167,7 @@ void SaveConvex(physx::PxCollection &meshCollection, physx::PxCollection &shapeC
 		defaultMaterial,
 		physx::PxTransform( physx::PxVec3(pos.x, pos.y, pos.z), physx::PxQuat(rot.x, rot.y, rot.z, rot.w) ) );
 
-	shapeCollection.addExternalRef(*pMesh.detatch(), meshSerializationID);
+	shapeCollection.addExternalRef(*pMesh.detach(), meshSerializationID);
 	pShape->collectForExport(shapeCollection);
 }
 
@@ -223,7 +223,7 @@ void SaveMesh(physx::PxCollection &meshCollection, physx::PxCollection &shapeCol
 		defaultMaterial,
 		physx::PxTransform( physx::PxVec3(pos.x, pos.y, pos.z), physx::PxQuat(rot.x, rot.y, rot.z, rot.w) ) );
 
-	shapeCollection.addExternalRef(*pMesh.detatch(), meshSerializationID);
+	shapeCollection.addExternalRef(*pMesh.detach(), meshSerializationID);
 	pShape->collectForExport(shapeCollection);
 }
 

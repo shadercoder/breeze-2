@@ -20,6 +20,25 @@ typedef Serialization<Entity, EntitySerializer> EntitySerialization;
 /// Gets the entity serialization register.
 BE_ENTITYSYSTEM_API EntitySerialization& GetEntitySerialization();
 
+/// Instantiate this to add a serializer of the given type.
+template <class EntitySerializer>
+struct EntitySerializationPlugin
+{
+	/// Serializer.
+	EntitySerializer Serializer;
+
+	/// Adds the serializer.
+	EntitySerializationPlugin()
+	{
+		GetEntitySerialization().AddSerializer(&Serializer);
+	}
+	/// Removes the serializer.
+	~EntitySerializationPlugin()
+	{
+		GetEntitySerialization().RemoveSerializer(&Serializer);
+	}
+};
+
 }
 
 #endif

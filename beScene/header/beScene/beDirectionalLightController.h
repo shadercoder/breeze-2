@@ -116,21 +116,21 @@ public:
 	BE_SCENE_API const beGraphics::TextureViewHandle* GetLightMaps(const void *pData, uint4 &count) const;
 
 	/// Sets the color.
-	LEAN_INLINE void SetColor(const beMath::fvec4 &color) { m_color = color; m_bConstantsChanged = true; }
+	LEAN_INLINE void SetColor(const beMath::fvec4 &color) { m_color = color; m_bConstantsChanged = true; EmitPropertyChanged(); }
 	/// Gets the color.
 	LEAN_INLINE const beMath::fvec4& GetColor() const { return m_color; }
 
 	/// Sets the attenuation.
-	LEAN_INLINE void SetAttenuation(float attenuation) { m_attenuation = attenuation; m_bConstantsChanged = true; }
+	LEAN_INLINE void SetAttenuation(float attenuation) { m_attenuation = attenuation; m_bConstantsChanged = true; EmitPropertyChanged(); }
 	/// Sets the attenuation offset.
-	LEAN_INLINE void SetAttenuationOffset(float attenuationOffset) { m_attenuationOffset = attenuationOffset; m_bConstantsChanged = true; }
+	LEAN_INLINE void SetAttenuationOffset(float attenuationOffset) { m_attenuationOffset = attenuationOffset; m_bConstantsChanged = true; EmitPropertyChanged(); }
 	/// Gets the attenuation offset.
 	LEAN_INLINE float GetAttenuationOffset() const { return m_attenuationOffset; }
 	/// Gets the attenuation.
 	LEAN_INLINE float GetAttenuation() const { return m_attenuation; }
 	
 	/// Sets the range.
-	LEAN_INLINE void SetRange(float range) { m_range = range; m_bConstantsChanged = true; }
+	LEAN_INLINE void SetRange(float range) { m_range = range; m_bConstantsChanged = true; EmitPropertyChanged(); }
 	/// Gets the range.
 	LEAN_INLINE float GetRange() const { return m_range; }
 
@@ -141,6 +141,8 @@ public:
 			Light::m_flags |= LightFlags::Shadowed;
 		else
 			Light::m_flags &= ~LightFlags::Shadowed;
+
+		 EmitPropertyChanged();
 	}
 	/// Checks if this light is currently casting shadows.
 	LEAN_INLINE bool IsShadowEnabled() const { return ((Light::m_flags & LightFlags::Shadowed) != 0); }
@@ -151,7 +153,7 @@ public:
 	LEAN_INLINE PipelineStageMask GetShadowStages() const { return m_shadowStageMask; }
 
 	/// Sets the shadow resolution.
-	LEAN_INLINE void SetShadowResolution(uint4 resolution) { m_shadowResolution = resolution; m_bConstantsChanged = true; }
+	LEAN_INLINE void SetShadowResolution(uint4 resolution) { m_shadowResolution = resolution; m_bConstantsChanged = true;  EmitPropertyChanged(); }
 	/// Gets the shadow resolution.
 	LEAN_INLINE uint4 GetShadowResolution() const { return m_shadowResolution; }
 

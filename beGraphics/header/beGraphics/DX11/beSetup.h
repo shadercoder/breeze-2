@@ -23,7 +23,7 @@ namespace DX11
 using beCore::PropertyDesc;
 
 /// Setup implementation.
-class Setup : public beGraphics::Setup
+class Setup : public beCore::PropertyFeedbackProvider<beGraphics::Setup>
 {
 public:
 	/// Property data.
@@ -144,7 +144,7 @@ public:
 	LEAN_INLINE const Effect* GetEffect() const { return m_pEffect; }
 
 	/// Gets the type index.
-	BE_GRAPHICS_DX11_API const beCore::TypeIndex* GetTypeIndex() const;
+	BE_GRAPHICS_DX11_API const beCore::TypeIndex* GetPropertyTypeIndex() const;
 
 	/// Gets the implementation identifier.
 	LEAN_INLINE ImplementationID GetImplementationID() const { return DX11Implementation; }

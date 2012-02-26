@@ -28,6 +28,8 @@ private:
 
 	ConsoleWidget *m_pConsole;
 
+	AbstractDocument *m_pDocument;
+
 private Q_SLOTS:
 	/// Keeps track of document selections.
 	void documentActivated(QMdiSubWindow *pWindow);

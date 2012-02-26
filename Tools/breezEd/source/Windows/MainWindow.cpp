@@ -96,19 +96,9 @@ bool addDocumentWindow(const Ui::MainWindow &mainWindow, QWidget *pView, Abstrac
 		{
 			pView = documentType.pFactory->createDocumentView(pDocument, pDocumentMode, pEditor);
 		}
-		catch (const std::exception &error)
-		{
-			QMessageBox msg;
-			msg.setIcon(QMessageBox::Critical);
-			msg.setWindowTitle( MainWindow::tr("Error creating document view") );
-			msg.setText( MainWindow::tr("Error while creating document view, you might need to adjust your settings.") );
-			msg.setInformativeText( QString::fromUtf8(error.what()) );
-			msg.exec();
-			return false;
-		}
 		catch (...)
 		{
-			QMessageBox::critical( nullptr,
+			exceptionToMessageBox(
 					MainWindow::tr("Error creating document view"),
 					MainWindow::tr("Error while creating document view, you might need to adjust your settings.")
 				);
@@ -154,7 +144,8 @@ Mode* maybeAddDocumentMode(MainWindow::document_mode_map &modes, Mode &modeStack
 MainWindow::MainWindow(Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
 	: QMainWindow(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
-	m_pModeStack( new Mode(this) )
+	m_pModeStack( new Mode(this) ),
+	m_pDocument()
 {
 	ui.setupUi(this);
 	m_pInfoLabel = new QLabel(ui.statusBar);
@@ -240,18 +231,9 @@ void MainWindow::newDocument()
 					
 					addDocument(pDocument, nullptr);
 				}
-				catch (const std::exception &error)
-				{
-					QMessageBox msg;
-					msg.setIcon(QMessageBox::Critical);
-					msg.setWindowTitle( MainWindow::tr("Error creating document") );
-					msg.setText( MainWindow::tr("An unexpected error occurred while creating '%1' document '%2'.").arg(documentType.name).arg(documentFile) );
-					msg.setInformativeText( QString::fromUtf8(error.what()) );
-					msg.exec();
-				}
 				catch (...)
 				{
-					QMessageBox::critical( nullptr,
+					exceptionToMessageBox(
 							MainWindow::tr("Error creating document"),
 							MainWindow::tr("An unexpected error occurred while creating '%1' document '%2'.").arg(documentType.name).arg(documentFile)
 						);
@@ -337,18 +319,9 @@ bool MainWindow::openDocument()
 							tr("Could not open '%1' file '%2'.").arg(selectedType->name).arg(openFile)
 						);
 				}
-				catch (const std::exception &error)
-				{
-					QMessageBox msg;
-					msg.setIcon(QMessageBox::Critical);
-					msg.setWindowTitle( MainWindow::tr("Error opening document") );
-					msg.setText( MainWindow::tr("An unexpected error occurred while opening '%1' document '%2'.").arg(selectedType->name).arg(openFile) );
-					msg.setInformativeText( QString::fromUtf8(error.what()) );
-					msg.exec();
-				}
 				catch (...)
 				{
-					QMessageBox::critical( nullptr,
+					exceptionToMessageBox(
 							MainWindow::tr("Error opening document"),
 							MainWindow::tr("An unexpected error occurred while opening '%1' document '%2'.").arg(selectedType->name).arg(openFile)
 						);
@@ -390,18 +363,9 @@ bool MainWindow::openDocument(const QString &documentTypeName)
 						tr("Could not open '%1' file '%2'.").arg(documentTypeName).arg(openFile)
 					);
 			}
-			catch (const std::exception &error)
-			{
-				QMessageBox msg;
-				msg.setIcon(QMessageBox::Critical);
-				msg.setWindowTitle( MainWindow::tr("Error opening document") );
-				msg.setText( MainWindow::tr("An unexpected error occurred while opening '%1' document '%2'.").arg(documentTypeName).arg(openFile) );
-				msg.setInformativeText( QString::fromUtf8(error.what()) );
-				msg.exec();
-			}
 			catch (...)
 			{
-				QMessageBox::critical( nullptr,
+				exceptionToMessageBox(
 						MainWindow::tr("Error opening document"),
 						MainWindow::tr("An unexpected error occurred while opening '%1' document '%2'.").arg(documentTypeName).arg(openFile)
 					);
@@ -478,7 +442,13 @@ void MainWindow::documentActivated(QMdiSubWindow *pWindow)
 		if (itDocumentMode != m_documentModes.constEnd())
 			(*itDocumentMode)->enter();
 
-		Q_EMIT documentChanged(pDocumentWindow->document());
+		AbstractDocument *pDocument = pDocumentWindow->document();
+
+		if (pDocument != m_pDocument)
+		{
+			m_pDocument = pDocument;
+			Q_EMIT documentChanged(m_pDocument);
+		}
 	}
 }
 

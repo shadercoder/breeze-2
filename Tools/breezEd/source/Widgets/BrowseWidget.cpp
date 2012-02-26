@@ -10,6 +10,8 @@ BrowseWidget::BrowseWidget( QWidget *pParent, Qt::WFlags flags)
 	ui.setupUi(this);
 
 	checkedConnect(ui.browseButton, SIGNAL(clicked()), this, SIGNAL(browse()));
+	checkedConnect(ui.pathEdit, SIGNAL(cursorPositionChanged(int, int)), this, SIGNAL(editingStarted()));
+	checkedConnect(ui.pathEdit, SIGNAL(editingFinished()), this, SIGNAL(editingFinished()));
 }
 
 // Destructor.

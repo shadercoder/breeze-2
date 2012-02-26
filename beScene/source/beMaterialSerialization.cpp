@@ -118,6 +118,7 @@ lean::resource_ptr<Material, true> LoadMaterial(const rapidxml::xml_node<lean::u
 	const beGraphics::Effect *pMainEffect = pMaterial->GetEffect();
 	const uint4 techniqueCount = pMaterial->GetTechniqueCount();
 
+	// TODO: Move to material itself (already has setup index)
 	typedef lean::dynamic_array<beGraphics::Setup*> setup_array;
 	typedef lean::dynamic_array<uint4> idx_array;
 	idx_array setupIndices(techniqueCount);

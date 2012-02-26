@@ -108,29 +108,8 @@ void LightControllerSerializer<LightController>::Save(const beEntitySystem::Cont
 	ControllerSerializer::Save(pSerializable, node, parameters, queue);
 }
 
-namespace
-{
-
-// Plugin class.
-template <class LightController>
-struct LightControllerSerialization
-{
-	const LightControllerSerializer<LightController> Serializer;
-
-	LightControllerSerialization()
-	{
-		beEntitySystem::GetControllerSerialization().AddSerializer(&Serializer);
-	}
-	~LightControllerSerialization()
-	{
-		beEntitySystem::GetControllerSerialization().RemoveSerializer(&Serializer);
-	}
-};
-
-const LightControllerSerialization<DirectionalLightController> DirectionalLightControllerSerialization;
-const LightControllerSerialization<PointLightController> PointLightControllerSerialization;
-const LightControllerSerialization<SpotLightController> SpotLightControllerSerialization;
-
-} // namespace
+const beEntitySystem::ControllerSerializationPlugin<DirectionalLightControllerSerializer> DirectionalLightControllerSerialization;
+const beEntitySystem::ControllerSerializationPlugin<PointLightControllerSerializer> PointLightControllerSerialization;
+const beEntitySystem::ControllerSerializationPlugin<SpotLightControllerSerializer> SpotLightControllerSerialization;
 
 } // namespace

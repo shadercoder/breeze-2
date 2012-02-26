@@ -19,6 +19,25 @@ typedef Serialization<Simulation> SimulationSerialization;
 /// Gets the simulation serialization register.
 BE_ENTITYSYSTEM_API SimulationSerialization& GetSimulationSerialization();
 
+/// Instantiate this to add a serializer of the given type.
+template <class SimulationSerializer>
+struct SimulationSerializationPlugin
+{
+	/// Serializer.
+	SimulationSerializer Serializer;
+
+	/// Adds the serializer.
+	SimulationSerializationPlugin()
+	{
+		GetSimulationSerialization().AddSerializer(&Serializer);
+	}
+	/// Removes the serializer.
+	~SimulationSerializationPlugin()
+	{
+		GetSimulationSerialization().RemoveSerializer(&Serializer);
+	}
+};
+
 }
 
 #endif

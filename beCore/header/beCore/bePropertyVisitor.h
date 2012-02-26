@@ -13,7 +13,7 @@ namespace beCore
 {
 
 /// Property visitor.
-class PropertyVisitor
+class LEAN_INTERFACE PropertyVisitor
 {
 protected:
 	~PropertyVisitor() { }

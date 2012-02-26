@@ -169,6 +169,8 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="header\beCore\beComponentReflector.h" />
+    <ClInclude Include="header\beCore\beComponentTypes.h" />
     <ClInclude Include="header\beCore\beContent.h" />
     <ClInclude Include="header\beCore\beContentProvider.h" />
     <ClInclude Include="header\beCore\beCore.h" />
@@ -193,9 +195,11 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beCore\beParameterSet.h" />
     <ClInclude Include="header\beCore\bePathResolver.h" />
     <ClInclude Include="header\beCore\bePersistentIDs.h" />
+    <ClInclude Include="header\beCore\bePropertyListener.h" />
     <ClInclude Include="header\beCore\bePropertySerialization.h" />
     <ClInclude Include="header\beCore\bePropertyVisitor.h" />
     <ClInclude Include="header\beCore\beQueryResult.h" />
+    <ClInclude Include="header\beCore\beReflectedComponent.h" />
     <ClInclude Include="header\beCore\beReflectionProperties.h" />
     <ClInclude Include="header\beCore\beReflectionPropertyProvider.h" />
     <ClInclude Include="header\beCore\beShared.h" />
@@ -211,17 +215,18 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beCore\beWrapper.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\beComponentTypes.cpp" />
     <ClCompile Include="source\beCore.cpp" />
     <ClCompile Include="source\beDefaultPathResolver.cpp" />
     <ClCompile Include="source\beFileContentProvider.cpp" />
     <ClCompile Include="source\beFileSystem.cpp" />
     <ClCompile Include="source\beFileSystemPathResolver.cpp" />
     <ClCompile Include="source\beFileWatch.cpp" />
-    <ClCompile Include="source\beGenericSerialization.cpp" />
     <ClCompile Include="source\beIdentifiers.cpp" />
     <ClCompile Include="source\beJob.cpp" />
     <ClCompile Include="source\beParameters.cpp" />
     <ClCompile Include="source\bePersistentIDs.cpp" />
+    <ClCompile Include="source\bePropertyProvider.cpp" />
     <ClCompile Include="source\bePropertySerialization.cpp" />
     <ClCompile Include="source\beReflectionProperties.cpp" />
     <ClCompile Include="source\beTextSerialization.cpp" />

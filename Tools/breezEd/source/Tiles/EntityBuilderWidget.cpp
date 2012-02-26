@@ -27,6 +27,7 @@
 #include "Interaction/Math.h"
 #include <beMath/bePlane.h>
 
+#include "Utility/Strings.h"
 #include "Utility/Undo.h"
 #include "Utility/Checked.h"
 
@@ -52,10 +53,12 @@ private:
 		if (m_pCommand)
 			return m_pCommand->entity();
 
+		QString name = m_pUI->nameLineEdit->text();
+
 		try
 		{
 			// Entity
-			lean::resource_ptr<beEntitySystem::Entity> pEntity = lean::new_resource<beEntitySystem::Entity>( m_pUI->nameLineEdit->text().toUtf8().data() );
+			lean::resource_ptr<beEntitySystem::Entity> pEntity = lean::new_resource<beEntitySystem::Entity>( toUtf8Range(name) );
 
 			// Document & entity environment
 			beCore::ParameterSet sceneParams( &beEntitySystem::GetSerializationParameters() );
@@ -81,18 +84,11 @@ private:
 			m_pDocument->undoStack()->push(pCommand);
 			m_pCommand = pCommand;
 		}
-		catch (const std::exception &error)
-		{
-			QMessageBox::critical( nullptr,
-					EntityBuilderWidget::tr("Error creating entity"),
-					QString::fromUtf8(error.what())
-				);
-		}
 		catch (...)
 		{
-			QMessageBox::critical( nullptr,
+			exceptionToMessageBox(
 					EntityBuilderWidget::tr("Error creating entity"),
-					EntityBuilderWidget::tr("An unknown error occurred while creating the entity.")
+					EntityBuilderWidget::tr("An unexpected error occurred while creating entity '%1'.").arg( makeName(name) )
 				);
 		}
 
@@ -240,7 +236,7 @@ void EntityBuilderWidget::createEntity()
 // Adds a controller of the given type.
 void EntityBuilderWidget::addController(const QString &type)
 {
-	const beEntitySystem::ControllerSerializer *pSerializer = beEntitySystem::GetControllerSerialization().GetSerializer(type.toUtf8().data());
+	const beEntitySystem::ControllerSerializer *pSerializer = beEntitySystem::GetControllerSerialization().GetSerializer( toUtf8Range(type) );
 
 	if (pSerializer)
 	{

@@ -9,7 +9,7 @@
 // Constructor.
 CreateEntityCommand::CreateEntityCommand(SceneDocument *pDocument, beEntitySystem::World *pWorld, beEntitySystem::Entity *pEntity, QUndoCommand *pParent)
 	: QUndoCommand(
-		QCoreApplication::translate("CreateEntityCommand", "Create entity '%1'").arg( makeName(toQt(pEntity->GetName())) ),
+		QCoreApplication::translate("CreateEntityCommand", "Created entity '%1'").arg( makeName(toQt(pEntity->GetName())) ),
 		pParent ),
 	m_pDocument( LEAN_ASSERT_NOT_NULL(pDocument) ),
 	m_pWorld( LEAN_ASSERT_NOT_NULL(pWorld) ),

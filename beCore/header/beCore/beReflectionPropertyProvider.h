@@ -6,8 +6,7 @@
 #define BE_CORE_REFLECTION_PROPERTY_PROVIDER
 
 #include "beCore.h"
-#include "bePropertyProvider.h"
-#include "beTypeIndex.h"
+#include "beReflectedComponent.h"
 
 namespace beCore
 {
@@ -15,7 +14,7 @@ namespace beCore
 struct ReflectionProperty;	
 
 /// Generic property provider base class.
-class LEAN_INTERFACE ReflectionPropertyProvider : public PropertyProvider
+class LEAN_INTERFACE ReflectionPropertyProvider : public ReflectedPropertyProvider< PropertyFeedbackProvider<ReflectedComponent> >
 {
 public:
 	/// Property range type.
@@ -52,7 +51,7 @@ public:
 	BE_CORE_API bool ReadProperty(uint4 id, PropertyVisitor &visitor) const;
 
 	/// Gets the type index.
-	BE_CORE_API const TypeIndex* GetTypeIndex() const;
+	BE_CORE_API const TypeIndex* GetPropertyTypeIndex() const;
 };
 
 } // namespace

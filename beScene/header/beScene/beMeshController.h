@@ -120,6 +120,22 @@ public:
 	/// Gets the local bounding sphere.
 	LEAN_INLINE const beMath::fsphere3& GetLocalBounds() { return m.localBounds; }
 
+	/// Gets the number of child components.
+	BE_SCENE_API uint4 GetComponentCount() const;
+	/// Gets the name of the n-th child component.
+	BE_SCENE_API beCore::Exchange::utf8_string GetComponentName(uint4 idx) const;
+	/// Gets the n-th reflected child component, nullptr if not reflected.
+	BE_SCENE_API const ReflectedComponent* GetReflectedComponent(uint4 idx) const;
+
+	/// Gets the type of the n-th child component.
+	BE_SCENE_API beCore::Exchange::utf8_string GetComponentType(uint4 idx) const;
+	/// Gets the n-th component.
+	BE_SCENE_API lean::cloneable_obj<lean::any, true> GetComponent(uint4 idx) const;
+	/// Returns true, if the n-th component can be replaced.
+	BE_SCENE_API bool IsComponentReplaceable(uint4 idx) const;
+	/// Sets the n-th component.
+	BE_SCENE_API void SetComponent(uint4 idx, const lean::any &pComponent);
+
 	/// Gets the scenery.
 	LEAN_INLINE DynamicScenery* GetScenery() const { return m.pScenery; }
 

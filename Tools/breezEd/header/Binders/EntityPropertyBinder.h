@@ -9,6 +9,8 @@
 class QTreeView;
 class QStandardItem;
 
+class SceneDocument;
+
 /// Create entity command class.
 class EntityPropertyBinder : public QObject, public lean::noncopyable
 {
@@ -19,12 +21,20 @@ private:
 
 public:
 	/// Constructor.
-	EntityPropertyBinder(beEntitySystem::Entity *pEntity, QTreeView *pTree, QStandardItem *pParentItem, QObject *pParent = nullptr);
+	EntityPropertyBinder(beEntitySystem::Entity *pEntity, SceneDocument *pDocument, QTreeView *pTree, QStandardItem *pParentItem, QObject *pParent = nullptr);
 	/// Destructor.
 	virtual ~EntityPropertyBinder();
 
 	/// Property provider.
 	beEntitySystem::Entity* entity() const { return m_pEntity; }
+
+public Q_SLOTS:
+	/// Check for property changes.
+	void updateProperties();
+
+Q_SIGNALS:
+	/// Propagates property update calls.
+	void propagateUpdateProperties();
 };
 
 #endif

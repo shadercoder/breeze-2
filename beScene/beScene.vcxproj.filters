@@ -476,5 +476,11 @@
     <ClCompile Include="source\beLightControllerSerialization.cpp">
       <Filter>Source Files\Lights</Filter>
     </ClCompile>
+    <ClCompile Include="source\beMaterialComponents.cpp">
+      <Filter>Source Files\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beEffectComponent.cpp">
+      <Filter>Source Files\Material</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

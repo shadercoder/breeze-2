@@ -97,12 +97,24 @@ inline QString toQt(const lean::utf8_ntri &str)
 	return QString::fromUtf8(str.c_str(), static_cast<int>(str.size()));
 }
 
-/// Builds an utf8_string from the given QString.
-inline lean::utf8_ntr toUtf8Range(const QString &str)
+/// Gets a utf8 character range to the given QString.
+struct toUtf8Range
 {
-	const QByteArray &bytes = str.toUtf8();
-	return lean::utf8_ntr(bytes.data(), bytes.data() + bytes.size());
-}
+	const QByteArray bytes;
+
+	LEAN_INLINE toUtf8Range(const QString &str)
+		: bytes(str.toUtf8()) { }
+
+	LEAN_INLINE lean::utf8_ntr get() const
+	{
+		return lean::utf8_ntr(bytes.data(), bytes.data() + bytes.size());
+	}
+
+	LEAN_INLINE operator lean::utf8_ntr() const
+	{
+		return get();
+	}
+};
 
 /// Builds an utf8_string from the given QString.
 inline lean::utf8_string toUtf8(const QString &str)

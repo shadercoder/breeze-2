@@ -228,7 +228,7 @@ StateEffectBinderPass::ResourceBindings* GetResourceBindings(Any::API::Effect *p
 		|| !resourceBindings->PSResourceBindings.empty()
 		|| !resourceBindings->CSResourceBindings.empty();
 
-	return (bHasResourceBindings) ? resourceBindings.detatch() : nullptr;
+	return (bHasResourceBindings) ? resourceBindings.detach() : nullptr;
 }
 
 } // namespace

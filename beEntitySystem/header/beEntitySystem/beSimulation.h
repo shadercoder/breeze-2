@@ -38,7 +38,9 @@ public:
 	LEAN_INLINE const utf8_string& GetName() const { return m_name; }
 
 	/// Gets the simulation type.
-	BE_ENTITYSYSTEM_API virtual beCore::Exchange::utf8_string GetType() const;
+	BE_ENTITYSYSTEM_API static utf8_ntr GetSimulationType();
+	/// Gets the simulation type.
+	virtual utf8_ntr GetType() const { return GetSimulationType(); }
 };
 
 } // namespace

@@ -7,7 +7,10 @@
 
 #include "beCore.h"
 #include "beTypeIndex.h"
-#include <lean/type_info.h>
+#include "beExchangeContainers.h"
+#include <lean/properties/property_type.h>
+
+#include <forward_list>
 
 namespace beCore
 {
@@ -15,23 +18,24 @@ namespace beCore
 /// Property description.
 struct PropertyDesc
 {
-	const lean::type_info *TypeInfo;	///< Value (component) type.
-	size_t Count;						///< Value (component) count.
-	uint4 TypeID;						///< Serialization type.
+	const lean::property_type_info *TypeInfo;	///< Value (component) type.
+	size_t Count;								///< Value (component) count.
+	uint4 TypeID;								///< Serialization type.
 
 	/// Default Constructor.
 	PropertyDesc()
-		: TypeInfo(&lean::get_type_info<void>()),
+		: TypeInfo(nullptr),
 		Count(0),
 		TypeID(TypeIndex::InvalidID) { }
 	/// Constructor.
-	PropertyDesc(const lean::type_info &typeInfo, size_t count, uint4 typeID)
+	PropertyDesc(const lean::property_type_info &typeInfo, size_t count, uint4 typeID)
 		: TypeInfo(&typeInfo),
 		Count(count),
 		TypeID(typeID) { }
 };
 
 class PropertyVisitor;
+class PropertyListener;
 
 /// Generic property provider base class.
 class LEAN_INTERFACE PropertyProvider
@@ -41,6 +45,9 @@ protected:
 	~PropertyProvider() throw() { }
 
 public:
+	/// Invalid property ID.
+	static const uint4 InvalidID = static_cast<uint4>(-1);
+
 	/// Gets the number of properties.
 	virtual uint4 GetPropertyCount() const = 0;
 	/// Gets the ID of the given property.
@@ -73,12 +80,103 @@ public:
 	template <class Value>
 	LEAN_INLINE bool GetProperty(uint4 id, Value *values, size_t count) const { return GetProperty(id, typeid(Value), values, count); }
 
+	/// Adds a property listener.
+	virtual void AddPropertyListener(PropertyListener *listener) = 0;
+	/// Removes a property listener.
+	virtual void RemovePropertyListener(PropertyListener *pListener) = 0;
+
 	/// Gets the type index.
-	virtual const TypeIndex* GetTypeIndex() const = 0;
+	virtual const TypeIndex* GetPropertyTypeIndex() const = 0;
+};
+
+/// Simple property listener callback implementation.
+class PropertyListenerCollection
+{
+private:
+	typedef std::forward_list<PropertyListener*> listener_list;
+	listener_list m_listeners;
+
+public:
+	/// Constructor.
+	BE_CORE_API PropertyListenerCollection();
+	/// Does nothing.
+	LEAN_INLINE PropertyListenerCollection(const PropertyListenerCollection&) { }
+	/// Destructor.
+	BE_CORE_API ~PropertyListenerCollection();
+
+	/// Does nothing.
+	LEAN_INLINE PropertyListenerCollection& operator =(const PropertyListenerCollection&) { return *this; }
+
+	/// Adds a property listener.
+	BE_CORE_API void AddPropertyListener(PropertyListener *listener);
+	/// Removes a property listener.
+	BE_CORE_API void RemovePropertyListener(PropertyListener *pListener);
+	/// Calls all property listeners.
+	BE_CORE_API void EmitPropertyChanged(const PropertyProvider &provider) const;
+
+	/// Checks, if any property listeners have been registered, before making the call.
+	LEAN_INLINE void RarelyEmitPropertyChanged(const PropertyProvider &provider) const
+	{
+		if (!m_listeners.empty())
+			EmitPropertyChanged(provider);
+	}
+};
+
+/// Simple property listener callback implementation.
+template <class Interface = PropertyProvider>
+class LEAN_INTERFACE PropertyFeedbackProvider : public Interface
+{
+private:
+	PropertyListenerCollection m_listeners;
+
+protected:
+	PropertyFeedbackProvider& operator =(const PropertyFeedbackProvider&) { return *this; }
+	~PropertyFeedbackProvider() throw() { }
+
+public:
+	/// Adds a property listener.
+	void AddPropertyListener(PropertyListener *listener) { m_listeners.AddPropertyListener(listener); }
+	/// Removes a property listener.
+	void RemovePropertyListener(PropertyListener *pListener) { m_listeners.RemovePropertyListener(pListener); }
+	
+	/// Checks, if any property listeners have been registered, before making the call.
+	LEAN_INLINE void EmitPropertyChanged() const { m_listeners.RarelyEmitPropertyChanged(*this); }
+};
+
+/// Generic property provider base class.
+template <class Interface = PropertyProvider>
+class LEAN_INTERFACE OptionalPropertyProvider : public PropertyFeedbackProvider<Interface>
+{
+protected:
+	OptionalPropertyProvider& operator =(const OptionalPropertyProvider&) { return *this; }
+	~OptionalPropertyProvider() throw() { }
+
+public:
+	/// Gets the number of properties.
+	virtual uint4 GetPropertyCount() const { return 0; }
+	/// Gets the ID of the given property.
+	virtual uint4 GetPropertyID(const utf8_ntri &name) const { return InvalidID; }
+	/// Gets the name of the given property.
+	virtual utf8_ntr GetPropertyName(uint4 id) const { return utf8_ntr(""); }
+	/// Gets the type of the given property.
+	virtual PropertyDesc GetPropertyDesc(uint4 id) const { return PropertyDesc(); }
+
+	/// Sets the given (raw) values.
+	virtual bool SetProperty(uint4 id, const std::type_info &type, const void *values, size_t count) { return false; }
+	/// Gets the given number of (raw) values.
+	virtual bool GetProperty(uint4 id, const std::type_info &type, void *values, size_t count) const { return false; }
+
+	/// Visits a property for modification.
+	virtual bool WriteProperty(uint4 id, PropertyVisitor &visitor, bool bWriteOnly = true) { return false; }
+	/// Visits a property for reading.
+	virtual bool ReadProperty(uint4 id, PropertyVisitor &visitor) const { return false; }
+
+	/// Gets the type index.
+	virtual const TypeIndex* GetPropertyTypeIndex() const { return nullptr; }
 };
 
 /// Enhanced generic property provider base class.
-class EnhancedPropertyProvider : public PropertyProvider
+class LEAN_INTERFACE EnhancedPropertyProvider : public PropertyProvider
 {
 protected:
 	EnhancedPropertyProvider& operator =(const EnhancedPropertyProvider&) { return *this; }

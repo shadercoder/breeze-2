@@ -345,7 +345,7 @@ void beCore::Job::Impl::RunChildren()
 // A child has terminated.
 LEAN_INLINE void beCore::Job::Impl::ChildTerminated(Impl *pChild)
 {
-	// Detatch resetting parent LAST (parent implicitly locks job)
+	// Detach resetting parent LAST (parent implicitly locks job)
 	lean::atomic_set(pChild->m_pNextSibling, nullptr);
 	lean::atomic_set(pChild->m_pParent, nullptr);
 

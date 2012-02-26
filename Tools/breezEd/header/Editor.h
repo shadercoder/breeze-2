@@ -17,7 +17,7 @@ private:
 	lean::scoped_ptr<DocumentManager> m_pDocumentManager;
 	lean::scoped_ptr<MainWindow> m_pMainWindow;
 	lean::scoped_ptr<DeviceManager> m_pDeviceManager;
-	
+
 public:
 	/// Constructor.
 	Editor();

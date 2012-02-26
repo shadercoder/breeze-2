@@ -6,6 +6,8 @@
 #include "beEntitySystem/beSimulationSerializer.h"
 #include "beEntitySystem/beSimulation.h"
 
+#include "beEntitySystem/beSimulationSerialization.h"
+
 #include "beEntitySystem/beControllerSerialization.h"
 #include "beEntitySystem/beControllerSerializer.h"
 
@@ -33,6 +35,13 @@ SimulationSerializer::~SimulationSerializer()
 {
 }
 
+/// Creates a simulation object from the given parameters.
+lean::resource_ptr<Simulation, true> SimulationSerializer::Create(const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const
+{
+	// TODO
+	return nullptr;
+}
+
 // Loads a simulation from the given xml node.
 lean::resource_ptr<Simulation, true> SimulationSerializer::Load(const rapidxml::xml_node<lean::utf8_t> &node, 
 	beCore::ParameterSet &parameters, SerializationQueue<LoadJob> &queue) const
@@ -41,5 +50,28 @@ lean::resource_ptr<Simulation, true> SimulationSerializer::Load(const rapidxml::
 	ControllerDrivenSerializer<Simulation>::Load(pSimulation, node, parameters, queue);
 	return pSimulation.transfer();
 }
+
+namespace
+{
+
+// Plugin class.
+struct SimulationSerialization
+{
+	SimulationSerializer Serializer;
+
+	SimulationSerialization()
+		: Serializer( Simulation::GetSimulationType() )
+	{
+		GetSimulationSerialization().AddSerializer(&Serializer);
+	}
+	~SimulationSerialization()
+	{
+		GetSimulationSerialization().RemoveSerializer(&Serializer);
+	}
+};
+
+const SimulationSerialization SimulationSerialization;
+
+} // namespace
 
 } // namespace

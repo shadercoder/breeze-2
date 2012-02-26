@@ -104,6 +104,28 @@ public:
 	BE_ENTITYSYSTEM_API void Load(const rapidxml::xml_node<lean::utf8_t> &root, beCore::ParameterSet &parameters);
 };
 
+/// Instantiate this to add a serializer of the given type to the global queue of save tasks.
+template <class SaveTask>
+struct SaveTaskPlugin
+{
+	/// Adds a global save task of the given type.
+	SaveTaskPlugin()
+	{
+		GetSaveTasks().AddSerializationJob( new SaveTask() );
+	}
+};
+
+/// Instantiate this to add a loader of the given type to the global queue of load tasks.
+template <class LoadTask>
+struct LoadTaskPlugin
+{
+	/// Adds a global load task of the given type.
+	LoadTaskPlugin()
+	{
+		GetLoadTasks().AddSerializationJob( new LoadTask() );
+	}
+};
+
 } // namespace
 
 #endif
