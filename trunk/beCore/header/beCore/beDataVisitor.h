@@ -12,7 +12,7 @@ namespace beCore
 {
 
 /// Data visitor.
-class DataVisitor
+class LEAN_INTERFACE DataVisitor
 {
 protected:
 	~DataVisitor() { }

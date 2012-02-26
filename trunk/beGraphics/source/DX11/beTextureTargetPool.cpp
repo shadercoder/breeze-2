@@ -222,7 +222,7 @@ lean::com_ptr<const ColorTextureTarget, true> TextureTargetPool::AcquireColorTex
 		pTarget = new (m_colorTargetPool.allocate()) ColorTextureTarget(
 				desc, pTexture,
 				pTextureView, pTargetView,
-				pTargetViews.detatch()
+				pTargetViews.detach()
 			);
 		lean::push_sorted(m_colorTargets, pTarget, TargetPointerDescCompare());
 	}
@@ -364,7 +364,7 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 		pTarget = new (m_depthStencilTargetPool.allocate()) DepthStencilTextureTarget(
 				desc, pTexture,
 				pTextureView, pTargetView,
-				pTargetViews.detatch()
+				pTargetViews.detach()
 			);
 		lean::push_sorted(m_depthStencilTargets, pTarget, TargetPointerDescCompare());
 	}

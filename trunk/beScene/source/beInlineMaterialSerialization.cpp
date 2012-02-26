@@ -114,15 +114,7 @@ public:
 	}
 };
 
-struct MaterialLoaderPlugin
-{
-	MaterialLoaderPlugin()
-	{
-		beEntitySystem::GetLoadTasks().AddSerializationJob( new MaterialLoader() );
-	}
-};
-
-const MaterialLoaderPlugin MaterialLoaderPlugin;
+const beEntitySystem::LoadTaskPlugin<MaterialLoader> MaterialLoaderPlugin;
 
 } // namespace
 

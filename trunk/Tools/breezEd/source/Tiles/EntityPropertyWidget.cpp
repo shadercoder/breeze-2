@@ -6,6 +6,8 @@
 #include "Binders/EntityPropertyBinder.h"
 #include <QtGui/QStandardItemModel>
 
+#include <QtCore/QTimer>
+
 #include "Utility/Strings.h"
 #include "Utility/Checked.h"
 
@@ -13,7 +15,7 @@ namespace
 {
 
 /// Updates the widget from the given selection.
-void updateFromSelection(Ui::EntityPropertyWidget &widget, const EntityPropertyWidget::entity_vector &selection)
+void updateFromSelection(Ui::EntityPropertyWidget &widget, const EntityPropertyWidget::entity_vector &selection, SceneDocument *pDocument, QTimer &timer)
 {
 	QString selectionText = (selection.empty())
 		? EntityPropertyWidget::tr("<none>")
@@ -29,7 +31,8 @@ void updateFromSelection(Ui::EntityPropertyWidget &widget, const EntityPropertyW
 
 	if  (!selection.empty())
 	{
-		EntityPropertyBinder *pBinder = new EntityPropertyBinder(selection[0], widget.propertyView, nullptr);
+		EntityPropertyBinder *pBinder = new EntityPropertyBinder(selection[0], pDocument, widget.propertyView, nullptr);
+		checkedConnect(&timer, SIGNAL(timeout()), pBinder, SLOT(updateProperties()));
 		pBinder->setParent(widget.propertyView->model());
 	}
 }
@@ -40,11 +43,15 @@ void updateFromSelection(Ui::EntityPropertyWidget &widget, const EntityPropertyW
 EntityPropertyWidget::EntityPropertyWidget(Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
 	: QWidget(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
+	m_pTimer( new QTimer(this) ),
 	m_pDocument()
 {
 	ui.setupUi(this);
 
-	updateFromSelection(ui, m_selection);
+	m_pTimer->setInterval(300);
+	m_pTimer->start();
+
+	updateFromSelection(ui, m_selection, m_pDocument, *m_pTimer);
 }
 
 // Destructor.
@@ -56,11 +63,20 @@ EntityPropertyWidget::~EntityPropertyWidget()
 void EntityPropertyWidget::setActiveSelection(SceneDocument *pDocument)
 {
 	if (pDocument)
-		m_selection = pDocument->selection();
-	else
-		m_selection.clear();
+	{
+		const SceneDocument::EntityVector &selection = pDocument->selection();
 
-	updateFromSelection(ui, m_selection);
+		if (selection != m_selection)
+		{
+			m_selection = pDocument->selection();
+			updateFromSelection(ui, m_selection, pDocument, *m_pTimer);
+		}
+	}
+	else if (!m_selection.empty())
+	{
+		m_selection.clear();
+		updateFromSelection(ui, m_selection, nullptr, *m_pTimer);
+	}
 }
 
 // Sets the undo stack of the given document.

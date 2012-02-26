@@ -45,13 +45,13 @@ public:
 	BE_ENTITYSYSTEM_API virtual ~Entity();
 
 	/// Sets the cell.
-	LEAN_INLINE void SetCell(const ivec3 &cell) { m_cell = cell; }
+	LEAN_INLINE void SetCell(const ivec3 &cell) { m_cell = cell; EmitPropertyChanged(); }
 	/// Sets the (cell-relative) position.
-	LEAN_INLINE void SetPosition(const fvec3 &position) { m_position = position; }
+	LEAN_INLINE void SetPosition(const fvec3 &position) { m_position = position; EmitPropertyChanged(); }
 	/// Sets the orientation.
-	LEAN_INLINE void SetOrientation(const fmat3 &orientation) { m_orientation = orientation; }
+	LEAN_INLINE void SetOrientation(const fmat3 &orientation) { m_orientation = orientation; EmitPropertyChanged(); }
 	/// Sets the scaling.
-	LEAN_INLINE void SetScaling(const fvec3 &scaling) { m_scaling = scaling; }
+	LEAN_INLINE void SetScaling(const fvec3 &scaling) { m_scaling = scaling; EmitPropertyChanged(); }
 
 	/// Gets the cell.
 	LEAN_INLINE const ivec3& GetCell() const { return m_cell; }

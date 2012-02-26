@@ -22,6 +22,9 @@ public:
 	/// Destructor.
 	BE_ENTITYSYSTEM_API ~SimulationSerializer();
 
+	/// Creates a simulation object from the given parameters.
+	BE_ENTITYSYSTEM_API virtual lean::resource_ptr<Simulation, true> Create(const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const;
+
 	/// Loads a simulation from the given xml node.
 	BE_ENTITYSYSTEM_API virtual lean::resource_ptr<Simulation, true> Load(const rapidxml::xml_node<lean::utf8_t> &node,
 		beCore::ParameterSet &parameters, SerializationQueue<LoadJob> &queue) const;

@@ -13,7 +13,7 @@ private:
 
 public:
 	/// Constructor.
-	BrowseWidget(QWidget *pParent = nullptr , Qt::WFlags flags = 0);
+	BrowseWidget(QWidget *pParent = nullptr, Qt::WFlags flags = 0);
 	/// Destructor.
 	~BrowseWidget();
 
@@ -27,6 +27,10 @@ public Q_SLOTS:
 Q_SIGNALS:
 	/// Browser requested.
 	void browse();
+	/// Path editing started.
+	void editingStarted();
+	/// Path editing finished.
+	void editingFinished();
 };
 
 #endif

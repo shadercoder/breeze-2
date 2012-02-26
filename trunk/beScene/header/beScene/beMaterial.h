@@ -7,6 +7,7 @@
 
 #include "beScene.h"
 #include <beCore/beShared.h>
+#include <beCore/beReflectedComponent.h>
 #include <beGraphics/beEffect.h>
 #include <beGraphics/beEffectCache.h>
 #include <beGraphics/beSetup.h>
@@ -20,16 +21,20 @@ namespace beScene
 class MaterialCache;
 
 /// Material class.
-class Material : public lean::nonassignable, public beCore::Resource
+class Material : public lean::nonassignable, public beCore::OptionalPropertyProvider< beCore::RigidReflectedComponent<> >, public beCore::Resource
 {
 public:
 	struct Technique;
 	typedef std::vector<Technique> technique_vector;
 
+	struct Setup;
+	typedef std::vector<Setup> setup_vector;
+
 private:
 	lean::resource_ptr<const beGraphics::Effect> m_pEffect;
 	
 	technique_vector m_techniques;
+	setup_vector m_setups;
 
 	MaterialCache *m_pCache;
 
@@ -51,11 +56,19 @@ public:
 	/// Gets the input signature of this pass.
 	BE_SCENE_API const char* GetInputSignature(uint4 &size, uint4 techniqueIdx, uint4 passID = 0) const;
 
+	/// Gets the number of child components.
+	BE_SCENE_API uint4 GetComponentCount() const;
+	/// Gets the name of the n-th child component.
+	BE_SCENE_API beCore::Exchange::utf8_string GetComponentName(uint4 idx) const;
+	/// Gets the n-th child property provider, nullptr if not a property provider.
+	BE_SCENE_API const PropertyProvider* GetPropertyProvider(uint4 idx) const;
+	/// Gets the n-th reflected child component, nullptr if not reflected.
+	BE_SCENE_API const ReflectedComponent* GetReflectedComponent(uint4 idx) const;
+
 	/// Gets the effect.
 	LEAN_INLINE const beGraphics::Effect* GetEffect() const { return m_pEffect; }
 	/// Gets the material cache.
 	LEAN_INLINE MaterialCache* GetCache() const { return m_pCache; }
-
 };
 
 } // namespace

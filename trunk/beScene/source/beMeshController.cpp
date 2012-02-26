@@ -32,6 +32,8 @@
 #include <beMath/beMatrix.h>
 #include <beMath/beSphere.h>
 
+#include <lean/io/numeric.h>
+
 namespace beScene
 {
 
@@ -244,6 +246,8 @@ uint4 MeshController::AddMeshWithMaterial(const Mesh *mesh, const RenderableMate
 	if (m.bRendered)
 		UpdateInScenery(m);
 
+	EmitPropertyChanged();
+
 	return subsetIdx;
 }
 
@@ -262,6 +266,8 @@ void MeshController::SetMeshWithMaterial(uint4 subsetIdx, const Mesh *mesh, cons
 		// Update renderable
 		if (m.bRendered)
 			UpdateInScenery(m);
+
+		EmitPropertyChanged();
 	}
 	else
 		AddMeshWithMaterial(mesh, pMaterial);
@@ -283,9 +289,14 @@ void MeshController::RemoveMeshWithMaterial(const Mesh *pMesh, const RenderableM
 		else
 			++it;
 	
-	// Update renderable
-	if (bRemoved && m.bRendered)
-		UpdateInScenery(m);
+	if (bRemoved)
+	{
+		// Update renderable
+		if (m.bRendered)
+			UpdateInScenery(m);
+
+		EmitPropertyChanged();
+	}
 }
 
 // Removes the n-th subset.
@@ -298,6 +309,8 @@ void MeshController::RemoveSubset(uint4 subsetIdx)
 		// Update renderable
 		if (m.bRendered)
 			UpdateInScenery(m);
+
+		EmitPropertyChanged();
 	}
 }
 
@@ -312,6 +325,8 @@ void MeshController::SetMaterial(const RenderableMaterial *pMaterial)
 		// Update renderable
 		if (m.bRendered)
 			UpdateInScenery(m);
+
+		EmitPropertyChanged();
 	}
 }
 
@@ -494,6 +509,64 @@ void MeshController::Detach()
 		m.pScenery->RemoveRenderable(this);
 		m.bRendered = false;
 	}
+}
+
+// Gets the number of child components.
+uint4 MeshController::GetComponentCount() const
+{
+	return static_cast<uint4>( m.subsets.size() );
+}
+
+// Gets the name of the n-th child component.
+beCore::Exchange::utf8_string MeshController::GetComponentName(uint4 idx) const
+{
+	beCore::Exchange::utf8_string name;
+
+	// TODO: Read mesh names somewhere? (Mesh compound!) :-/
+
+	// Ugly default names
+	utf8_string num = lean::int_to_string(idx);
+	name.reserve(lean::ntarraylen("Subset ") + num.size());
+	name.append("Subset ");
+	name.append(num.c_str(), num.c_str() + num.size());
+	
+	return name;
+	}
+
+	// Gets the n-th reflected child component, nullptr if not reflected.
+	const beCore::ReflectedComponent* MeshController::GetReflectedComponent(uint4 idx) const
+	{
+		if (idx < m.subsets.size())
+	{
+		const RenderableMaterial *pMaterial = m.subsets[idx].pMaterial;
+		return (pMaterial) ? pMaterial->GetMaterial() : nullptr;
+	}
+	else
+		return nullptr;
+}
+
+// Gets the type of the n-th child component.
+beCore::Exchange::utf8_string MeshController::GetComponentType(uint4 idx) const
+{
+	return "RenderableMaterial";
+}
+
+// Gets the n-th component.
+lean::cloneable_obj<lean::any, true> MeshController::GetComponent(uint4 idx) const
+{
+	return lean::any_value<RenderableMaterial*>( const_cast<RenderableMaterial*>( GetMaterial(idx) ) );
+}
+
+// Returns true, if the n-th component can be replaced.
+bool MeshController::IsComponentReplaceable(uint4 idx) const
+{
+	return true;
+}
+
+// Sets the n-th component.
+void MeshController::SetComponent(uint4 idx, const lean::any &pComponent)
+{
+	SetMaterial( idx, any_cast<RenderableMaterial*>(pComponent) );
 }
 
 // Gets the controller type.

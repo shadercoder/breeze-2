@@ -7,9 +7,11 @@
 #include <beEntitySystem/beController.h>
 
 #include "Utility/Strings.h"
+#include "Utility/Checked.h"
 
 // Constructor.
 EntityPropertyBinder::EntityPropertyBinder(beEntitySystem::Entity *pEntity,
+										   SceneDocument *pDocument,
 										   QTreeView *pTree, QStandardItem *pParentItem,
 										   QObject *pParent)
 	: QObject(pParent),
@@ -18,6 +20,8 @@ EntityPropertyBinder::EntityPropertyBinder(beEntitySystem::Entity *pEntity,
 	// Create new empty model, if none to be extended
 	if (!pParentItem)
 	{
+		GenericPropertyBinder::setupTree(*pTree);
+
 		// WARNING: Don't attach to binder, binder might be attached to model
 		QStandardItemModel *pModel = new QStandardItemModel(pTree);
 		GenericPropertyBinder::setupModel(*pModel);
@@ -31,7 +35,8 @@ EntityPropertyBinder::EntityPropertyBinder(beEntitySystem::Entity *pEntity,
 	pParentItem->appendRow(pEntityItem);
 	GenericPropertyBinder::fillRow(*pEntityItem);
 	
-	new GenericPropertyBinder(m_pEntity, pTree, pEntityItem, this);
+	GenericPropertyBinder *pEntityBinder = new GenericPropertyBinder(m_pEntity, m_pEntity, pDocument, pTree, pEntityItem, this);
+	checkedConnect(this, SIGNAL(propagateUpdateProperties()), pEntityBinder, SLOT(updateProperties()));
 	pTree->expand( pEntityItem->index() );
 
 	beEntitySystem::Entity::Controllers controllers = m_pEntity->GetControllers();
@@ -46,7 +51,8 @@ EntityPropertyBinder::EntityPropertyBinder(beEntitySystem::Entity *pEntity,
 		pParentItem->appendRow( pControllerItem );
 		GenericPropertyBinder::fillRow(*pControllerItem);
 
-		new GenericPropertyBinder(pController, pTree, pControllerItem, this);
+		GenericPropertyBinder *pBinder = new GenericPropertyBinder(pController, pController, pDocument, pTree, pControllerItem, this);
+		checkedConnect(this, SIGNAL(propagateUpdateProperties()), pBinder, SLOT(updateProperties()));
 		pTree->expand( pControllerItem->index() );
 	}
 }
@@ -54,4 +60,10 @@ EntityPropertyBinder::EntityPropertyBinder(beEntitySystem::Entity *pEntity,
 // Destructor.
 EntityPropertyBinder::~EntityPropertyBinder()
 {
+}
+
+// Check for property changes.
+void EntityPropertyBinder::updateProperties()
+{
+	Q_EMIT propagateUpdateProperties();
 }

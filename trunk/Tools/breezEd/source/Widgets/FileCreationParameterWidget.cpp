@@ -7,6 +7,7 @@
 
 #include <beCore/beExchangeContainers.h>
 
+#include "Utility/Strings.h"
 #include "Utility/Checked.h"
 
 // Constructor.
@@ -42,7 +43,7 @@ QString FileCreationParameterWidget::onBrowse(const QString &path)
 void FileCreationParameterWidget::setParameters(beCore::Parameters &parameters, SceneDocument &document) const
 {
 	// TODO: Improve parameter set?
-	parameters.SetValue( parameters.Add( m_name.toUtf8().data() ), beCore::Exchange::utf8_string( m_pWidget->path().toUtf8().data() ) );
+	parameters.SetValue( parameters.Add( toUtf8Range(m_name) ), toUtf8Range(m_pWidget->path()).get().to<beCore::Exchange::utf8_string>() );
 }
 
 // Gets the widget.

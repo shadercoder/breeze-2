@@ -350,26 +350,6 @@ void MeshControllerSerializer::Save(const beEntitySystem::Controller *pSerializa
 	}
 }
 
-namespace
-{
-
-// Plugin class.
-struct MeshControllerSerialization
-{
-	const MeshControllerSerializer Serializer;
-
-	MeshControllerSerialization()
-	{
-		beEntitySystem::GetControllerSerialization().AddSerializer(&Serializer);
-	}
-	~MeshControllerSerialization()
-	{
-		beEntitySystem::GetControllerSerialization().RemoveSerializer(&Serializer);
-	}
-};
-
-const MeshControllerSerialization MeshControllerSerialization;
-
-} // namespace
+const beEntitySystem::ControllerSerializationPlugin<MeshControllerSerializer> MeshControllerSerialization;
 
 } // namespace

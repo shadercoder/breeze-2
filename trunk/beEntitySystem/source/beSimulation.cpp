@@ -26,9 +26,9 @@ void Simulation::SetName(const utf8_ntri &name)
 }
 
 // Gets the simulation type.
-beCore::Exchange::utf8_string Simulation::GetType() const
+utf8_ntr Simulation::GetSimulationType()
 {
-	return "Simulation";
+	return utf8_ntr("Simulation");
 }
 
 } // namespace

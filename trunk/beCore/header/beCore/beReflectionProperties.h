@@ -41,7 +41,7 @@ struct ReflectionProperty : public lean::ui_property_desc<ReflectionPropertyProv
 	/// Constructs an empty property description.
 	ReflectionProperty() { }
 	/// Constructs a property description from the given parameters.
-	ReflectionProperty(const utf8_ntri &name, uint4 typeID, const lean::property_type &type, size_t count, int widget)
+	ReflectionProperty(const utf8_ntri &name, uint4 typeID, const lean::property_type_info &type, size_t count, int widget)
 		: base_type(name, type, count, widget),
 		typeID(typeID) { }
 };
@@ -50,14 +50,14 @@ struct ReflectionProperty : public lean::ui_property_desc<ReflectionPropertyProv
 template <class Type>
 LEAN_INLINE ReflectionProperty MakeReflectionProperty(const utf8_ntri &name, int widget, size_t count)
 {
-	return ReflectionProperty(name, RegisterType<Type>(), lean::get_property_type<Type>(), count, widget);
+	return ReflectionProperty(name, RegisterType<Type>(), lean::get_property_type_info<Type>(), count, widget);
 }
 
 /// Constructs a property description from the given parameters.
 template <class Type, size_t Count>
 LEAN_INLINE ReflectionProperty MakeReflectionProperty(const utf8_ntri &name, int widget)
 {
-	return ReflectionProperty(name, RegisterType<Type>(), lean::get_property_type<Type>(), Count, widget);
+	return ReflectionProperty(name, RegisterType<Type>(), lean::get_property_type_info<Type>(), Count, widget);
 }
 
 namespace Impl
@@ -82,7 +82,7 @@ LEAN_INLINE ReflectionProperty MakeReflectionProperty(const utf8_ntri &name, int
 {
 	return ReflectionProperty(name,
 		RegisterType< typename Impl::DeducePropertyElements<Type>::type >(),
-		lean::get_property_type< typename Impl::DeducePropertyElements<Type>::type >(),
+		lean::get_property_type_info< typename Impl::DeducePropertyElements<Type>::type >(),
 		typename Impl::DeducePropertyElements<Type>::count, widget);
 }
 

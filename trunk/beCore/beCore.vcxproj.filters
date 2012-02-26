@@ -156,6 +156,18 @@
     <ClInclude Include="header\beCore\beOpaqueHandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\beCore\beComponentTypes.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beComponentReflector.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\beReflectedComponent.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beCore\bePropertyListener.h">
+      <Filter>Header Files\Reflection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\beCore.cpp">
@@ -188,9 +200,6 @@
     <ClCompile Include="source\beFileWatch.cpp">
       <Filter>Source Files\Resource Management</Filter>
     </ClCompile>
-    <ClCompile Include="source\beGenericSerialization.cpp">
-      <Filter>Source Files\Serialization</Filter>
-    </ClCompile>
     <ClCompile Include="source\bePropertySerialization.cpp">
       <Filter>Source Files\Serialization</Filter>
     </ClCompile>
@@ -214,6 +223,12 @@
     </ClCompile>
     <ClCompile Include="source\beFileContentProvider.cpp">
       <Filter>Source Files\Resource Management</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beComponentTypes.cpp">
+      <Filter>Source Files\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="source\bePropertyProvider.cpp">
+      <Filter>Source Files\Reflection</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

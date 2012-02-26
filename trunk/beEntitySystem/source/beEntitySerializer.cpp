@@ -85,7 +85,7 @@ namespace
 // Plugin class.
 struct EntitySerialization
 {
-	const EntitySerializer Serializer;
+	EntitySerializer Serializer;
 
 	EntitySerialization()
 		: Serializer( Entity::GetEntityType() )

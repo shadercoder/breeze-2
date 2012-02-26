@@ -40,7 +40,7 @@ PropertyDesc ReflectionPropertyProvider::GetPropertyDesc(uint4 id) const
 	if (id < properties.size())
 	{
 		const ReflectionProperty &property = properties[id];
-		desc = PropertyDesc(property.type->type_info(), property.count, property.typeID);
+		desc = PropertyDesc(*property.type_info, property.count, property.typeID);
 	}
 
 	return desc;
@@ -56,7 +56,11 @@ bool ReflectionPropertyProvider::SetProperty(uint4 id, const std::type_info &typ
 		const ReflectionProperty &desc = properties[id];
 
 		if (desc.setter.valid())
-			return (*desc.setter)(*this, type, values, desc.count);
+			if ((*desc.setter)(*this, type, values, desc.count))
+			{
+				EmitPropertyChanged();
+				return true;
+			}
 	}
 
 	return false;
@@ -88,24 +92,33 @@ bool ReflectionPropertyProvider::WriteProperty(uint4 id, PropertyVisitor &visito
 
 		if (desc.setter.valid())
 		{
-			const lean::type_info &typeInfo = desc.type->type_info();
-			size_t size = desc.type->size(desc.count);
+			const lean::property_type &propertyType = *desc.type_info->property_type;
+			size_t size = propertyType.size(desc.count);
 
 			static const size_t StackBufferSize = 16 * 8;
 			char stackBuffer[StackBufferSize];
 
 			lean::scoped_property_data<lean::deallocate_property_data_policy> bufferGuard(
-				desc.type, (size <= StackBufferSize) ? nullptr : desc.type->allocate(desc.count), desc.count );
+				propertyType, (size <= StackBufferSize) ? nullptr : propertyType.allocate(desc.count), desc.count );
 			void *values = (bufferGuard.data()) ? bufferGuard.data() : stackBuffer;
 
-			desc.type->construct(values, desc.count);
-			lean::scoped_property_data<lean::destruct_property_data_policy> valueGuard(desc.type, values, desc.count);
+			propertyType.construct(values, desc.count);
+			lean::scoped_property_data<lean::destruct_property_data_policy> valueGuard(propertyType, values, desc.count);
 
-			if (bWriteOnly || (*desc.getter)(*this, typeInfo.type, values, desc.count))
+			if (bWriteOnly || (*desc.getter)(*this, desc.type_info->type, values, desc.count))
 			{
-				bool bModified = visitor.Visit(*this, id, PropertyDesc(typeInfo, desc.count, desc.typeID), values);
+				bool bModified = visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.typeID), values);
 
-				return !bModified || (*desc.setter)(*this, typeInfo.type, values, desc.count);
+				if (bModified)
+				{
+					if ((*desc.setter)(*this, desc.type_info->type, values, desc.count))
+					{
+						EmitPropertyChanged();
+						return true;
+					}
+				}
+				
+				return !bModified;
 			}
 		}
 	}
@@ -123,23 +136,23 @@ bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor
 
 		if (desc.getter.valid())
 		{
-			size_t size = desc.type->size(desc.count);
-			const lean::type_info &typeInfo = desc.type->type_info();
+			const lean::property_type &propertyType = *desc.type_info->property_type;
+			size_t size = propertyType.size(desc.count);
 
 			static const size_t StackBufferSize = 16 * 8;
 			char stackBuffer[StackBufferSize];
 
 			lean::scoped_property_data<lean::deallocate_property_data_policy> bufferGuard(
-				desc.type, (size <= StackBufferSize) ? nullptr : desc.type->allocate(desc.count), desc.count );
+				propertyType, (size <= StackBufferSize) ? nullptr : propertyType.allocate(desc.count), desc.count );
 			void *values = (bufferGuard.data()) ? bufferGuard.data() : stackBuffer;
 
-			desc.type->construct(values, desc.count);
-			lean::scoped_property_data<lean::destruct_property_data_policy> valueGuard(desc.type, values, desc.count);
+			propertyType.construct(values, desc.count);
+			lean::scoped_property_data<lean::destruct_property_data_policy> valueGuard(propertyType, values, desc.count);
 
-			if ((*desc.getter)(*this, typeInfo.type, values,  desc.count))
+			if ((*desc.getter)(*this, desc.type_info->type, values,  desc.count))
 			{
 				// WARNING: Call read-only overload!
-				visitor.Visit(*this, id, PropertyDesc(typeInfo, desc.count, desc.typeID), const_cast<const void*>(values));
+				visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.typeID), const_cast<const void*>(values));
 				return true;
 			}
 		}
@@ -149,7 +162,7 @@ bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor
 }
 
 /// Gets the type index.
-const TypeIndex* ReflectionPropertyProvider::GetTypeIndex() const
+const TypeIndex* ReflectionPropertyProvider::GetPropertyTypeIndex() const
 {
 	return &beCore::GetTypeIndex();
 }

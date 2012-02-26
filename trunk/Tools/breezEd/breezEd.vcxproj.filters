@@ -515,6 +515,36 @@
     <ClCompile Include="GeneratedFiles\Release\moc_ShapeCreationParameterWidget.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_TreeViewEx.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_TreeViewEx.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ItemDelegateEx.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ItemDelegateEx.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ComponentSelectorWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ComponentSelectorWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\ComponentSelectorWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Commands\ChangeProperty.cpp">
+      <Filter>Source Files\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Utility\Utility.cpp">
+      <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Commands\SetComponent.cpp">
+      <Filter>Source Files\Commands</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
@@ -618,6 +648,15 @@
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_ShapeImportDialog.h">
       <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ComponentSelectorWidget.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\ChangeProperty.h">
+      <Filter>Header Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\SetComponent.h">
+      <Filter>Header Files\Commands</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -811,6 +850,18 @@
       <Filter>Header Files\Windows</Filter>
     </CustomBuild>
     <CustomBuild Include="header\Widgets\ShapeCreationParameterWidget.h">
+      <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Utility\TreeViewEx.h">
+      <Filter>Header Files\Utility</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Utility\ItemDelegateEx.h">
+      <Filter>Header Files\Utility</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\ComponentSelectorWidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\ComponentSelectorWidget.h">
       <Filter>Header Files\Widgets</Filter>
     </CustomBuild>
   </ItemGroup>

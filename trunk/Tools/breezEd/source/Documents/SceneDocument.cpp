@@ -24,7 +24,7 @@ SceneDocument::SceneDocument(const QString &type, const QString &file, bool bLoa
 	: AbstractDocument(type, file, pEditor, pParent),
 	m_pUndoStack( new QUndoStack(this) ),
 	m_pWorld( nullptr ),
-	m_pSimulation( lean::new_resource<beEntitySystem::Simulation>( toUtf8(name()) ) ),
+	m_pSimulation( lean::new_resource<beEntitySystem::Simulation>( toUtf8Range(name()) ) ),
 	m_pRenderer( beScene::CreateEffectDrivenRenderer(editor()->deviceManager()->graphicsDevice()) ),
 	m_pRenderContext( beScene::CreateRenderContext(m_pRenderer->ImmediateContext()) ),
 	m_pScene( lean::new_resource<beScene::SceneController>(m_pSimulation, m_pRenderer->Pipeline(), m_pRenderContext) ),
@@ -46,7 +46,7 @@ SceneDocument::SceneDocument(const QString &type, const QString &file, bool bLoa
 	if (bLoadFromFile)
 	{
 		beCore::ParameterSet serializationParams( getSerializationParameters() );
-		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8(name()), toUtf8(file), serializationParams );
+		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8Range(name()), toUtf8Range(file), serializationParams );
 
 		setChanged(false);
 
@@ -54,7 +54,7 @@ SceneDocument::SceneDocument(const QString &type, const QString &file, bool bLoa
 	}
 	else
 	{
-		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8(name()) ); 
+		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8Range(name()) ); 
 		setChanged(true);
 	}
 }
@@ -155,7 +155,7 @@ bool SceneDocument::saveAs(const QString &file)
 		if (!directory.exists())
 			QFileInfo(directory.path()).dir().mkdir(directory.dirName());
 
-		m_pWorld->Serialize( toUtf8(file) );
+		m_pWorld->Serialize( toUtf8Range(file) );
 	}
 	catch (...)
 	{
@@ -175,7 +175,7 @@ bool SceneDocument::saveAs(const QString &file)
 // Sets the document name.
 void SceneDocument::setName(const QString &name)
 {
-	m_pWorld->SetName(name.toUtf8().data());
+	m_pWorld->SetName( toUtf8Range(name) );
 	m_pSimulation->SetName(m_pWorld->GetName());
 	setChanged(true);
 

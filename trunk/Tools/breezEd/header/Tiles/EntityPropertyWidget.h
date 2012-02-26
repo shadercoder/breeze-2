@@ -5,6 +5,8 @@
 
 #include <beEntitySystem/beEntity.h>
 
+class QTimer;
+
 class Editor;
 class SceneDocument;
 class AbstractDocument;
@@ -22,6 +24,8 @@ private:
 	Ui::EntityPropertyWidget ui;
 
 	Editor *m_pEditor;
+
+	QTimer *m_pTimer;
 
 	SceneDocument *m_pDocument;
 	entity_vector m_selection;
