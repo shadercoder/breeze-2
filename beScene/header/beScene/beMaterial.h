@@ -60,8 +60,6 @@ public:
 	BE_SCENE_API uint4 GetComponentCount() const;
 	/// Gets the name of the n-th child component.
 	BE_SCENE_API beCore::Exchange::utf8_string GetComponentName(uint4 idx) const;
-	/// Gets the n-th child property provider, nullptr if not a property provider.
-	BE_SCENE_API const PropertyProvider* GetPropertyProvider(uint4 idx) const;
 	/// Gets the n-th reflected child component, nullptr if not reflected.
 	BE_SCENE_API const ReflectedComponent* GetReflectedComponent(uint4 idx) const;
 

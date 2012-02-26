@@ -491,6 +491,48 @@ const TextureView* Setup::GetTexture(uint4 id) const
 		: nullptr;
 }
 
+// Gets the number of child components.
+uint4 Setup::GetComponentCount() const
+{
+	return GetTextureCount();
+}
+
+// Gets the name of the n-th child component.
+beCore::Exchange::utf8_string Setup::GetComponentName(uint4 idx) const
+{
+	return GetTextureName(idx).to<beCore::Exchange::utf8_string>();
+}
+
+// Gets the n-th reflected child component, nullptr if not reflected.
+const beCore::ReflectedComponent* Setup::GetReflectedComponent(uint4 idx) const
+{
+	return nullptr;
+}
+
+// Gets the type of the n-th child component.
+beCore::Exchange::utf8_string Setup::GetComponentType(uint4 idx) const
+{
+	return "Texture";
+}
+
+// Gets the n-th component.
+lean::cloneable_obj<lean::any, true> Setup::GetComponent(uint4 idx) const
+{
+	return lean::any_value<beGraphics::TextureView*>( const_cast<beGraphics::DX11::TextureView*>( GetTexture(idx) ) );
+}
+
+// Returns true, if the n-th component can be replaced.
+bool Setup::IsComponentReplaceable(uint4 idx) const
+{
+	return true;
+}
+
+// Sets the n-th component.
+void Setup::SetComponent(uint4 idx, const lean::any &pComponent)
+{
+	SetTexture(idx, lean::any_cast<beGraphics::TextureView*>(pComponent));
+}
+
 } // namespace
 
 } // namespace

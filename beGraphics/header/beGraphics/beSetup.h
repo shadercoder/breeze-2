@@ -7,7 +7,7 @@
 
 #include "beGraphics.h"
 #include <beCore/beShared.h>
-#include <beCore/bePropertyProvider.h>
+#include <beCore/beReflectedComponent.h>
 #include "beTextureProvider.h"
 #include "beDeviceContext.h"
 #include "beEffect.h"
@@ -16,7 +16,7 @@ namespace beGraphics
 {
 
 /// Setup interface.
-class Setup : public beCore::Resource, public beCore::PropertyProvider, public TextureProvider, public Implementation
+class Setup : public beCore::Resource, public beCore::ReflectedComponent, public TextureProvider, public Implementation
 {
 protected:
 	LEAN_INLINE Setup& operator =(const Setup&) { return *this; }

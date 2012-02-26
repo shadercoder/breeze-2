@@ -140,6 +140,23 @@ public:
 	/// Gets the given texture.
 	BE_GRAPHICS_DX11_API const TextureView* GetTexture(uint4 id) const;
 
+	/// Gets the number of child components.
+	BE_GRAPHICS_DX11_API uint4 GetComponentCount() const;
+	/// Gets the name of the n-th child component.
+	BE_GRAPHICS_DX11_API beCore::Exchange::utf8_string GetComponentName(uint4 idx) const;
+	/// Gets the n-th reflected child component, nullptr if not reflected.
+	BE_GRAPHICS_DX11_API const beCore::ReflectedComponent* GetReflectedComponent(uint4 idx) const;
+
+	/// Gets the type of the n-th child component.
+	BE_GRAPHICS_DX11_API beCore::Exchange::utf8_string GetComponentType(uint4 idx) const;
+	/// Gets the n-th component.
+	BE_GRAPHICS_DX11_API lean::cloneable_obj<lean::any, true> GetComponent(uint4 idx) const;
+
+	/// Returns true, if the n-th component can be replaced.
+	BE_GRAPHICS_DX11_API bool IsComponentReplaceable(uint4 idx) const;
+	/// Sets the n-th component.
+	BE_GRAPHICS_DX11_API void SetComponent(uint4 idx, const lean::any &pComponent);
+
 	/// Gets the effect.
 	LEAN_INLINE const Effect* GetEffect() const { return m_pEffect; }
 

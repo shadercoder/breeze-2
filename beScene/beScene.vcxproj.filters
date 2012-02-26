@@ -482,5 +482,8 @@
     <ClCompile Include="source\beEffectComponent.cpp">
       <Filter>Source Files\Material</Filter>
     </ClCompile>
+    <ClCompile Include="source\beTextureComponent.cpp">
+      <Filter>Source Files\Material</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

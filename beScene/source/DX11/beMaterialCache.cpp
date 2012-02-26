@@ -148,6 +148,9 @@ beScene::Material* MaterialCache::SetMaterialName(const lean::utf8_ntri &nameRan
 	{
 		itMaterial->second.pMaterial = pMaterial;
 
+		// Link back to material info
+		m->materialInfo[itMaterial->second.pMaterial] = &itMaterial->second;
+
 		// Notify dependent listeners
 		m->dependencies.DependencyChanged(
 			itMaterial->second.dependency,
