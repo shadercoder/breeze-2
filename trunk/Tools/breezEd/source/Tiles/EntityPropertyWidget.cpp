@@ -83,18 +83,12 @@ void EntityPropertyWidget::setActiveSelection(SceneDocument *pDocument)
 void EntityPropertyWidget::setDocument(AbstractDocument *pDocument)
 {
 	if (m_pDocument)
-	{
 		disconnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(setActiveSelection(SceneDocument*)));
-		disconnect(m_pDocument, SIGNAL(documentClosing(AbstractDocument*, bool)), this, SLOT(setDocument()));
-	}
 
 	m_pDocument = qobject_cast<SceneDocument*>(pDocument);
 
 	if (m_pDocument)
-	{
-		checkedConnect(m_pDocument, SIGNAL(documentClosing(AbstractDocument*, bool)), this, SLOT(setDocument()));
 		checkedConnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(setActiveSelection(SceneDocument*)));
-	}
 
 	setActiveSelection(m_pDocument);
 }

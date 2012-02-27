@@ -28,7 +28,7 @@ public:
 
 public Q_SLOTS:
 	/// Sets the current document.
-	void setDocument(AbstractDocument *pDocument = nullptr);
+	void setDocument(AbstractDocument *pDocument);
 
 	/// Creates an entity.
 	void createEntity();

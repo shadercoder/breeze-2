@@ -455,6 +455,12 @@ void MainWindow::documentActivated(QMdiSubWindow *pWindow)
 // Keeps track of document life time.
 void MainWindow::documentClosing(AbstractDocument *pDocument)
 {
+	if (pDocument == m_pDocument)
+	{
+		m_pDocument = nullptr;
+		Q_EMIT documentChanged(nullptr);
+	}
+
 	Q_EMIT documentClosed(pDocument);
 
 	document_mode_map::iterator itDocumentMode = m_documentModes.find(pDocument);

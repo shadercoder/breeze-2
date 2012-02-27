@@ -14,8 +14,6 @@ class UndoHistoryWidget : public QWidget
 private:
 	Ui::UndoHistoryWidget ui;
 
-	AbstractDocument *m_pDocument;
-
 public:
 	/// Constructor.
 	UndoHistoryWidget(QWidget *pParent = nullptr, Qt::WFlags flags = 0);
@@ -29,9 +27,9 @@ public:
 
 public Q_SLOTS:
 	/// Sets the undo stack.
-	void setUndoStack(QUndoStack *pStack = nullptr);
+	void setUndoStack(QUndoStack *pStack);
 	/// Sets the undo stack of the given document.
-	void setDocument(AbstractDocument *pDocument = nullptr);
+	void setDocument(AbstractDocument *pDocument);
 };
 
 #endif

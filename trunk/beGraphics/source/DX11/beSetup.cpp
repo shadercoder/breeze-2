@@ -500,7 +500,15 @@ uint4 Setup::GetComponentCount() const
 // Gets the name of the n-th child component.
 beCore::Exchange::utf8_string Setup::GetComponentName(uint4 idx) const
 {
-	return GetTextureName(idx).to<beCore::Exchange::utf8_string>();
+	beCore::Exchange::utf8_string name;
+
+	utf8_ntr textureName = GetTextureName(idx);
+	name.reserve(textureName.size() + lean::ntarraylen(" (Texture)"));
+
+	name.append(textureName.c_str(), textureName.size());
+	name.append(" (Texture)", lean::ntarraylen(" (Texture)"));
+
+	return name;
 }
 
 // Gets the n-th reflected child component, nullptr if not reflected.

@@ -38,7 +38,7 @@ public:
 
 public Q_SLOTS:
 	/// Sets the undo stack of the given document.
-	void setDocument(AbstractDocument *pDocument = nullptr);
+	void setDocument(AbstractDocument *pDocument);
 	/// Sets the active selection of the given document.
 	void setActiveSelection(SceneDocument *pDocument);
 };

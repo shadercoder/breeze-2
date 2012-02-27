@@ -193,7 +193,7 @@ EntityBuilderWidget::EntityBuilderWidget(Editor *pEditor, QWidget *pParent, Qt::
 
 	checkedConnect(ui.createButton, SIGNAL(pressed()), this, SLOT(createEntity()), Qt::QueuedConnection);
 
-	setDocument();
+	setDocument(nullptr);
 }
 
 // Destructor.
@@ -204,13 +204,7 @@ EntityBuilderWidget::~EntityBuilderWidget()
 // Sets the current document.
 void EntityBuilderWidget::setDocument(AbstractDocument *pDocument)
 {
-	if (m_pDocument)
-		disconnect(m_pDocument, SIGNAL(documentClosing(AbstractDocument*, bool)), this, SLOT(setDocument()));
-
 	m_pDocument = qobject_cast<SceneDocument*>(pDocument);
-
-	if (m_pDocument)
-		checkedConnect(m_pDocument, SIGNAL(documentClosing(AbstractDocument*, bool)), this, SLOT(setDocument()));
 
 	ui.createButton->setEnabled(m_pDocument != nullptr);
 }
