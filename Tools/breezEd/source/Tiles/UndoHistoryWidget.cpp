@@ -7,8 +7,7 @@
 
 // Constructor.
 UndoHistoryWidget::UndoHistoryWidget(QWidget *pParent, Qt::WFlags flags)
-	: QWidget(pParent, flags),
-	m_pDocument()
+	: QWidget(pParent, flags)
 {
 	ui.setupUi(this);
 
@@ -24,9 +23,6 @@ UndoHistoryWidget::~UndoHistoryWidget()
 // Sets the undo stack.
 void UndoHistoryWidget::setUndoStack(QUndoStack *pStack)
 {
-	if (m_pDocument)
-		disconnect(m_pDocument, SIGNAL(documentClosing(AbstractDocument*, bool)), this, SLOT(setDocument()));
-
 	ui.undoView->setStack(pStack);
 }
 
@@ -34,10 +30,6 @@ void UndoHistoryWidget::setUndoStack(QUndoStack *pStack)
 void UndoHistoryWidget::setDocument(AbstractDocument *pDocument)
 {
 	setUndoStack( (pDocument) ? pDocument->undoStack() : nullptr );
-	m_pDocument = pDocument;
-
-	if (m_pDocument)
-		checkedConnect(m_pDocument, SIGNAL(documentClosing(AbstractDocument*, bool)), this, SLOT(setDocument()));
 }
 
 // Gets the undo stack.
