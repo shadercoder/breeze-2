@@ -61,7 +61,7 @@ struct Vertex
 	float2 TexCoord	: TexCoord;
 
 	IF_NORMALMAP(
-		float3 Tangent	: Tangent;
+		float4 Tangent	: Tangent;
 	)
 };
 
@@ -72,7 +72,7 @@ struct Pixel
 	float2 TexCoord		: TexCoord1;
 	
 	IF_NORMALMAP(
-		float3 Tangent		: TexCoord2;
+		float4 Tangent	: TexCoord2;
 	)
 };
 
@@ -86,7 +86,8 @@ Pixel VSMain(Vertex v)
 	o.TexCoord = v.TexCoord * TextureRepeat;
 
 	IF_NORMALMAP(
-		o.Tangent = mul(v.Tangent, (float3x3) World);
+		o.Tangent.xyz = mul(v.Tangent.xyz, (float3x3) World);
+		o.Tangent.w = v.Tangent.w;
 	)
 	
 	return o;
@@ -107,17 +108,6 @@ float3 DecodeNormal(float3 n)
 
 GeometryOutput PSGeometry(Pixel p) // , uint primID : SV_PrimitiveID
 {
-	float3 normal = p.NormalDepth.xyz;
-	
-	IF_NORMALMAP(
-		float3 tangent = p.Tangent;
-		float3 bitangent = cross(normal, tangent);
-		
-		normal = mul( DecodeNormal(NormalTexture.Sample(LinearSampler, p.TexCoord).xyz), float3x3(tangent, bitangent, normal) );
-	)
-	
-	normal = normalize(normal);
-
 	float4 diffuse = DiffuseColor;
 	diffuse.xyz *= FromSRGB(DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz);
 
@@ -126,15 +116,21 @@ GeometryOutput PSGeometry(Pixel p) // , uint primID : SV_PrimitiveID
 		specular.xyz *= SpecularTexture.Sample(LinearSampler, p.TexCoord).xyz;
 	)
 
-//	diffuse = float4(
-//		fmod(primID * 5333, 331) / 331, // fmod(primID * 134581, 13) / 13
-//		fmod(primID * 7573, 307) / 307, // fmod(primID * 52361, 17) / 17
-//		fmod(primID * 6733, 373) / 373, // fmod(primID * 331, 11) / 11
-//		1.99999f );
+	float3 normal = normalize(p.NormalDepth.xyz);
+	
+	IF_NORMALMAP(
+		float3 bitangent = normalize( cross(normal, p.Tangent.xyz) );
+		float3 tangent = cross(bitangent, normal);
 
-//	if (p.NormalDepth.w != p.DepthC)
-//	if (frac(p.Position.x) != 0.5f || frac(p.Position.y) != 0.5)
-//		diffuse = float4(1, 0, 1, 1.9999f);
+		// Texture might be flipped
+		bitangent *= -sign(p.Tangent.w);
+
+		normal = mul(
+				DecodeNormal( NormalTexture.Sample(LinearSampler, p.TexCoord).xyz ),
+				float3x3(tangent, bitangent, normal)
+			);
+		normal = normalize(normal);
+	)
 
 	return ReturnGeometry(p.NormalDepth.w, normal, diffuse, specular);
 }

@@ -93,9 +93,9 @@ uint4 GetVertexAttributes(const aiMesh &mesh, uint4 flags)
 		vertexAttributes |= beScene::MeshVertexAttributes::TexCoord;
 
 	if (mesh.HasTangentsAndBitangents() && (flags & MeshWriteFlags::Tangents))
-		vertexAttributes |= beScene::MeshVertexAttributes::Tangent;
+		vertexAttributes |= beScene::MeshVertexAttributes::Tangent | beScene::MeshVertexAttributes::Handedness;
 	if (mesh.HasTangentsAndBitangents() && (flags & MeshWriteFlags::BiTangents))
-		vertexAttributes |= beScene::MeshVertexAttributes::BiTangent;
+		vertexAttributes |= beScene::MeshVertexAttributes::BiTangent | beScene::MeshVertexAttributes::Handedness;
 
 	return vertexAttributes;
 }
@@ -132,15 +132,19 @@ uint4 WriteVertexDescChunk(lean::raw_file &file, uint4 vertexAttributes)
 				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::TexCoord, 0, beGraphics::Format::R32G32F)
 			);
 
+	beGraphics::Format::T handednessFormat = (vertexAttributes & beScene::MeshVertexAttributes::Handedness)
+		? beGraphics::Format::R32G32B32A32F
+		: beGraphics::Format::R32G32B32F;
+
 	if (vertexAttributes & beScene::MeshVertexAttributes::Tangent)
 		descChunk.Size += WriteData<beScene::MeshDataVertexElementDesc>(
 				file,
-				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::Tangent, 0, beGraphics::Format::R32G32B32F)
+				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::Tangent, 0, handednessFormat)
 			);
 	if (vertexAttributes & beScene::MeshVertexAttributes::BiTangent)
 		descChunk.Size += WriteData<beScene::MeshDataVertexElementDesc>(
 				file,
-				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::BiTangent, 0, beGraphics::Format::R32G32B32F)
+				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::BiTangent, 0, handednessFormat)
 			);
 
 	metaSize += EndChunk(file, descChunk);
@@ -181,10 +185,25 @@ uint4 WriteVertexChunk(lean::raw_file &file, const aiMesh &mesh, uint4 vertexAtt
 			vertexChunk.Size += WriteData<float>(file, mesh.mTextureCoords[0][i].y);
 		}
 
-		if (vertexAttributes & beScene::MeshVertexAttributes::Tangent)
-			vertexChunk.Size += WriteData<aiVector3D>(file, mesh.mTangents[i]);
-		if (vertexAttributes & beScene::MeshVertexAttributes::BiTangent)
-			vertexChunk.Size += WriteData<aiVector3D>(file, mesh.mBitangents[i]);
+		if (vertexAttributes & beScene::MeshVertexAttributes::TangentFrame)
+		{
+			float handedness = (mesh.mTangents[i] ^ mesh.mBitangents[i]) * mesh.mNormals[i];
+			
+			if (vertexAttributes & beScene::MeshVertexAttributes::Tangent)
+			{
+				vertexChunk.Size += WriteData<aiVector3D>(file, mesh.mTangents[i]);
+				
+				if (vertexAttributes & beScene::MeshVertexAttributes::Handedness)
+					vertexChunk.Size += WriteData<float>(file, handedness);
+			}
+			if (vertexAttributes & beScene::MeshVertexAttributes::BiTangent)
+			{
+				vertexChunk.Size += WriteData<aiVector3D>(file, mesh.mBitangents[i]);
+
+				if (vertexAttributes & beScene::MeshVertexAttributes::Handedness)
+					vertexChunk.Size += WriteData<float>(file, handedness);
+			}
+		}
 	}
 
 	metaSize += EndChunk(file, vertexChunk);

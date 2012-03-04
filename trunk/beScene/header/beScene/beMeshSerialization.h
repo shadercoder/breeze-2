@@ -61,12 +61,13 @@ namespace MeshVertexAttributes
 		Color = 1 << 2,		///< Vertex color.
 		TexCoord = 1 << 3,	///< Vertex tex coord.
 		
-		Tangent = 1 << 4,	///< Vertex tangent.
-		BiTangent = 1 << 5,	///< Vertex bi-tangent.
+		Tangent = 1 << 4,		///< Vertex tangent.
+		BiTangent = 1 << 5,		///< Vertex bi-tangent.
+		Handedness = 1 << 6,	///< Vertex tangent includes handedness.
 
-		TangentFrame = Normal | Tangent,			///< Normal-tangent frame.
-		BiTangentFrame = Normal | BiTangent,		///< Normal-bi-tangent frame.
-		FullFrame = Normal | Tangent | BiTangent	///< Full normal-tangent-bi-tangent frame.
+		TangentFrame = Normal | Tangent | Handedness,		///< Normal-tangent frame.
+		BiTangentFrame = Normal | BiTangent | Handedness,	///< Normal-bi-tangent frame.
+		FullFrame = Normal | Tangent | BiTangent			///< Full normal-tangent-bi-tangent frame.
 	};
 }
 

@@ -359,12 +359,11 @@ void SpotLightController::Flush()
 
 	m_pEntity->SetScaling( beMath::vec(radius, radius, m_range) );
 
-	beMath::fsphere3 bounds(
+/*	beMath::fsphere3 bounds(
 			beMath::nvec<3>(2, 0.5f * m_range),
 			sqrt(radius * radius + 0.25f * m_range * m_range)
 		);
-	SetLocalBounds( beMath::fsphere3( beMath::fvec3(), m_range) );
-
+*/
 	m_bConstantsChanged = true;
 
 	MeshController::Flush();
