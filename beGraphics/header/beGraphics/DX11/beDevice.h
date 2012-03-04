@@ -44,6 +44,9 @@ public:
 	/// Presents the rendered image.
 	BE_GRAPHICS_DX11_API void Present(bool bVSync = false);
 	
+	/// Resizes the swap chain buffers.
+	BE_GRAPHICS_DX11_API void Resize(uint4 width, uint4 height);
+
 	/// Gets the swap chain description.
 	BE_GRAPHICS_DX11_API SwapChainDesc GetDesc() const;
 	

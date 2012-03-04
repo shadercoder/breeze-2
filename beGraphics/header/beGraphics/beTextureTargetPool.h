@@ -65,6 +65,11 @@ class TextureTargetPool : public lean::noncopyable_chain<beCore::Resource>, publ
 public:
 	virtual ~TextureTargetPool() throw() { }
 
+	/// Resets the usage statistics.
+	virtual void ResetUsage() = 0;
+	/// Releases unused targets.
+	virtual void ReleaseUnused() = 0;
+
 	/// Acquires a color texture target according to the given description.
 	virtual lean::com_ptr<const ColorTextureTarget, true> AcquireColorTextureTarget(const TextureTargetDesc &desc) = 0;
 	/// Acquires a depth-stencil texture target according to the given description.

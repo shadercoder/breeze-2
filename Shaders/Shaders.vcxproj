@@ -25,6 +25,7 @@
     <None Include="..\Bin\Data\Effects\2.0\Lights\DirectionalLight.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\PointLight.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\SpotLight.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Materials\BumpTextured.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Grass.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Marker.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Grass.fx" />
@@ -33,6 +34,7 @@
     <None Include="..\Bin\Data\Effects\2.0\Materials\Path\StretchTextured.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Textured.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Simple.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Materials\SpecTextured.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\StretchTextured.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Textured.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Engine\Feedback.fx" />

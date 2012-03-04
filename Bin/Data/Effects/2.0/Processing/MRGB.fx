@@ -29,7 +29,10 @@ Pixel VSQuad(Vertex v)
 	return p;
 }
 
-SamplerState DefaultSampler;
+SamplerState DefaultSampler
+{
+	Filter = MIN_MAG_MIP_POINT;
+};
 
 float max4(float4 value)
 {

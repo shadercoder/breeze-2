@@ -19,7 +19,7 @@ public:
 	static const char *const DocumentTypeName;
 
 	/// Constructor.
-	CodeDocument(const QString &type, const QString &file, Editor *pEditor, QObject *pParent = nullptr);
+	CodeDocument(const QString &type, const QString &name, const QString &file, Editor *pEditor, QObject *pParent = nullptr);
 	/// Destructor.
 	virtual ~CodeDocument();
 

@@ -32,7 +32,7 @@ inline lean::resource_ptr<beEntitySystem::Entity, true> createWidgetMesh(uint4 I
 	// TODO: NO HARD-CODED PATHS
 	lean::resource_ptr<beScene::Material> pMaterial = lean::new_resource<beScene::Material>(
 			resources.EffectCache()->GetEffect("Materials/Widget.fx", nullptr, 0),
-			*resources.EffectCache()
+			*resources.EffectCache(), *resources.TextureCache()
 		);
 
 	// TODO: How to handle material layers?

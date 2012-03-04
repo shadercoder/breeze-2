@@ -112,7 +112,7 @@ lean::resource_ptr<Material, true> LoadMaterial(const rapidxml::xml_node<lean::u
 
 	pMaterial = lean::new_resource<Material>(
 			LoadEffect(node, effects),
-			effects, pCache
+			effects, textures, pCache
 		);
 
 	const beGraphics::Effect *pMainEffect = pMaterial->GetEffect();

@@ -14,6 +14,8 @@
 #include <lean/containers/any.h>
 #include <lean/smart/cloneable_obj.h>
 
+#include "beExchangeContainers.h"
+
 namespace beCore
 {
 
@@ -32,6 +34,19 @@ struct ComponentParameter
 /// Component parameter range.
 typedef lean::range<const ComponentParameter*> ComponentParameters;
 
+/// Component state enumeration.
+namespace ComponentState
+{
+	// Enum.
+	enum T
+	{
+		NotSet,		/// Null.
+		Unknown,	/// Valid, but unmanaged.
+		Named,		/// Valid & named.
+		Filed		/// Valid & filed.
+	};
+}
+
 /// Provides generic access to abstract component types.
 class ComponentReflector
 {
@@ -48,7 +63,7 @@ public:
 	virtual lean::cloneable_obj<lean::any, true> CreateComponent(const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const { return nullptr; }
 
 	/// Returns true, if the component can be named.
-	virtual bool HasName() const { return false; }
+	virtual bool HasName() const { return CanBeNamed(); }
 	/// Returns true, if the component can be named.
 	virtual bool CanBeNamed() const { return false; }
 	/// Gets a component by name.
@@ -60,6 +75,9 @@ public:
 	virtual utf8_ntr GetFileExtension() const { return utf8_ntr(""); }
 	/// Gets a component from the given file.
 	virtual lean::cloneable_obj<lean::any, true> GetComponent(const utf8_ntri &file, const beCore::ParameterSet &parameters) const { return nullptr; }
+
+	/// Gets the name or file of the given component.
+	virtual beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, ComponentState::T *pState = nullptr) const { return beCore::Exchange::utf8_string(); }
 
 	/// Gets the component type reflected.
 	virtual utf8_ntr GetType() const = 0;

@@ -10,6 +10,7 @@
 #include <beCore/beReflectedComponent.h>
 #include <beGraphics/beEffect.h>
 #include <beGraphics/beEffectCache.h>
+#include <beGraphics/beTextureCache.h>
 #include <beGraphics/beSetup.h>
 #include <lean/tags/noncopyable.h>
 #include <lean/smart/resource_ptr.h>
@@ -40,7 +41,7 @@ private:
 
 public:
 	/// Constructor.
-	BE_SCENE_API Material(const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache, MaterialCache *pCache = nullptr);
+	BE_SCENE_API Material(const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache, MaterialCache *pCache = nullptr);
 	/// Destructor.
 	BE_SCENE_API virtual ~Material();
 

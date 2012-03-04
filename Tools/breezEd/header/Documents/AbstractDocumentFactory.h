@@ -34,7 +34,7 @@ public:
 	virtual ~AbstractDocumentFactory() { };
 
 	/// Creates a document.
-	virtual AbstractDocument* createDocument(const QString &file, Editor *pEditor, QObject *pParent = nullptr) = 0;
+	virtual AbstractDocument* createDocument(const QString &name, const QString &file, Editor *pEditor, QObject *pParent = nullptr) = 0;
 	/// Builds a file path from the given name & directory.
 	virtual QString fileFromDir(const QString &name, const QString &path) const = 0;
 	/// Opens a document.

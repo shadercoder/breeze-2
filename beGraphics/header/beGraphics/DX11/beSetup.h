@@ -17,6 +17,8 @@
 namespace beGraphics
 {
 
+class TextureCache;
+
 namespace DX11
 {
 
@@ -100,9 +102,9 @@ private:
 
 public:
 	/// Constructor.
-	BE_GRAPHICS_DX11_API Setup(const Effect *pEffect);
+	BE_GRAPHICS_DX11_API Setup(const Effect *pEffect, beGraphics::TextureCache *pTextures);
 	/// Constructor.
-	BE_GRAPHICS_DX11_API Setup(ID3DX11Effect *pEffect);
+	BE_GRAPHICS_DX11_API Setup(ID3DX11Effect *pEffect, beGraphics::TextureCache *pTextures);
 	/// Destructor.
 	BE_GRAPHICS_DX11_API ~Setup();
 

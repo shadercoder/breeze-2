@@ -466,6 +466,24 @@ void SwapChain::Present(bool bVSync)
 	m_pSwapChain->Present(bVSync ? 1 : 0, 0);
 }
 
+// Resizes the swap chain buffers.
+void SwapChain::Resize(uint4 width, uint4 height)
+{
+	DXGI_SWAP_CHAIN_DESC descDX;
+	BE_THROW_DX_ERROR_MSG(
+		m_pSwapChain->GetDesc(&descDX),
+		"IDXGISwapChain::GetDesc()");
+	BE_THROW_DX_ERROR_MSG(
+		m_pSwapChain->ResizeBuffers(
+				descDX.BufferCount,
+				width,
+				height,
+				descDX.BufferDesc.Format,
+				descDX.Flags
+			),
+		"IDXGISwapChain::ResizeBuffers()");
+}
+
 // Gets the swap chain description.
 SwapChainDesc SwapChain::GetDesc() const
 {

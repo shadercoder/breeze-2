@@ -27,6 +27,7 @@ public:
 	/// Shader stage state mask.
 	struct ShaderStageStateMask
 	{
+		bool shaderSet;
 		uint4 constantBufferMask;
 		uint4 resourceMask;
 	};
@@ -55,6 +56,7 @@ private:
 	uint4 m_pipelineRevertMask;
 
 	lean::scoped_ptr<ResourceBindings> m_pResourceBindings;
+	uint4 m_controlPointCount;
 
 public:
 	/// Constructor.

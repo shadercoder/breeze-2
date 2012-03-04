@@ -19,6 +19,8 @@
 #include <lean/smart/scoped_ptr.h>
 #include <QtCore/QVariant>
 
+#include <lean/io/filesystem.h>
+
 #include "Utility/Strings.h"
 #include "Utility/Checked.h"
 
@@ -118,8 +120,35 @@ struct PropertyValueWriter : public beCore::DataVisitor
 	}
 };
 
+/// Gets a printable representation of the given component.
+QString getComponentValue(const beCore::ReflectedComponent &reflectedComponent, uint4 componentIdx)
+{
+	QString name;
+
+	const beCore::ComponentReflector *pReflector = beCore::GetComponentTypes().GetReflector(
+			reflectedComponent.GetComponentType(componentIdx)
+		);
+
+	if (pReflector)
+	{
+		beCore::ComponentState::T state;
+		name = toQt( pReflector->GetNameOrFile(*reflectedComponent.GetComponent(componentIdx), &state) );
+
+		if (state == beCore::ComponentState::Unknown)
+			name = GenericPropertyBinder::tr("<Internal>");
+		else if (state == beCore::ComponentState::NotSet)
+			name = GenericPropertyBinder::tr("<Not set>");
+		else if (state == beCore::ComponentState::Filed)
+			name = lean::get_stem<QString>(name);
+	}
+	else
+		name = GenericPropertyBinder::tr("<Unknown type>");
+
+	return name;
+}
+
 /// Adds the properties of the given provider.
-void AddProperties(beCore::PropertyProvider &propertyProvider, QStandardItem &parentItem)
+void addProperties(beCore::PropertyProvider &propertyProvider, QStandardItem &parentItem)
 {
 	const uint4 propertyCount = propertyProvider.GetPropertyCount();
 
@@ -172,7 +201,7 @@ void AddProperties(beCore::PropertyProvider &propertyProvider, QStandardItem &pa
 }
 
 /// Adds the child components of the given provider.
-void AddComponents(beCore::ReflectedComponent &reflectedComponent, QStandardItem &parentItem, QTreeView &tree, SceneDocument *pDocument, GenericPropertyBinder *pBinder)
+void addComponents(beCore::ReflectedComponent &reflectedComponent, QStandardItem &parentItem, QTreeView &tree, SceneDocument *pDocument, GenericPropertyBinder *pBinder)
 {
 	const uint4 componentCount = reflectedComponent.GetComponentCount();
 	
@@ -195,7 +224,7 @@ void AddComponents(beCore::ReflectedComponent &reflectedComponent, QStandardItem
 		{
 			pNameItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 
-			QStandardItem *pValueItem = new QStandardItem( "??? TODO" );
+			QStandardItem *pValueItem = new QStandardItem( getComponentValue(reflectedComponent, i) );
 			pValueItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
 			parentItem.appendRow( QList<QStandardItem*>() << pNameItem << pValueItem );
 		}
@@ -262,14 +291,14 @@ GenericPropertyBinder::GenericPropertyBinder(beCore::PropertyProvider *pProperty
 
 	// Properties
 	m_propertyStartIdx = m_pParentItem->rowCount();
-	AddProperties(*m_pPropertyProvider, *m_pParentItem);
+	addProperties(*m_pPropertyProvider, *m_pParentItem);
 	m_propertyEndIdx = m_pParentItem->rowCount();
 
 	// Components
 	m_componentStartIdx = m_pParentItem->rowCount();
 	
 	if (m_pComponent)
-		AddComponents(*m_pComponent, *m_pParentItem, *m_pTree, m_pDocument, this);
+		addComponents(*m_pComponent, *m_pParentItem, *m_pTree, m_pDocument, this);
 
 	m_componentEndIdx = m_pParentItem->rowCount();
 
@@ -346,7 +375,16 @@ void GenericPropertyBinder::updateProperties()
 		for (int row = m_componentStartIdx; row < m_componentEndIdx; ++row)
 		{
 			uint4 componentIdx = static_cast<uint4>(row - m_componentStartIdx);
+			bool bEditable = m_pComponent->IsComponentReplaceable(componentIdx);
 
+			// Update component item
+			if (bEditable)
+			{
+				QStandardItem *pComponentValue = m_pParentItem->child(row, 1);
+				pComponentValue->setText( getComponentValue(*m_pComponent, componentIdx) );
+			}
+
+			// Update component properties
 			QStandardItem *pComponentItem = m_pParentItem->child(row, 0);
 
 			GenericPropertyBinder *pChildBinder = pComponentItem->data().value<GenericPropertyBinder*>();
@@ -374,8 +412,6 @@ void GenericPropertyBinder::updateProperties()
 
 				pComponentItem->setData( QVariant::fromValue(pChildBinder) );
 			}
-
-			// TODO: Value changes
 		}
 
 		m_bPropertiesChanged = false;
@@ -471,17 +507,18 @@ void GenericPropertyBinder::startEditing(QWidget *parent, const QStyleOptionView
 				// Create editor panel (opaque for focus, mouse & eyes)
 				QFrame *editor = new QFrame(parent);
 				editor->setAttribute(Qt::WA_NoMousePropagation);
-				editor->setFocusPolicy(Qt::StrongFocus);
 				editor->setAutoFillBackground(true);
 				editor->setFrameShape(QFrame::StyledPanel);
 
 				QVBoxLayout *layout = new QVBoxLayout(editor);
 
 				// Create component editor
-				ComponentSelectorWidget *componentSelector =  new ComponentSelectorWidget(pReflector, editor);
+				ComponentSelectorWidget *componentSelector = new ComponentSelectorWidget(pReflector, m_pComponent->GetComponent(componentIdx), m_pDocument->editor(), editor);
 				layout->addWidget(componentSelector);
-
+				
 				editor->setLayout(layout);
+				editor->setFocusProxy(componentSelector);
+
 				editor->adjustSize();
 				pEditor = editor;
 			}
@@ -505,7 +542,10 @@ void GenericPropertyBinder::updateEditor(QWidget *editor, const QModelIndex &ind
 
 		// Component editors are never updated after they've been opened
 		if (m_componentStartIdx <= row && row < m_componentEndIdx)
+		{
+			editor->setFocus();
 			bHandled = true;
+		}
 	}
 }
 
@@ -564,8 +604,10 @@ void GenericPropertyBinder::updateEditorGeometry(QWidget *editor, const QStyleOp
 			int itemWidth = option.rect.width();
 			int width = (3 * editor->parentWidget()->width() + itemWidth) / 4;
 
+			QPoint editorPos(option.rect.left() - (width - itemWidth), option.rect.bottom());
+
 			// Put editor below property
-			editor->move(option.rect.left() - (width - itemWidth), option.rect.bottom());
+			editor->move( editor->mapFromGlobal( editor->parentWidget()->mapToGlobal(editorPos) ) );
 			editor->resize(width, editor->height());
 			bHandled = true;
 		}

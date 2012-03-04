@@ -40,11 +40,11 @@ struct Material::Setup
 namespace
 {
 
-void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache);
+void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache);
 
 /// Adds the given technique.
 void AddTechnique(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::Any::Setup *pSetup,
-	ID3DX11EffectTechnique *pTechniqueDX, beGraphics::EffectCache &effectCache)
+	ID3DX11EffectTechnique *pTechniqueDX, beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache)
 {
 	const char *includeEffect = "";
 
@@ -105,16 +105,16 @@ void AddTechnique(Material::technique_vector &techniques, Material::setup_vector
 			// Create new setup for material, if non existent, yet
 			if (!pNestedSetup)
 			{
-				pNestedSetup = lean::new_resource<beGraphics::Any::Setup>( &ToImpl(*pNestedEffect) );
+				pNestedSetup = lean::new_resource<beGraphics::Any::Setup>( &ToImpl(*pNestedEffect), &textureCache );
 				setups.emplace_back( pNestedSetup );
 			}
 
 			// Add single technique
-			AddTechnique(techniques, setups, pNestedEffect, pNestedSetup, pNestedTechniqueDX, effectCache);
+			AddTechnique(techniques, setups, pNestedEffect, pNestedSetup, pNestedTechniqueDX, effectCache, textureCache);
 		}
 		else
 			// Add all techniques
-			LoadTechniques(techniques, setups, pNestedEffect, effectCache); // TODO: Material sharing partly broken
+			LoadTechniques(techniques, setups, pNestedEffect, effectCache, textureCache); // TODO: Material sharing partly broken
 	}
 	else
 		// Simply add the technique
@@ -127,13 +127,13 @@ void AddTechnique(Material::technique_vector &techniques, Material::setup_vector
 }
 
 /// Loads techniques from the given effect.
-void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache)
+void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache)
 {
 	ID3DX11Effect *pEffectDX = ToImpl(*pEffect);
 
 	// Create new setup for material
-	lean::resource_ptr<beGraphics::Any::Setup> pSetup = lean::bind_resource(
-			new beGraphics::Any::Setup( &ToImpl(*pEffect) ) // TODO: Material sharing partly broken
+	lean::resource_ptr<beGraphics::Any::Setup> pSetup = lean::new_resource<beGraphics::Any::Setup>(
+			&ToImpl(*pEffect), &textureCache // TODO: Material sharing partly broken
 		);
 	setups.emplace_back( pSetup );
 
@@ -150,18 +150,18 @@ void LoadTechniques(Material::technique_vector &techniques, Material::setup_vect
 		if (!pTechniqueDX->IsValid())
 			LEAN_THROW_ERROR_MSG("ID3DX11Effect::GetTechniqueByIndex()");
 
-		AddTechnique(techniques, setups, pEffect, pSetup, pTechniqueDX, effectCache);
+		AddTechnique(techniques, setups, pEffect, pSetup, pTechniqueDX, effectCache, textureCache);
 	}
 }
 
 } // namespace
 
 // Constructor.
-Material::Material(const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache, MaterialCache *pCache)
+Material::Material(const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache, MaterialCache *pCache)
 	: m_pEffect(pEffect),
 	m_pCache(pCache)
 {
-	LoadTechniques(m_techniques, m_setups, m_pEffect, effectCache);
+	LoadTechniques(m_techniques, m_setups, m_pEffect, effectCache, textureCache);
 }
 
 // Destructor.

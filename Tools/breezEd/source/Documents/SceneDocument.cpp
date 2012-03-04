@@ -20,11 +20,11 @@
 const char *const SceneDocument::DocumentTypeName = "Scene";
 
 // Constructor.
-SceneDocument::SceneDocument(const QString &type, const QString &file, bool bLoadFromFile, Editor *pEditor, QObject *pParent)
-	: AbstractDocument(type, file, pEditor, pParent),
+SceneDocument::SceneDocument(const QString &type, const QString &name, const QString &file, bool bLoadFromFile, Editor *pEditor, QObject *pParent)
+	: AbstractDocument(type, name, file, pEditor, pParent),
 	m_pUndoStack( new QUndoStack(this) ),
 	m_pWorld( nullptr ),
-	m_pSimulation( lean::new_resource<beEntitySystem::Simulation>( toUtf8Range(name()) ) ),
+	m_pSimulation( lean::new_resource<beEntitySystem::Simulation>( toUtf8Range(name) ) ),
 	m_pRenderer( beScene::CreateEffectDrivenRenderer(editor()->deviceManager()->graphicsDevice()) ),
 	m_pRenderContext( beScene::CreateRenderContext(m_pRenderer->ImmediateContext()) ),
 	m_pScene( lean::new_resource<beScene::SceneController>(m_pSimulation, m_pRenderer->Pipeline(), m_pRenderContext) ),
@@ -46,17 +46,12 @@ SceneDocument::SceneDocument(const QString &type, const QString &file, bool bLoa
 	if (bLoadFromFile)
 	{
 		beCore::ParameterSet serializationParams( getSerializationParameters() );
-		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8Range(name()), toUtf8Range(file), serializationParams );
-
-		setChanged(false);
-
-		m_pWorld->Attach();
+		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8Range(name), toUtf8Range(file), serializationParams );
 	}
 	else
-	{
-		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8Range(name()) ); 
-		setChanged(true);
-	}
+		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8Range(name) ); 
+
+	m_pWorld->Attach();
 }
 
 // Destructor.
@@ -210,9 +205,9 @@ public:
 	virtual ~SceneDocumentFactory() { }
 
 	/// Creates a document.
-	AbstractDocument* createDocument(const QString &file, Editor *pEditor, QObject *pParent)
+	AbstractDocument* createDocument(const QString &name, const QString &file, Editor *pEditor, QObject *pParent)
 	{
-		return new SceneDocument(SceneDocument::DocumentTypeName, file, false, pEditor, pParent);
+		return new SceneDocument(SceneDocument::DocumentTypeName, name, file, false, pEditor, pParent);
 	}
 
 	/// Builds a file path from the given name & directory.
@@ -230,12 +225,10 @@ public:
 	/// Opens a document.
 	AbstractDocument* openDocument(const QString &file, Editor *pEditor, QObject *pParent)
 	{
-		std::auto_ptr<SceneDocument> pDocument( new SceneDocument(SceneDocument::DocumentTypeName, file, true, pEditor, pParent) );
+		// TODO: Load from file
+		QString name = QFileInfo(file).fileName();
 
-		// TODO: remove
-		pDocument->setName( QFileInfo(file).fileName() );
-		
-		return pDocument.release();
+		return new SceneDocument(SceneDocument::DocumentTypeName, name, file, true, pEditor, pParent);
 	}
 	
 	/// Checks if the given file may be opened using this document factory.

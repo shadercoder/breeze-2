@@ -56,7 +56,7 @@ public:
 	static const char *const DocumentTypeName;
 
 	/// Constructor.
-	SceneDocument(const QString &type, const QString &file, bool bLoadFromFile, Editor *pEditor, QObject *pParent = nullptr);
+	SceneDocument(const QString &type, const QString &name, const QString &file, bool bLoadFromFile, Editor *pEditor, QObject *pParent = nullptr);
 	/// Destructor.
 	virtual ~SceneDocument();
 

@@ -75,10 +75,11 @@ inline Type BitArrayToMask(const Element *bits, size_t bitCount)
 }
 
 /// Computes a shader stage state mask from the given DirectX 11 state masks.
-StateEffectBinderPass::ShaderStageStateMask GetShaderStageStateMask(const BYTE *constantBufferMask, const BYTE *resourceMask)
+StateEffectBinderPass::ShaderStageStateMask GetShaderStageStateMask(BYTE shaderSet, const BYTE *constantBufferMask, const BYTE *resourceMask)
 {
 	StateEffectBinderPass::ShaderStageStateMask mask;
 	
+	mask.shaderSet = (shaderSet != 0);
 	mask.constantBufferMask = BitArrayToMask<uint4>(constantBufferMask, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT);
 	mask.resourceMask = BitArrayToMask<uint4>(resourceMask, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT);
 
@@ -96,12 +97,12 @@ StateEffectBinderPass::StateMask GetStateMask(Any::API::EffectPass *pPass)
 		pPass->ComputeStateBlockMask(&stateBlock),
 		"ID3DX11EffectTechnique::ComputeStateBlockMask()" );
 
-	mask.VSMask = GetShaderStageStateMask(stateBlock.VSConstantBuffers, stateBlock.VSShaderResources);
-	mask.HSMask = GetShaderStageStateMask(stateBlock.HSConstantBuffers, stateBlock.HSShaderResources);
-	mask.DSMask = GetShaderStageStateMask(stateBlock.DSConstantBuffers, stateBlock.DSShaderResources);
-	mask.GSMask = GetShaderStageStateMask(stateBlock.GSConstantBuffers, stateBlock.GSShaderResources);
-	mask.PSMask = GetShaderStageStateMask(stateBlock.PSConstantBuffers, stateBlock.PSShaderResources);
-	mask.CSMask = GetShaderStageStateMask(stateBlock.CSConstantBuffers, stateBlock.CSShaderResources);
+	mask.VSMask = GetShaderStageStateMask(stateBlock.VS, stateBlock.VSConstantBuffers, stateBlock.VSShaderResources);
+	mask.HSMask = GetShaderStageStateMask(stateBlock.HS, stateBlock.HSConstantBuffers, stateBlock.HSShaderResources);
+	mask.DSMask = GetShaderStageStateMask(stateBlock.DS, stateBlock.DSConstantBuffers, stateBlock.DSShaderResources);
+	mask.GSMask = GetShaderStageStateMask(stateBlock.GS, stateBlock.GSConstantBuffers, stateBlock.GSShaderResources);
+	mask.PSMask = GetShaderStageStateMask(stateBlock.PS, stateBlock.PSConstantBuffers, stateBlock.PSShaderResources);
+	mask.CSMask = GetShaderStageStateMask(stateBlock.CS, stateBlock.CSConstantBuffers, stateBlock.CSShaderResources);
 
 	mask.pipelineMask = 0;
 
@@ -231,6 +232,14 @@ StateEffectBinderPass::ResourceBindings* GetResourceBindings(Any::API::Effect *p
 	return (bHasResourceBindings) ? resourceBindings.detach() : nullptr;
 }
 
+/// Gets the number of control points.
+uint4 GetControlPointCount(Any::API::EffectPass *pPass)
+{
+	int controlPoints = 0;
+	pPass->GetAnnotationByName("HSControlPoints")->AsScalar()->GetInt(&controlPoints);
+	return static_cast<uint4>(controlPoints);
+}
+
 } // namespace
 
 // Constructor.
@@ -239,7 +248,8 @@ StateEffectBinderPass::StateEffectBinderPass(Any::API::Effect *pEffect, Any::API
 	m_passID(passID),
 	m_stateMask( GetStateMask(pPass) ),
 	m_pipelineRevertMask( GetStateRevertMask(pPass) ),
-	m_pResourceBindings( GetResourceBindings(pEffect, pPass, m_stateMask) )
+	m_pResourceBindings( GetResourceBindings(pEffect, pPass, m_stateMask) ),
+	m_controlPointCount( GetControlPointCount(pPass) )
 {
 }
 
@@ -255,6 +265,7 @@ namespace
 template <class StateManager>
 void UpdateShaderState(StateManager &shaderStateManager, const StateEffectBinderPass::ShaderStageStateMask &stateMask)
 {
+	shaderStateManager.OverrideShader(stateMask.shaderSet);
 	shaderStateManager.OverrideConstantBuffers(stateMask.constantBufferMask);
 	shaderStateManager.OverrideResources(stateMask.resourceMask);
 }
@@ -320,6 +331,11 @@ bool StateEffectBinderPass::Apply(Any::StateManager& stateManager, Any::API::Dev
 #ifdef LEAN_DEBUG_BUILD
 	BE_LOG_DX_ERROR_MSG(result, "ID3DX11EffectPass::Apply()");
 #endif
+
+	if (m_controlPointCount > 0)
+		pContext->IASetPrimitiveTopology(
+				static_cast<D3D11_PRIMITIVE_TOPOLOGY>(D3D11_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST + m_controlPointCount - 1)
+			);
 	
 	return true;
 }

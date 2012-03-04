@@ -252,5 +252,11 @@
     <None Include="..\Bin\Data\Effects\2.0\Materials\Widget.fx">
       <Filter>Source Files\Materials</Filter>
     </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\BumpTextured.fx">
+      <Filter>Source Files\Materials</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\SpecTextured.fx">
+      <Filter>Source Files\Materials</Filter>
+    </None>
   </ItemGroup>
 </Project>
