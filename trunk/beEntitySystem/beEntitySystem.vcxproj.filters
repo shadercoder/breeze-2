@@ -117,6 +117,9 @@
     <ClInclude Include="header\beEntitySystem\beSerializationTasks.h">
       <Filter>Header Files\Serialization</Filter>
     </ClInclude>
+    <ClInclude Include="header\beEntitySystem\beEntityGroup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\dllmain.cpp">
@@ -184,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="source\beSerializationQueues.cpp">
       <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beEntityGroup.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

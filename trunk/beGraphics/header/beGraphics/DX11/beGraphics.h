@@ -63,7 +63,7 @@ namespace DX11
 	template <class Abstract>
 	LEAN_INLINE typename Impl::RobustToImplementationDX11<Abstract>::Type* ToImpl(Abstract *pAbstract)
 	{
-		LEAN_ASSERT(pAbstract->GetImplementationID() == DX11Implementation);
+		LEAN_ASSERT(!pAbstract || pAbstract->GetImplementationID() == DX11Implementation);
 		return static_cast< typename Impl::RobustToImplementationDX11<Abstract>::Type* >(pAbstract);
 	}
 	/// Casts the given abstract type to its DX11 implementation type, if available.

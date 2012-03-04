@@ -42,6 +42,41 @@ class TextureReflector : public beCore::ComponentReflector
 			);
 	}
 
+	/// Gets the name or file of the given component.
+	beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, beCore::ComponentState::T *pState = nullptr) const
+	{
+		beCore::Exchange::utf8_string result;
+
+		const beGraphics::TextureView *pTexture = any_cast<beGraphics::TextureView*>(component);
+
+		if (pTexture)
+		{
+			const beGraphics::TextureCache *pCache = pTexture->GetCache();
+			
+			if (pCache)
+			{
+				bool bFile = false;
+				result = pCache->GetFile(*pTexture, &bFile).to<beCore::Exchange::utf8_string>();
+
+				if (pState)
+				{
+					if (bFile)
+						*pState = beCore::ComponentState::Filed;
+					else if (!result.empty())
+						*pState = beCore::ComponentState::Named;
+					else
+						*pState = beCore::ComponentState::Unknown;
+				}
+			}
+			else if (pState)
+				*pState = beCore::ComponentState::Unknown;
+		}
+		else if (pState)
+			*pState = beCore::ComponentState::NotSet;
+
+		return result;
+	}
+
 	/// Gets the component type reflected.
 	utf8_ntr GetType() const
 	{

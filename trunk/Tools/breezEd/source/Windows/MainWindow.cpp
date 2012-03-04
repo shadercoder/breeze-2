@@ -15,6 +15,9 @@
 #include "Views/AbstractView.h"
 
 #include <QtGui/QFileDialog>
+#include <QtCore/QFileInfo>
+#include <QtCore/QDir>
+#include <QtCore/QSettings>
 
 #include "Windows/WindowsDialog.h"
 #include "Tiles/ConsoleWidget.h"
@@ -226,8 +229,9 @@ void MainWindow::newDocument()
 				try
 				{
 					// Create document
-					DocumentReference<AbstractDocument> pDocument = documentType.pFactory->createDocument(documentFile, m_pEditor, this);
-					pDocument->setName(newDocumentDialog.documentName());
+					DocumentReference<AbstractDocument> pDocument = documentType.pFactory->createDocument(
+							newDocumentDialog.documentName(), documentFile, m_pEditor, this
+						);
 					
 					addDocument(pDocument, nullptr);
 				}
@@ -253,11 +257,15 @@ void MainWindow::newDocument()
 // Opens a document.
 bool MainWindow::openDocument()
 {
+	QString location = m_pEditor->settings()->value("mainWindow/openPath", QDir::currentPath()).toString();
+
 	// Open file browser dialog
-	QString openFile = QFileDialog::getOpenFileName(this, tr("Select a file to open."), QDir::currentPath());
+	QString openFile = QFileDialog::getOpenFileName(this, tr("Select a file to open."), location);
 
 	if (!openFile.isEmpty())
 	{
+		m_pEditor->settings()->setValue("mainWindow/openPath", QFileInfo(openFile).absolutePath());
+
 		QList<DocumentType> documentTypes = m_pEditor->documentManager()->documentTypes();
 		QList<DocumentType> matchingTypes, anyTypes;
 
@@ -341,11 +349,15 @@ bool MainWindow::openDocument()
 // Opens a document of the given type.
 bool MainWindow::openDocument(const QString &documentTypeName)
 {
+	QString location = m_pEditor->settings()->value("mainWindow/openPath/" + documentTypeName, QDir::currentPath()).toString();
+
 	// Open file browser dialog
-	QString openFile = QFileDialog::getOpenFileName(m_pEditor->mainWindow(), tr("Select a '%1' file to open.").arg(documentTypeName), QDir::currentPath());
+	QString openFile = QFileDialog::getOpenFileName(m_pEditor->mainWindow(), tr("Select a '%1' file to open.").arg(documentTypeName), location);
 
 	if (!openFile.isEmpty())
 	{
+		m_pEditor->settings()->setValue("mainWindow/openPath/" + documentTypeName, QFileInfo(openFile).absolutePath());
+
 		const DocumentType &documentType = m_pEditor->documentManager()->documentType(documentTypeName);
 
 		if (documentType.valid())

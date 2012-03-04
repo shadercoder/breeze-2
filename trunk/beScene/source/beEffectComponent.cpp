@@ -42,6 +42,41 @@ class EffectReflector : public beCore::ComponentReflector
 			);
 	}
 
+	/// Gets the name or file of the given component.
+	beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, beCore::ComponentState::T *pState = nullptr) const
+	{
+		beCore::Exchange::utf8_string result;
+
+		const beGraphics::Effect *pEffect = any_cast<beGraphics::Effect*>(component);
+
+		if (pEffect)
+		{
+			const beGraphics::EffectCache *pCache = pEffect->GetCache();
+			
+			if (pCache)
+			{
+				bool bFile = false;
+				result = pCache->GetFile(*pEffect, nullptr, &bFile).to<beCore::Exchange::utf8_string>();
+
+				if (pState)
+				{
+					if (bFile)
+						*pState = beCore::ComponentState::Filed;
+					else if (!result.empty())
+						*pState = beCore::ComponentState::Named;
+					else
+						*pState = beCore::ComponentState::Unknown;
+				}
+			}
+			else if (pState)
+				*pState = beCore::ComponentState::Unknown;
+		}
+		else if (pState)
+			*pState = beCore::ComponentState::NotSet;
+
+		return result;
+	}
+
 	/// Gets the component type reflected.
 	utf8_ntr GetType() const
 	{

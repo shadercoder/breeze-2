@@ -95,6 +95,9 @@ public:
 	/// Presents the rendered image.
 	virtual void Present(bool bVSync = false) = 0;
 
+	/// Resizes the swap chain buffers.
+	virtual void Resize(uint4 width, uint4 height) = 0;
+
 	/// Gets the swap chain description.
 	virtual SwapChainDesc GetDesc() const = 0;
 };

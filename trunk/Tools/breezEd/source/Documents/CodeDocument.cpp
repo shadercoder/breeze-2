@@ -28,8 +28,8 @@ void setupPlaintextDocument(QTextDocument &document)
 } // namespace
 
 // Constructor.
-CodeDocument::CodeDocument(const QString &type, const QString &file, Editor *pEditor, QObject *pParent)
-	: AbstractDocument(type, file, pEditor, pParent)
+CodeDocument::CodeDocument(const QString &type, const QString &name, const QString &file, Editor *pEditor, QObject *pParent)
+	: AbstractDocument(type, name, file, pEditor, pParent)
 {
 	setupPlaintextDocument(m_document);
 
@@ -87,9 +87,9 @@ public:
 	virtual ~CodeDocumentFactory() { }
 
 	/// Creates a document.
-	AbstractDocument* createDocument(const QString &file, Editor *pEditor, QObject *pParent)
+	AbstractDocument* createDocument(const QString &name, const QString &file, Editor *pEditor, QObject *pParent)
 	{
-		return new CodeDocument(CodeDocument::DocumentTypeName, file, pEditor, pParent);
+		return new CodeDocument(CodeDocument::DocumentTypeName, name, file, pEditor, pParent);
 	}
 
 	/// Builds a file path from the given name & directory.
@@ -111,8 +111,9 @@ public:
 
 		if (textFile.open(QIODevice::ReadOnly))
 		{
-			std::auto_ptr<CodeDocument> pDocument( static_cast<CodeDocument*>( createDocument(file, pEditor, pParent) ) );
-			pDocument->setName( QFileInfo(file).fileName() );
+			QString name = QFileInfo(file).fileName();
+
+			std::auto_ptr<CodeDocument> pDocument( static_cast<CodeDocument*>( createDocument(name, file, pEditor, pParent) ) );
 
 			pDocument->textDocument()->setPlainText( QString::fromUtf8( textFile.readAll() ) ); 
 			pDocument->setChanged(false);

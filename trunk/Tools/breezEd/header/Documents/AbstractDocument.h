@@ -33,7 +33,7 @@ protected Q_SLOTS:
 
 public:
 	/// Constructor.
-	AbstractDocument(QString sType, const QString &file, Editor *pEditor, QObject *pParent = nullptr);
+	AbstractDocument(QString sType, const QString &name, const QString &file, Editor *pEditor, QObject *pParent = nullptr);
 	/// Destructor.
 	virtual ~AbstractDocument();
 

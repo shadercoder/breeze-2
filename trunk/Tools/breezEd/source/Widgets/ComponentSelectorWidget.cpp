@@ -8,88 +8,160 @@
 
 #include "Documents/SceneDocument.h"
 
+#include "Editor.h"
+
 #include "Utility/Strings.h"
 #include "Utility/Checked.h"
 
 namespace
 {
 
-// Adapts the UI to match the given reflector.
-void AdaptUI(ComponentSelectorWidget &selector, Ui::ComponentSelectorWidget &ui, const beCore::ComponentReflector *pReflector)
+/// Hides & removes the given widget from its layout.
+void hideAndRemove(QWidget &widget)
+{
+	widget.hide();
+
+	QWidget *pParent = widget.parentWidget();
+
+	if (pParent)
+	{
+		QLayout *pLayout = pParent->layout();
+
+		if (pLayout)
+			pLayout->removeWidget(&widget);
+	}
+}
+
+/// Recursively retrieves the last focus proxy in a chain.
+QWidget* lastFocusProxy(QWidget *widget)
+{
+	QWidget *proxy = widget, *nextProxy = widget;
+
+	while (nextProxy)
+	{
+		proxy = nextProxy;
+		nextProxy = proxy->focusProxy();
+	}
+
+	return proxy;
+}
+
+/// Recursively checks if the given widget is a child of the given parent widget.
+bool isChild(QWidget *widget, QWidget *parent)
+{
+	QWidget *intermediateParent = widget;
+
+	while (intermediateParent)
+	{
+		if (intermediateParent == parent)
+			return true;
+
+		intermediateParent = intermediateParent->parentWidget();
+	}
+
+	return false;
+}
+
+/// Adapts the UI to match the given reflector.
+void adaptUI(ComponentSelectorWidget &selector, Ui::ComponentSelectorWidget &ui, const beCore::ComponentReflector &reflector, Editor *pEditor)
 {
 	int optionCount = 0;
 
 	// Remove file option, if not available
-	if (!pReflector->CanBeLoaded())
+	if (!reflector.CanBeLoaded())
 	{
-		ui.fileButton->hide();
-		ui.formLayout->removeWidget(ui.fileButton);
-
-		ui.browseWidget->hide();
-		ui.formLayout->removeWidget(ui.browseWidget);
+		hideAndRemove(*ui.fileButton);
+		hideAndRemove(*ui.browseWidget);
 	}
 	else
 	{
-		ui.fileButton->setChecked(optionCount == 0);
+		ui.browseWidget->installFocusHandler(&selector);
+
+		if (optionCount == 0)
+		{
+			ui.fileButton->setChecked(true);
+			selector.setFocusProxy(ui.browseWidget);
+		}
 		++optionCount;
 	}
 
 	// Remove name option, if not available
-	if (!pReflector->CanBeNamed())
+	if (!reflector.HasName())
 	{
-		ui.nameButton->hide();
-		ui.formLayout->removeWidget(ui.nameButton);
-
-		ui.nameEdit->hide();
-		ui.formLayout->removeWidget(ui.nameEdit);
+		hideAndRemove(*ui.nameButton);
+		hideAndRemove(*ui.nameEdit);
 	}
 	else
 	{
-		ui.nameButton->setChecked(optionCount == 0);
+		ui.nameEdit->installEventFilter(&selector);
+
+		if (optionCount == 0)
+		{
+			ui.nameButton->setChecked(true);
+			selector.setFocusProxy(ui.nameEdit);
+		}
 		++optionCount;
 	}
 
 	// Recursively build parameter list
-	if (pReflector->CanBeCreated())
+	if (reflector.CanBeCreated())
 	{
-		beCore::ComponentParameters parameters = pReflector->GetCreationParameters();
+		QWidget *firstParameterWidget = nullptr;
+
+		beCore::ComponentParameters parameters = reflector.GetCreationParameters();
 
 		for (beCore::ComponentParameters::iterator it = parameters.begin(); it != parameters.end(); ++it)
 		{
 			QGroupBox *parameterGroup = new QGroupBox( toQt(it->Name), &selector );
 			QVBoxLayout *layout = new QVBoxLayout(parameterGroup);
 
+			QWidget *parameterWidget;
+
 			if (it->Type == "String")
-				layout->addWidget( new QLineEdit(parameterGroup) );
+			{
+				parameterWidget = new QLineEdit(parameterGroup);
+				parameterWidget->installEventFilter(&selector);
+			}
 			else
 			{
 				const beCore::ComponentReflector *pReflector = beCore::GetComponentTypes().GetReflector(it->Type);
 
 				if (pReflector)
-					layout->addWidget( new ComponentSelectorWidget(pReflector, parameterGroup) );
+				{
+					ComponentSelectorWidget *csw = new ComponentSelectorWidget(pReflector, nullptr, pEditor, parameterGroup);
+					csw->installFocusHandler(&selector);
+					parameterWidget = csw;
+				}
 				else
-					layout->addWidget( new QLabel(
+					parameterWidget = new QLabel(
 							ComponentSelectorWidget::tr("Unknown type '%1'").arg( toQt(it->Type) ),
 							parameterGroup
-						) );
+						);
 			}
+
+			layout->addWidget(parameterWidget);
+
+			if (!firstParameterWidget)
+				firstParameterWidget = parameterWidget;
 
 			parameterGroup->setLayout(layout);
 			ui.newLayout->addWidget(parameterGroup);
 		}
 
-		ui.newButton->setChecked(optionCount == 0);
+		ui.newWrapper->setFocusProxy(firstParameterWidget);
+
+		if (optionCount == 0)
+		{
+			ui.newButton->setChecked(true);
+			selector.setFocusProxy(ui.newWrapper);
+		}
 		++optionCount;
 	}
 	// Remove new option, if not available
 	else
 	{
-		ui.newButton->hide();
-		ui.formLayout->removeWidget(ui.newButton);
-
-		ui.formLayout->removeItem(ui.newLayout);
-		ui.newLayout->deleteLater();
-		ui.newLayout = nullptr;
+		hideAndRemove(*ui.newButton);
+		hideAndRemove(*ui.newWrapper);
 	}
 
 	// Don't show labels, if only one option
@@ -103,20 +175,63 @@ void AdaptUI(ComponentSelectorWidget &selector, Ui::ComponentSelectorWidget &ui,
 	selector.adjustSize();
 }
 
+/// Makes a component selector setting string.
+QString makeSettingString(const beCore::ComponentReflector &reflector, const QString &setting)
+{
+	return QString("componentSelectorWidget/%1/%2").arg(toQt(reflector.GetType())).arg(setting);
+}
+
+// Initialize the UI from current element or from the stored configuration.
+void initUI(ComponentSelectorWidget &selector, Ui::ComponentSelectorWidget &ui, const beCore::ComponentReflector &reflector, const lean::any *pCurrent, Editor &editor)
+{
+	bool bFileInitialized = false;
+	bool bNameInitialized = false;
+
+	if (pCurrent && (reflector.HasName() || reflector.CanBeLoaded()))
+	{
+		beCore::ComponentState::T state = beCore::ComponentState::Unknown;
+		QString name = toQt(reflector.GetNameOrFile(*pCurrent, &state));
+
+		if (state == beCore::ComponentState::Filed)
+		{
+			ui.browseWidget->setPath(name);
+			bFileInitialized = true;
+
+			ui.fileButton->setChecked(true);
+			selector.setFocusProxy(ui.browseWidget);
+		}
+		else if (state == beCore::ComponentState::Named)
+		{
+			ui.nameEdit->setText(name);
+			bNameInitialized = true;
+
+			ui.nameButton->setChecked(true);
+			selector.setFocusProxy(ui.nameEdit);
+		}
+	}
+
+	if (!bFileInitialized)
+		ui.browseWidget->setPath( editor.settings()->value(makeSettingString(reflector, "file"), QDir::currentPath()).toString() );
+	if (!bNameInitialized)
+		ui.nameEdit->setText( editor.settings()->value(makeSettingString(reflector, "name"), QString()).toString() );
+}
+
 } // namespace
 
 // Constructor.
-ComponentSelectorWidget::ComponentSelectorWidget(const beCore::ComponentReflector *pReflector, QWidget *pParent, Qt::WFlags flags)
+ComponentSelectorWidget::ComponentSelectorWidget(const beCore::ComponentReflector *pReflector, const lean::any *pCurrent, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
 	: QWidget(pParent, flags),
+	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
 	m_pReflector( LEAN_ASSERT_NOT_NULL(pReflector) )
 {
 	ui.setupUi(this);
 
-	AdaptUI(*this, ui, m_pReflector);
+	// Remove irrelevant controls & recursively build widget
+	adaptUI(*this, ui, *m_pReflector, m_pEditor);
 
-	checkedConnect(ui.nameEdit, SIGNAL(cursorPositionChanged(int, int)), ui.nameButton, SLOT(click()));
-	
-	checkedConnect(ui.browseWidget, SIGNAL(editingStarted()), ui.fileButton, SLOT(click()));
+	// Initialize from current element or from stored configuration
+	initUI(*this, ui, *m_pReflector, pCurrent, *m_pEditor);
+
 	checkedConnect(ui.browseWidget, SIGNAL(browse()), this, SLOT(browse()));
 }
 
@@ -125,13 +240,24 @@ ComponentSelectorWidget::~ComponentSelectorWidget()
 {
 }
 
+// Installs the given event handler on all relevant child widgets.
+void ComponentSelectorWidget::installFocusHandler(QObject *handler)
+{
+	m_focusHandlers.push_back( LEAN_ASSERT_NOT_NULL(handler) );
+}
+
 // Browser requested.
 void ComponentSelectorWidget::browse()
 {
+	QString location = ui.browseWidget->path();
+
+	if (location.isEmpty())
+		location = QDir::currentPath();
+
 	// Open either breeze mesh or importable 3rd-party mesh format
 	QString file = QFileDialog::getOpenFileName( this,
 			tr("Select a ''%1' resource").arg( toQt(m_pReflector->GetType()) ),
-			QDir::currentPath(), // TODO
+			location,
 			QString("%1 %2 (*.%3);;%4 (*.*)")
 				.arg( toQt(m_pReflector->GetType()) )
 				.arg( tr("Files") )
@@ -152,9 +278,23 @@ lean::cloneable_obj<lean::any> ComponentSelectorWidget::acquireComponent(SceneDo
 	beCore::ParameterSet parameters = document.getSerializationParameters();
 
 	if (ui.fileButton->isChecked())
-		return *m_pReflector->GetComponent( toUtf8Range(ui.browseWidget->path()), parameters );
+	{
+		QString path = ui.browseWidget->path();
+
+		if (!path.isEmpty())
+			m_pEditor->settings()->setValue(makeSettingString(*m_pReflector, "file"), path);
+
+		return *m_pReflector->GetComponent( toUtf8Range(path), parameters );
+	}
 	else if (ui.nameButton->isChecked())
-		return *m_pReflector->GetComponentByName( toUtf8Range(ui.nameEdit->text()), parameters );
+	{
+		QString name = ui.nameEdit->text();
+
+		if (!name.isEmpty())
+			m_pEditor->settings()->setValue(makeSettingString(*m_pReflector, "name"), name);
+
+		return *m_pReflector->GetComponentByName( toUtf8Range(name), parameters );
+	}
 	else
 	{
 		beCore::Parameters creationParameters;
@@ -186,4 +326,26 @@ lean::cloneable_obj<lean::any> ComponentSelectorWidget::acquireComponent(SceneDo
 
 		return *m_pReflector->CreateComponent( creationParameters, parameters );
 	}
+}
+
+// Filters focus events.
+bool ComponentSelectorWidget::eventFilter(QObject *obj, QEvent *event)
+{
+	if (event->type() == QEvent::FocusIn)
+	{
+		QWidget *widget = static_cast<QWidget*>(obj);
+
+		if (isChild(widget, ui.nameEdit))
+			ui.nameButton->setChecked(true);
+		else if (isChild(widget, ui.browseWidget))
+			ui.fileButton->setChecked(true);
+		else if (isChild(widget, ui.newWrapper))
+			ui.newButton->setChecked(true);
+
+		Q_FOREACH(QObject *handler, m_focusHandlers)
+			if (handler->eventFilter(obj, event))
+				return true;
+	}
+
+	return QObject::eventFilter(obj, event);
 }

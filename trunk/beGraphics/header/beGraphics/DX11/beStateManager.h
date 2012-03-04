@@ -47,6 +47,9 @@ namespace StateMasks
 /// Shader stage state setup.
 struct ShaderStageStateSetup
 {
+	bool ShaderSet;
+	lean::com_ptr<ID3D11DeviceChild> Shader;
+
 	static const size_t MaxConstantBuffers = (D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT < lean::size_info<uint4>::bits)
 		? D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT
 		: lean::size_info<uint4>::bits;
@@ -141,8 +144,92 @@ class StateManager;
 namespace ShaderStageStateTraits
 {
 
+template <class ID3D11ShaderInterface>
+void GetShader(ID3D11DeviceContext *pContext, ID3D11DeviceChild **ppShader);
+template <class ID3D11ShaderInterface>
+void SetShader(ID3D11DeviceContext *pContext, ID3D11DeviceChild *pShader);
+
+template <>
+LEAN_INLINE void SetShader<ID3D11VertexShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild *pShader)
+{
+	pContext->VSSetShader(static_cast<ID3D11VertexShader*>(pShader), nullptr, 0);
+}
+template <>
+LEAN_INLINE void GetShader<ID3D11VertexShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild **ppShader)
+{
+	ID3D11VertexShader *pShader;
+	pContext->VSGetShader(&pShader, nullptr, nullptr);
+	*ppShader = pShader;
+}
+
+template <>
+LEAN_INLINE void SetShader<ID3D11HullShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild *pShader)
+{
+	pContext->HSSetShader(static_cast<ID3D11HullShader*>(pShader), nullptr, 0);
+}
+template <>
+LEAN_INLINE void GetShader<ID3D11HullShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild **ppShader)
+{
+	ID3D11HullShader *pShader;
+	pContext->HSGetShader(&pShader, nullptr, nullptr);
+	*ppShader = pShader;
+}
+
+template <>
+LEAN_INLINE void SetShader<ID3D11DomainShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild *pShader)
+{
+	pContext->DSSetShader(static_cast<ID3D11DomainShader*>(pShader), nullptr, 0);
+}
+template <>
+LEAN_INLINE void GetShader<ID3D11DomainShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild **ppShader)
+{
+	ID3D11DomainShader *pShader;
+	pContext->DSGetShader(&pShader, nullptr, nullptr);
+	*ppShader = pShader;
+}
+
+template <>
+LEAN_INLINE void SetShader<ID3D11GeometryShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild *pShader)
+{
+	pContext->GSSetShader(static_cast<ID3D11GeometryShader*>(pShader), nullptr, 0);
+}
+template <>
+LEAN_INLINE void GetShader<ID3D11GeometryShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild **ppShader)
+{
+	ID3D11GeometryShader *pShader;
+	pContext->GSGetShader(&pShader, nullptr, nullptr);
+	*ppShader = pShader;
+}
+
+template <>
+LEAN_INLINE void SetShader<ID3D11PixelShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild *pShader)
+{
+	pContext->PSSetShader(static_cast<ID3D11PixelShader*>(pShader), nullptr, 0);
+}
+template <>
+LEAN_INLINE void GetShader<ID3D11PixelShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild **ppShader)
+{
+	ID3D11PixelShader *pShader;
+	pContext->PSGetShader(&pShader, nullptr, nullptr);
+	*ppShader = pShader;
+}
+
+template <>
+LEAN_INLINE void SetShader<ID3D11ComputeShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild *pShader)
+{
+	pContext->CSSetShader(static_cast<ID3D11ComputeShader*>(pShader), nullptr, 0);
+}
+template <>
+LEAN_INLINE void GetShader<ID3D11ComputeShader>(ID3D11DeviceContext *pContext, ID3D11DeviceChild **ppShader)
+{
+	ID3D11ComputeShader *pShader;
+	pContext->CSGetShader(&pShader, nullptr, nullptr);
+	*ppShader = pShader;
+}
+
 /// Shader stage traits.
 template <uint4 StateMask, ShaderStageStateSetup (StateSetup::*StageStateSetup),
+	class ID3D11ShaderInterface,
 	void (_stdcall ID3D11DeviceContext::*SetConstantBuffersP)(UINT, UINT, ID3D11Buffer *const *),
 	void (_stdcall ID3D11DeviceContext::*GetConstantBuffersP)(UINT, UINT, ID3D11Buffer**),
 	void (_stdcall ID3D11DeviceContext::*SetShaderResourcesP)(UINT, UINT, ID3D11ShaderResourceView *const *),
@@ -151,6 +238,9 @@ struct Traits
 {
 	/// State mask.
 	static const uint4 StateMask = StateMask;
+
+	/// Shader interface.
+	typedef ID3D11ShaderInterface ID3D11ShaderInterface;
 
 	/// Gets the shader state state setup from the given state setup.
 	static LEAN_INLINE ShaderStageStateSetup& GetSetup(StateSetup &setup) { return (setup.*StageStateSetup); }
@@ -161,6 +251,17 @@ struct Traits
 	static LEAN_INLINE void (_stdcall ID3D11DeviceContext::* SetConstantBuffersPtr() )(UINT, UINT, ID3D11Buffer *const *) { return SetConstantBuffersP; }
 	/// @code GetConstantBuffers()@endcode method pointer.
 	static LEAN_INLINE void (_stdcall ID3D11DeviceContext::* GetConstantBuffersPtr() )(UINT, UINT, ID3D11Buffer**) { return GetConstantBuffersP; }
+
+	/// Sets the given shader in the given device context.
+	static LEAN_INLINE void SetShader(ID3D11DeviceContext *pContext, ID3D11DeviceChild *pShader)
+	{
+		ShaderStageStateTraits::SetShader<ID3D11ShaderInterface>(pContext, pShader);
+	}
+	/// Gets the shader from the given device context.
+	static LEAN_INLINE void GetShader(ID3D11DeviceContext *pContext, ID3D11DeviceChild **ppShader)
+	{
+		ShaderStageStateTraits::GetShader<ID3D11ShaderInterface>(pContext, ppShader);
+	}
 
 	/// Sets constant buffers in the given device context.
 	static LEAN_INLINE void SetConstantBuffers(ID3D11DeviceContext *pContext, UINT offset, UINT count, ID3D11Buffer *const *buffers)
@@ -191,21 +292,27 @@ struct Traits
 };
 
 typedef Traits<StateMasks::VertexShader, &StateSetup::VSState,
+	ID3D11VertexShader,
 	&ID3D11DeviceContext::VSSetConstantBuffers, &ID3D11DeviceContext::VSGetConstantBuffers, 
 	&ID3D11DeviceContext::VSSetShaderResources, &ID3D11DeviceContext::VSGetShaderResources> VertexShader;
 typedef Traits<StateMasks::HullShader, &StateSetup::HSState,
+	ID3D11HullShader,
 	&ID3D11DeviceContext::HSSetConstantBuffers, &ID3D11DeviceContext::HSGetConstantBuffers, 
 	&ID3D11DeviceContext::HSSetShaderResources, &ID3D11DeviceContext::HSGetShaderResources> HullShader;
 typedef Traits<StateMasks::DomainShader, &StateSetup::DSState,
+	ID3D11DomainShader,
 	&ID3D11DeviceContext::DSSetConstantBuffers, &ID3D11DeviceContext::DSGetConstantBuffers, 
 	&ID3D11DeviceContext::DSSetShaderResources, &ID3D11DeviceContext::DSGetShaderResources> DomainShader;
 typedef Traits<StateMasks::GeometryShader, &StateSetup::GSState,
+	ID3D11GeometryShader,
 	&ID3D11DeviceContext::GSSetConstantBuffers, &ID3D11DeviceContext::GSGetConstantBuffers, 
 	&ID3D11DeviceContext::GSSetShaderResources, &ID3D11DeviceContext::GSGetShaderResources> GeometryShader;
 typedef Traits<StateMasks::PixelShader, &StateSetup::PSState,
+	ID3D11PixelShader,
 	&ID3D11DeviceContext::PSSetConstantBuffers, &ID3D11DeviceContext::PSGetConstantBuffers, 
 	&ID3D11DeviceContext::PSSetShaderResources, &ID3D11DeviceContext::PSGetShaderResources> PixelShader;
 typedef Traits<StateMasks::ComputeShader, &StateSetup::CSState,
+	ID3D11ComputeShader,
 	&ID3D11DeviceContext::CSSetConstantBuffers, &ID3D11DeviceContext::CSGetConstantBuffers, 
 	&ID3D11DeviceContext::CSSetShaderResources, &ID3D11DeviceContext::CSGetShaderResources> ComputeShader;
 
@@ -218,6 +325,9 @@ class ShaderStageStateManager
 private:
 	StateManager *m_pStateManager;
 	ShaderStageStateSetup *m_pSetup;
+
+	bool m_shaderInvalid;
+	bool m_shaderOverride;
 
 	uint4 m_constantBufferInvalidMask;
 	uint4 m_constantBufferOverrideMask;
@@ -242,6 +352,8 @@ public:
 		ShaderStageStateSetup *pSetup)
 			: m_pStateManager(pStateManager),
 			m_pSetup(pSetup),
+			m_shaderInvalid(),
+			m_shaderOverride(),
 			m_constantBufferInvalidMask(),
 			m_constantBufferOverrideMask(),
 			m_shaderResourceInvalidMask(),
@@ -250,6 +362,14 @@ public:
 	/// Records overridden state.
 	bool RecordOverridden()
 	{
+		m_pSetup->ShaderSet = m_shaderOverride;
+
+		if (m_shaderOverride)
+		{
+			ShaderStageTraits::GetShader(m_pStateManager->GetContext(), m_pSetup->Shader.rebind());
+			m_shaderOverride = false;
+		}
+
 		DX11::Record(*m_pSetup, m_pStateManager->GetContext(),
 			ShaderStageTraits::GetConstantBuffersPtr(),
 			ShaderStageTraits::GetShaderResourcesPtr(),
@@ -259,8 +379,23 @@ public:
 		m_constantBufferOverrideMask &= ~m_pSetup->ConstantBufferMask;
 		m_shaderResourceOverrideMask &= ~m_pSetup->ResourceMask;
 
-		return (m_pSetup->ConstantBufferMask | m_pSetup->ResourceMask) != 0;
+		return m_pSetup->ShaderSet | ((m_pSetup->ConstantBufferMask | m_pSetup->ResourceMask) != 0);
 	}
+
+	/// Invalidates the given states.
+	LEAN_INLINE void InvalidateShader(bool bInvalidate)
+	{
+		m_shaderInvalid |= bInvalidate;
+
+		if (m_shaderInvalid)
+			m_pStateManager->Invalidate(ShaderStageTraits::StateMask);
+	}
+	/// Overrides the given states.
+	LEAN_INLINE void OverrideShader(bool bOverride) { m_shaderOverride |= bOverride; InvalidateShader(bOverride); }
+	/// Gets overridden states.
+	LEAN_INLINE bool ShaderOverridden() const { return m_shaderOverride; }
+	/// Revers the given overridden states.
+	LEAN_INLINE void RevertShader(bool bRevert) { m_shaderOverride &= !bRevert; }
 
 	/// Invalidates the given states.
 	LEAN_INLINE void InvalidateConstantBuffers(uint4 bufferMask)
@@ -293,23 +428,29 @@ public:
 	LEAN_INLINE void RevertResources(uint4 resourceMask) { m_shaderResourceOverrideMask &= ~resourceMask; }
 
 	/// Invalidates the given states.
-	LEAN_INLINE void Invalidate(uint4 constantBufferMask = ShaderStageStateSetup::AllConstantBuffers,
+	LEAN_INLINE void Invalidate(bool bInvalidateShader = true,
+		uint4 constantBufferMask = ShaderStageStateSetup::AllConstantBuffers,
 		uint4 resourceMask = ShaderStageStateSetup::AllResources)
 	{
+		InvalidateShader(bInvalidateShader);
 		InvalidateConstantBuffers(constantBufferMask);
 		InvalidateResources(resourceMask);
 	}
 	/// Overrides the given states.
-	LEAN_INLINE void Override(uint4 constantBufferMask = ShaderStageStateSetup::AllConstantBuffers,
+	LEAN_INLINE void Override(bool bOverrideShader = true,
+		uint4 constantBufferMask = ShaderStageStateSetup::AllConstantBuffers,
 		uint4 resourceMask = ShaderStageStateSetup::AllResources)
 	{
+		OverrideShader(bOverrideShader);
 		OverrideConstantBuffers(constantBufferMask);
 		OverrideResources(resourceMask);
 	}
 	/// Reverts the given overridden states.
-	LEAN_INLINE void Revert(uint4 constantBufferMask = ShaderStageStateSetup::AllConstantBuffers,
+	LEAN_INLINE void Revert(bool bRevertShader = true,
+		uint4 constantBufferMask = ShaderStageStateSetup::AllConstantBuffers,
 		uint4 resourceMask = ShaderStageStateSetup::AllResources)
 	{
+		RevertShader(bRevertShader);
 		RevertConstantBuffers(constantBufferMask);
 		RevertResources(resourceMask);
 	}
@@ -317,25 +458,36 @@ public:
 	/// Resets invalid shader states in the given device context.
 	void ResetShaderState()
 	{
+		bool resetShader = m_shaderInvalid & !m_shaderOverride;
+		m_shaderInvalid &= !resetShader;
+
+		// Do not reset anything that has not been recorded
+		if (resetShader & m_pSetup->ShaderSet)
+			ShaderStageTraits::SetShader(m_pStateManager->GetContext(), m_pSetup->Shader);
+
 		uint4 resetConstantBufferMask = m_constantBufferInvalidMask & ~m_constantBufferOverrideMask;
 		m_constantBufferInvalidMask &= ~resetConstantBufferMask;
 
+		// Do not reset anything that has not been recorded
 		// WARNING: Clamp to valid range
 		resetConstantBufferMask &= m_pSetup->ConstantBufferMask & ShaderStageStateSetup::AllConstantBuffers;
 
-		for (uint4 i = 0; resetConstantBufferMask != 0; ++i, resetConstantBufferMask >>= 1)
-			if (resetConstantBufferMask & 0x1)
-				ApplyConstantBuffer(i);
+		if (resetConstantBufferMask)
+			for (uint4 i = 0; resetConstantBufferMask != 0; ++i, resetConstantBufferMask >>= 1)
+				if (resetConstantBufferMask & 0x1)
+					ApplyConstantBuffer(i);
 
 		uint4 resetShaderResourceMask = m_shaderResourceInvalidMask & ~m_shaderResourceOverrideMask;
 		m_shaderResourceInvalidMask &= ~resetShaderResourceMask;
 
+		// Do not reset anything that has not been recorded
 		// WARNING: Clamp to valid range
 		resetShaderResourceMask &= m_pSetup->ResourceMask & ShaderStageStateSetup::AllResources;
 
-		for (uint4 i = 0; resetShaderResourceMask != 0; ++i, resetShaderResourceMask >>= 1)
-			if (resetShaderResourceMask & 0x1)
-				ApplyShaderResource(i);
+		if (resetShaderResourceMask)
+			for (uint4 i = 0; resetShaderResourceMask != 0; ++i, resetShaderResourceMask >>= 1)
+				if (resetShaderResourceMask & 0x1)
+					ApplyShaderResource(i);
 	}
 };
 

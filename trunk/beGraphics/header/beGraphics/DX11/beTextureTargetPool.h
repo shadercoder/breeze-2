@@ -10,9 +10,8 @@
 #include "beFormat.h"
 #include <D3D11.h>
 #include <lean/smart/com_ptr.h>
-#include <lean/memory/object_pool.h>
 #include <lean/smart/scoped_ptr.h>
-#include <vector>
+#include <lean/pimpl/pimpl_ptr.h>
 
 namespace beGraphics
 {
@@ -84,7 +83,8 @@ protected:
 
 	lean::com_ptr<ID3D11ShaderResourceView> m_pTexture;
 
-	mutable long m_references;
+	mutable int m_references;
+	mutable int m_uses;
 
 public:
 	/// Constructor. Texture is OPTIONAL.
@@ -99,8 +99,13 @@ public:
 	/// Gets the description.
 	LEAN_INLINE const DX11::TextureTargetDesc& GetDesc() const { return m_desc; }
 
+	/// Resets the texture's use count.
+	LEAN_INLINE void ResetUses() { m_uses = 0; }
+	/// Returns true, iff the texture has been in use at least once.
+	LEAN_INLINE bool WasUsed() { return (m_uses != 0); }
+
 	/// Marks the texture as in use.
-	LEAN_INLINE void AddRef() const { ++m_references; }
+	LEAN_INLINE void AddRef() const { ++m_references; ++m_uses; }
 	/// Marks the texture as free.
 	LEAN_INLINE void Release() const { --m_references; }
 	/// Marks the texture as in use.
@@ -183,27 +188,19 @@ using beGraphics::StageTextureTarget;
 class TextureTargetPool : public beGraphics::TextureTargetPool
 {
 private:
-	lean::com_ptr<ID3D11Device> m_pDevice;
-
-	typedef lean::object_pool<ColorTextureTarget, 0> color_target_pool;
-	color_target_pool m_colorTargetPool;
-	typedef lean::object_pool<DepthStencilTextureTarget, 0> depth_stencil_target_pool;
-	depth_stencil_target_pool m_depthStencilTargetPool;
-	typedef lean::object_pool<StageTextureTarget, 0> stage_target_pool;
-	stage_target_pool m_stageTargetPool;
-
-	typedef std::vector<ColorTextureTarget*> color_target_vector;
-	color_target_vector m_colorTargets;
-	typedef std::vector<DepthStencilTextureTarget*> depth_stencil_target_vector;
-	depth_stencil_target_vector m_depthStencilTargets;
-	typedef std::vector<StageTextureTarget*> stage_target_vector;
-	stage_target_vector m_stageTargets;
+	struct M;
+	lean::pimpl_ptr<M> m;
 
 public:
 	/// Constructor.
 	BE_GRAPHICS_API TextureTargetPool(ID3D11Device *pDevice);
 	/// Destructor.
 	BE_GRAPHICS_API ~TextureTargetPool();
+
+	/// Resets the usage statistics.
+	BE_GRAPHICS_API void ResetUsage();
+	/// Releases unused targets.
+	BE_GRAPHICS_API void ReleaseUnused();
 
 	/// Gets the implementation identifier.
 	ImplementationID GetImplementationID() const { return DX11Implementation; };

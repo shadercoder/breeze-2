@@ -7,7 +7,7 @@
 GraphicsCanvas::GraphicsCanvas(QWidget *pParent, Qt::WFlags flags)
 	: QWidget( pParent, flags | Qt::MSWindowsOwnDC ),
 	m_activeFPS(60),
-	m_idleFPS(24),
+	m_idleFPS(30),
 	m_bAutoFocus( true )
 {
 	// Enable direct drawing
@@ -22,10 +22,10 @@ GraphicsCanvas::GraphicsCanvas(QWidget *pParent, Qt::WFlags flags)
 	// Use all space
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-	m_timer.setInterval(1000 / m_idleFPS);
+	// Enqueue frame by frame
+	m_timer.setSingleShot(true);
 
-	checkedConnect(&m_timer, SIGNAL(timeout()), this, SLOT(step())); 
-	checkedConnect(&m_timer, SIGNAL(timeout()), this, SLOT(repaint())); 
+	checkedConnect(&m_timer, SIGNAL(timeout()), this, SLOT(nextFrame())); 
 }
 
 // Destructor.
@@ -33,12 +33,39 @@ GraphicsCanvas::~GraphicsCanvas()
 {
 }
 
-// Step.
-void GraphicsCanvas::step()
+// Step & render.
+void GraphicsCanvas::nextFrame()
 {
-	Q_EMIT step((float) m_hrTimer.seconds());
+	float timeStep = (float) m_hrTimer.seconds();
 
+	// Measure frame time
 	m_hrTimer.tick();
+
+	// Step & render
+	Q_EMIT step(timeStep);
+
+	if (this->isVisible())
+		doRender();
+
+	// Compute time to next frame
+	int targetFrameDelay = 1000 / targetFPS() - (int) m_hrTimer.milliseconds();
+
+	// Enqueue next frame
+	if (!this->isHidden())
+		m_timer.start( lean::max(targetFrameDelay, 0) );
+}
+
+// Render.
+void GraphicsCanvas::doRender()
+{
+	// Check if obscured
+	if (m_pSwapChain)
+	{
+		// Draw scene
+		Q_EMIT render();
+
+		m_pSwapChain->Present();
+	}
 }
 
 // Sets the swap chain.
@@ -53,7 +80,7 @@ void GraphicsCanvas::showEvent(QShowEvent *pEvent)
 	QWidget::showEvent(pEvent);
 
 	// Start drawing
-	m_timer.start();
+	m_timer.start(0);
 	m_hrTimer.tick();
 }
 
@@ -73,14 +100,8 @@ void GraphicsCanvas::paintEvent(QPaintEvent *pEvent)
 	
 	pEvent->accept();
 
-	// Check if obscured
-	if (m_pSwapChain && !pEvent->region().isEmpty())
-	{
-		// Draw scene
-		Q_EMIT render();
-
-		m_pSwapChain->Present();
-	}
+	if (!pEvent->region().isEmpty())
+		doRender();
 }
 
 // Intercepts focus events
@@ -89,20 +110,13 @@ void GraphicsCanvas::focusInEvent(QFocusEvent *pEvent)
 	QWidget::focusInEvent(pEvent);
 
 	if (this->hasFocus())
-	{
-		m_timer.setInterval(1000 / m_activeFPS);
-
 		Q_EMIT focussed(this);
-	}
 }
 
 // Intercepts focus events.
 void GraphicsCanvas::focusOutEvent(QFocusEvent *pEvent)
 {
 	QWidget::focusOutEvent(pEvent);
-
-	if (!this->hasFocus())
-		m_timer.setInterval(1000 / m_idleFPS);
 }
 
 // Intercepts enter events
@@ -127,18 +141,20 @@ void GraphicsCanvas::resizeEvent(QResizeEvent *pEvent)
 void GraphicsCanvas::setActiveFPS(int fps)
 {
 	m_activeFPS = fps;
-
-	if (this->hasFocus())
-		m_timer.setInterval(1000 / m_activeFPS);
 }
 
 // Sets the number of FPS when idle.
 void GraphicsCanvas::setIdleFPS(int fps)
 {
 	m_idleFPS = fps;
+}
 
-	if (!this->hasFocus())
-		m_timer.setInterval(1000 / m_idleFPS);
+// Gets the current target FPS.
+int GraphicsCanvas::targetFPS() const
+{
+	return (this->hasFocus())
+		? m_activeFPS
+		: m_idleFPS;
 }
 
 // Disables Qt painting on this widget.

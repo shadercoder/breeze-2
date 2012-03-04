@@ -13,6 +13,8 @@
 
 #include <beScene/bePipe.h>
 #include <beScene/beRenderingPipeline.h>
+#include <beScene/beRenderer.h>
+#include <beGraphics/beTextureTargetPool.h>
 
 #include "Interaction/Interaction.h"
 #include "Interaction/DropInteraction.h"
@@ -23,21 +25,23 @@
 
 #include "Utility/Checked.h"
 
+#include <lean/logging/errors.h>
+
 namespace
 {
 
 /// Constructs a swap chain for the given editor.
-lean::resource_ptr<beGraphics::SwapChain, true> createSwapChain(void *hWnd, Editor &editor)
+lean::resource_ptr<beGraphics::SwapChain, true> createSwapChain(QWidget &widget, Editor &editor)
 {
 	const QSettings &settings = *editor.settings();
 
 	beGraphics::SwapChainDesc desc;
 
-	desc.Window = hWnd;
+	desc.Window = widget.winId();
 	desc.Windowed = true;
 
-	desc.Display.Width = settings.value("graphicsDevice/resolutionX", 1024).toUInt();
-	desc.Display.Height = settings.value("graphicsDevice/resolutionY", 768).toUInt();
+	desc.Display.Width = widget.width();
+	desc.Display.Height = widget.height();
 	desc.Display.Format = beGraphics::Format::R8G8B8A8U_SRGB;
 	desc.Samples.Count = settings.value("graphicsDevice/multisampling", 0).toInt();
 	
@@ -52,6 +56,23 @@ beScene::CameraController* createCamera(beEntitySystem::Entity &entity, SceneDoc
 
 	entity.AddController(pCamera);
 	return pCamera;
+}
+
+/// Resizes the given swap chain.
+void resizePipe(beScene::Pipe &pipe, beGraphics::SwapChain &chain, uint4 width, uint4 height)
+{
+	pipe.SetFinalTarget(nullptr);
+
+	try
+	{
+		chain.Resize(width, height);
+	}
+	catch (...)
+	{
+		LEAN_LOG_ERROR_MSG("Resizing swap chain buffers failed");
+	}
+
+	pipe.SetFinalTarget(beGraphics::GetBackBuffer(chain).get());
 }
 
 /// Sets the given swap chain for the given camera.
@@ -104,7 +125,7 @@ SceneView::SceneView(SceneDocument *pDocument, Mode *pDocumentMode, Editor *pEdi
 	ui.setupUi(this);
 
 	// View swap chain
-	lean::resource_ptr<beGraphics::SwapChain> pSwapChain = createSwapChain(ui.canvas->winId(), *m_pEditor);
+	lean::resource_ptr<beGraphics::SwapChain> pSwapChain = createSwapChain(*ui.canvas, *m_pEditor);
 	ui.canvas->setSwapChain(pSwapChain);
 
 	// View camera
@@ -185,6 +206,9 @@ void SceneView::render()
 	{
 		m_pDocument->renderer()->InvalidateCaches();
 		m_pDocument->simulation()->Render();
+
+		// Get rid of unused targets
+		m_pDocument->renderer()->TargetPool()->ReleaseUnused();
 	}
 }
 
@@ -192,6 +216,10 @@ void SceneView::render()
 void SceneView::canvasResized(int width, int height)
 {
 	m_pCameraController->SetAspect( (float) width / height );
+
+	// Resize buffers & flush target pool (most sizes will have changed)
+	resizePipe(*m_pCameraController->GetPipe(), *ui.canvas->swapChain(), width, height);
+	m_pDocument->renderer()->TargetPool()->ResetUsage();
 }
 
 // Handles drag&drop events.

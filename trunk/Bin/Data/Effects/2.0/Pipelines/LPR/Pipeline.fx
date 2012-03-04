@@ -134,6 +134,10 @@ technique11 PipelineSetup <
 		SetRasterizerState( DefaultRasterizerState );
 		SetDepthStencilState( DefaultDepthStencilState, 0 );
 		SetBlendState( NULL, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xffffffff );
+
+		SetHullShader( NULL );
+		SetDomainShader( NULL );
+		SetGeometryShader( NULL );
 	}
 
 	pass <
@@ -159,6 +163,10 @@ technique11 PipelineSetup <
 		SetRasterizerState( DefaultRasterizerState );
 		SetDepthStencilState( DefaultDepthStencilState, 0 );
 		SetBlendState( NULL, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xffffffff );
+
+		SetHullShader( NULL );
+		SetDomainShader( NULL );
+		SetGeometryShader( NULL );
 	}
 
 	pass <
@@ -181,6 +189,10 @@ technique11 PipelineSetup <
 		SetRasterizerState( NULL );
 		SetDepthStencilState( ReadOnlyDepthStencilState, 0 );
 		SetBlendState( DoubleAdditiveBlendState, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xffffffff );
+
+		SetHullShader( NULL );
+		SetDomainShader( NULL );
+		SetGeometryShader( NULL );
 	}
 
 	pass <
@@ -201,6 +213,10 @@ technique11 PipelineSetup <
 		SetRasterizerState( DefaultRasterizerState );
 		SetDepthStencilState( DefaultDepthStencilState, 0 );
 		SetBlendState( NULL, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xffffffff );
+
+		SetHullShader( NULL );
+		SetDomainShader( NULL );
+		SetGeometryShader( NULL );
 	}
 
 	pass <
@@ -224,5 +240,9 @@ technique11 PipelineSetup <
 		SetRasterizerState( DefaultRasterizerState );
 		SetDepthStencilState( DefaultDepthStencilState, 0 );
 		SetBlendState( NULL, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xffffffff );
+
+		SetHullShader( NULL );
+		SetDomainShader( NULL );
+		SetGeometryShader( NULL );
 	}
 }

@@ -47,13 +47,20 @@ class RenderableMaterialReflector : public beCore::ComponentReflector
 	{
 		SceneParameters sceneParameters = GetSceneParameters(parameters);
 
+		lean::resource_ptr<Material> pMaterial = lean::new_resource<Material>(
+				creationParameters.GetValueChecked<beGraphics::Effect*>("Effect"),
+				*sceneParameters.ResourceManager->EffectCache(),
+				*sceneParameters.ResourceManager->TextureCache(),
+				sceneParameters.ResourceManager->MaterialCache()
+			);
+
+		sceneParameters.ResourceManager->MaterialCache()->SetMaterialName(
+				creationParameters.GetValueChecked<beCore::Exchange::utf8_string>("Name"),
+				pMaterial
+			);
+
 		return lean::any_value<RenderableMaterial*>(
-				sceneParameters.Renderer->RenderableMaterials()->GetMaterial(
-					sceneParameters.ResourceManager->MaterialCache()->GetMaterial(
-						creationParameters.GetValueChecked<beGraphics::Effect*>("Effect"), // TODO: Catch nullptr
-						creationParameters.GetValueChecked<beCore::Exchange::utf8_string>("Name")
-					)
-				)
+				sceneParameters.Renderer->RenderableMaterials()->GetMaterial(pMaterial)
 			);
 	}
 
@@ -99,6 +106,41 @@ class RenderableMaterialReflector : public beCore::ComponentReflector
 					sceneParameters.ResourceManager->MaterialCache()->GetMaterial(file)
 				)
 			);
+	}
+
+	/// Gets the name or file of the given component.
+	beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, beCore::ComponentState::T *pState = nullptr) const
+	{
+		beCore::Exchange::utf8_string result;
+
+		const RenderableMaterial *pMaterial = any_cast<RenderableMaterial*>(component);
+
+		if (pMaterial)
+		{
+			const MaterialCache *pCache = pMaterial->GetMaterial()->GetCache();
+			
+			if (pCache)
+			{
+				bool bFile = false;
+				result = pCache->GetFile(pMaterial->GetMaterial(), &bFile).to<beCore::Exchange::utf8_string>();
+
+				if (pState)
+				{
+					if (bFile)
+						*pState = beCore::ComponentState::Filed;
+					else if (!result.empty())
+						*pState = beCore::ComponentState::Named;
+					else
+						*pState = beCore::ComponentState::Unknown;
+				}
+			}
+			else if (pState)
+				*pState = beCore::ComponentState::Unknown;
+		}
+		else if (pState)
+			*pState = beCore::ComponentState::NotSet;
+
+		return result;
 	}
 
 	/// Gets the component type reflected.

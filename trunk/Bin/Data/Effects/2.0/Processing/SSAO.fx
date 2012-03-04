@@ -88,7 +88,10 @@ Pixel VSQuad(Vertex v)
 	return o;
 }
 
-SamplerState DefaultSampler;
+SamplerState DefaultSampler
+{
+	Filter = MIN_MAG_MIP_POINT;
+};
 
 SamplerState NoiseSampler
 {

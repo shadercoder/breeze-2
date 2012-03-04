@@ -62,6 +62,9 @@ public:
 	/// Gets the number of FPS when idle.
 	int idleFPS() const { return m_idleFPS; }
 
+	/// Gets the target FPS.
+	int targetFPS() const;
+
 	/// Gets the auto-focus property.
 	bool autoFocus() const { return m_bAutoFocus; }
 
@@ -77,8 +80,10 @@ public Q_SLOTS:
 	/// Sets the auto-focus property.
 	void setAutoFocus(bool bAutoFocus) { m_bAutoFocus = bAutoFocus; }
 
-	/// Step.
-	void step();
+	/// Step & render.
+	void nextFrame();
+	/// Render.
+	void doRender();
 
 Q_SIGNALS:
 	/// Called before any rendering is initiated.

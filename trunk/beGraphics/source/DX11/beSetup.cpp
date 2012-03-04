@@ -5,6 +5,7 @@
 #include "beGraphicsInternal/stdafx.h"
 #include "beGraphics/DX11/beSetup.h"
 #include "beGraphics/DX11/beDeviceContext.h"
+#include "beGraphics/beTextureCache.h"
 #include "beGraphics/DX/beError.h"
 
 #include <beCore/bePropertyVisitor.h>
@@ -235,7 +236,7 @@ Setup::property_vector GetProperties(ID3DX11Effect *pEffect, ID3DX11EffectConsta
 }
 
 // Gets all textures.
-Setup::texture_vector GetTextures(ID3DX11Effect *pEffect)
+Setup::texture_vector GetTextures(ID3DX11Effect *pEffect, beGraphics::TextureCache *pTextures)
 {
 	Setup::texture_vector textures;
 
@@ -261,11 +262,19 @@ Setup::texture_vector GetTextures(ID3DX11Effect *pEffect)
 		SUCCEEDED(pVariable->GetAnnotationByName("UIName")->AsString()->GetString(&textureName))
 			|| SUCCEEDED(pVariable->GetAnnotationByName("Name")->AsString()->GetString(&textureName));
 
+		const char *textureFile = nullptr;
+		SUCCEEDED(pVariable->GetAnnotationByName("UIFile")->AsString()->GetString(&textureFile))
+			|| SUCCEEDED(pVariable->GetAnnotationByName("File")->AsString()->GetString(&textureFile));
+
+		const beGraphics::TextureView *pView = (pTextures && textureFile)
+			? pTextures->GetTextureView(textureFile)
+			: nullptr;
+
 		textures.push_back(
 			Setup::Texture(
 					textureName,
 					pVariable,
-					nullptr
+					ToImpl(pView)
 				)
 			);
 	}
@@ -276,23 +285,23 @@ Setup::texture_vector GetTextures(ID3DX11Effect *pEffect)
 } // namespace
 
 // Constructor.
-Setup::Setup(const Effect *pEffect)
+Setup::Setup(const Effect *pEffect, beGraphics::TextureCache *pTextures)
 	: m_pEffect( LEAN_ASSERT_NOT_NULL(pEffect) ),
 	m_pConstants( MaybeGetSetupConstants(*m_pEffect) ),
 	m_pConstantBuffer( MaybeCloneConstantBuffer(m_pConstants) ),
 	m_properties( GetProperties(*m_pEffect, m_pConstants, m_pConstantBuffer, m_pBackingStore) ),
-	m_textures( GetTextures(*m_pEffect) ),
+	m_textures( GetTextures(*m_pEffect, pTextures) ),
 	m_bPropertiesChanged( true )
 {
 }
 
 // Constructor.
-Setup::Setup(ID3DX11Effect *pEffect)
+Setup::Setup(ID3DX11Effect *pEffect, beGraphics::TextureCache *pTextures)
 	: m_pEffect( lean::bind_resource(new Effect(pEffect)) ),
 	m_pConstants( MaybeGetSetupConstants(*m_pEffect) ),
 	m_pConstantBuffer( MaybeCloneConstantBuffer(m_pConstants) ),
 	m_properties( GetProperties(*m_pEffect, m_pConstants, m_pConstantBuffer, m_pBackingStore) ),
-	m_textures( GetTextures(*m_pEffect) ),
+	m_textures( GetTextures(*m_pEffect, pTextures) ),
 	m_bPropertiesChanged( true )
 {
 }

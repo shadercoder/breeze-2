@@ -322,9 +322,9 @@ void MeshControllerSerializer::Save(const beEntitySystem::Controller *pSerializa
 				lean::append_int_attribute(*subsetNode.document(), subsetNode, "subset", subsetIdx);
 
 				if (pMesh != pMainMesh)
-					AppendResourceAttribute(node, "mesh", "meshName", pMesh);
+					AppendResourceAttribute(subsetNode, "mesh", "meshName", pMesh);
 				if (pMaterial != pMainMaterial)
-					if (AppendResourceAttribute(node, "material", "materialName", pMaterial))
+					if (AppendResourceAttribute(subsetNode, "material", "materialName", pMaterial))
 						SaveMaterial(pMaterial, parameters, queue);
 
 				if (pMesh)

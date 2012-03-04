@@ -426,6 +426,8 @@ void Pipe::SetFinalTarget(const beGraphics::Any::Texture *pFinalTarget)
 			PipeTargetFlags::Flash | PipeTargetFlags::Immutable | PipeTargetFlags::Persistent, 0);
 		SetDesc(desc);
 	}
+	else
+		m_pFinalTarget.reset(nullptr);
 }
 
 // Gets the target identified by the given name or nullptr if none available.

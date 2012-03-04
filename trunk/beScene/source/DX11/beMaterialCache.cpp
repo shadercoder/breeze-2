@@ -194,7 +194,7 @@ beScene::Material* MaterialCache::GetMaterial(const beGraphics::Effect *pEffect,
 		{
 			LEAN_LOG("Attempting to create material \"" << name.c_str() << "\"");
 
-			lean::resource_ptr<Material> pMaterial = lean::new_resource<Material>(pEffect, *m->pEffectCache, this);
+			lean::resource_ptr<Material> pMaterial = lean::new_resource<Material>(pEffect, *m->pEffectCache, *m->pTextureCache, this);
 
 			LEAN_LOG("Material \"" << name.c_str() << "\" created successfully");
 

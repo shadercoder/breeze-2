@@ -4,11 +4,11 @@
 #include "Utility/Checked.h"
 
 // Constructor.
-AbstractDocument::AbstractDocument(QString type, const QString &file, Editor *pEditor, QObject *pParent)
+AbstractDocument::AbstractDocument(QString type, const QString &name, const QString &file, Editor *pEditor, QObject *pParent)
 	: QObject(pParent),
 	m_pEditor(LEAN_ASSERT_NOT_NULL(pEditor)),
 	m_type(type),
-	m_name(tr("<Untitled>")),
+	m_name( (!name.isEmpty()) ? name : tr("<Untitled>") ),
 	m_file(file),
 	m_bChanged(false),
 	m_references(0),

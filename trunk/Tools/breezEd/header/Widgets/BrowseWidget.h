@@ -17,6 +17,9 @@ public:
 	/// Destructor.
 	~BrowseWidget();
 
+	/// Installs the given event handler on all relevant child widgets.
+	void installFocusHandler(QObject *handler);
+
 	/// Gets the path.
 	QString path() const;
 

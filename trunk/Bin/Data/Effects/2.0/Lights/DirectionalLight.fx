@@ -22,6 +22,7 @@ Texture2D AmbientTexture : AmbientTarget
 Texture2D NoiseTexture
 <
 	string UIName = "Noise";
+	string UIFile = "rotationalMatrix32.png";
 >;
 
 Texture2D ShadowTexture : ShadowTarget
@@ -58,7 +59,10 @@ Pixel VSMain(Vertex v)
 	return o;
 }
 
-SamplerState DefaultSampler;
+SamplerState DefaultSampler
+{
+	Filter = MIN_MAG_MIP_POINT;
+};
 
 SamplerState NoiseSampler
 {
@@ -176,7 +180,7 @@ float4 PSShadow(Pixel p) : SV_Target0
 	}
 
 	visibility = saturate( 2.5 * visibility / 8 );
-	
+
 	return visibility;
 }
 
@@ -184,10 +188,11 @@ float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 {
 	float4 eyeGeometry = BE_SCENE_TEXTURE(SceneGeometryTexture).SampleLevel(DefaultSampler, p.TexCoord, 0);
 	float4 diffuseColor = BE_SCENE_TEXTURE(SceneDiffuseTexture).SampleLevel(DefaultSampler, p.TexCoord, 0);
+	float4 specularColor = BE_SCENE_TEXTURE(SceneSpecularTexture).SampleLevel(DefaultSampler, p.TexCoord, 0);
 	
 //	return diffuseColor;
 
-	float3 worldNormal = ExtractNormal(eyeGeometry);
+	float3 worldNormal = normalize( ExtractNormal(eyeGeometry) );
 
 	float4 intensity = 1.0f;
 
@@ -195,14 +200,18 @@ float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 		intensity = ShadowTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
 	
 	// Angle fallof
-	float cosAngle = dot(eyeGeometry.yzw, -DirectionalLight.Dir);
-	float negIntensity = saturate(0.5f - 0.1f * cosAngle) * AmbientTexture.SampleLevel(DefaultSampler, p.TexCoord, 0).a;
+	float cosAngle = dot(worldNormal, -DirectionalLight.Dir);
+	float negIntensity = saturate(0.5f - 0.25f * cosAngle); // * AmbientTexture.SampleLevel(DefaultSampler, p.TexCoord, 0).a;
 	float4 posIntensity = saturate(cosAngle) * intensity;
 	
 	float roundFactor = frac(diffuseColor.a);
-	intensity = lerp(posIntensity, negIntensity, roundFactor);
+	float3 diffuse = diffuseColor.xyz * lerp(posIntensity, negIntensity, roundFactor);
+
+	// Specular
+	float3 halfway = -normalize( normalize(p.CamDir) + DirectionalLight.Dir );
+	float3 specular = specularColor.xyz * intensity * pow( saturate( dot(worldNormal, halfway) ) , 1024.0f * specularColor.a );
 	
-	return float4(diffuseColor.xyz * DirectionalLight.Color.xyz * intensity.xyz, 0.0f);
+	return float4( (diffuse + specular) * DirectionalLight.Color.xyz, 0.0f );
 }
 
 technique11 Shadowed <

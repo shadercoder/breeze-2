@@ -9,7 +9,12 @@
 #include "beGraphics/DX11/beFormat.h"
 #include "beGraphics/DX11/beDeviceContext.h"
 #include "beGraphics/DX/beError.h"
+
+#include <boost/ptr_container/ptr_vector.hpp>
+
 #include <lean/functional/algorithm.h>
+
+#include <lean/logging/log.h>
 
 namespace beGraphics
 {
@@ -20,20 +25,34 @@ namespace DX11
 namespace
 {
 
+/// Compares the given pair of descriptions.
+LEAN_INLINE bool DescLessThan(const TextureTargetDesc &left, const TextureTargetDesc &right)
+{
+	return (memcmp(&left, &right, sizeof(TextureTargetDesc)) < 0);
+}
+
 /// Orders texture target pointers by the descriptions of the texture targets pointed to.
 struct TargetPointerDescCompare
 {
-	LEAN_INLINE bool operator ()(const TextureTarget *left, const TextureTarget *right)
+	LEAN_INLINE bool operator ()(const TextureTarget *left, const TextureTarget &right)
 	{
-		return (memcmp(&left->GetDesc(), &right->GetDesc(), sizeof(TextureTargetDesc)) < 0);
+		return DescLessThan(left->GetDesc(), right.GetDesc());
 	}
-	LEAN_INLINE bool operator ()(const TextureTarget *left, const TextureTargetDesc &right)
+	LEAN_INLINE bool operator ()(const TextureTarget &left, const TextureTarget *right)
 	{
-		return (memcmp(&left->GetDesc(), &right, sizeof(TextureTargetDesc)) < 0);
+		return DescLessThan(left.GetDesc(), right->GetDesc());
 	}
-	LEAN_INLINE bool operator ()(const TextureTargetDesc &left, const TextureTarget *right)
+	LEAN_INLINE bool operator ()(const TextureTarget &left, const TextureTarget &right)
 	{
-		return (memcmp(&left, &right->GetDesc(), sizeof(TextureTargetDesc)) < 0);
+		return DescLessThan(left.GetDesc(), right.GetDesc());
+	}
+	LEAN_INLINE bool operator ()(const TextureTarget &left, const TextureTargetDesc &right)
+	{
+		return DescLessThan(left.GetDesc(), right);
+	}
+	LEAN_INLINE bool operator ()(const TextureTargetDesc &left, const TextureTarget &right)
+	{
+		return DescLessThan(left, right.GetDesc());
 	}
 };
 
@@ -52,23 +71,6 @@ D3D11_TEXTURE2D_DESC ToAPI(const TextureTargetDesc &desc, UINT bindFlags, DXGI_F
 	descDX.CPUAccessFlags = 0;
 	descDX.MiscFlags = (desc.MipLevels & TextureTargetFlags::AutoGenMipMaps) ? D3D11_RESOURCE_MISC_GENERATE_MIPS : 0;
 	return descDX;
-}
-
-/// Returns a free texture target in the given sorted range, if available.
-template <class TextureTarget, class Iterator>
-TextureTarget* FindFreeTextureTarget(Iterator begin, Iterator end, const TextureTargetDesc &desc)
-{
-	std::pair<Iterator, Iterator> targetRange = std::equal_range( begin, end, desc, TargetPointerDescCompare() );
-
-	for (Iterator itTarget = targetRange.first; itTarget != targetRange.second; ++itTarget)
-	{
-		TextureTarget *pTarget = *itTarget;
-
-		if (!pTarget->IsInUse())
-			return pTarget;
-	}
-
-	return nullptr;
 }
 
 } // namespace
@@ -135,12 +137,74 @@ StageTextureTarget::~StageTextureTarget()
 namespace DX11
 {
 
+namespace
+{
+
+/// Returns a free texture target in the given sorted range, if available.
+template <class TextureTarget, class Iterator>
+TextureTarget* FindFreeTextureTarget(Iterator begin, Iterator end, const TextureTargetDesc &desc)
+{
+	std::pair<Iterator, Iterator> targetRange = std::equal_range( begin, end, desc, TargetPointerDescCompare() );
+
+	for (Iterator itTarget = targetRange.first; itTarget != targetRange.second; ++itTarget)
+	{
+		TextureTarget &target = *itTarget;
+
+		if (!target.IsInUse())
+			return &target;
+	}
+
+	return nullptr;
+}
+
+/// Resets usage.
+template <class Iterator>
+void ResetTargetUsage(Iterator begin, Iterator end)
+{
+	for (Iterator it = begin; it != end; ++it)
+		it->ResetUses();
+}
+
+/// Resets usage.
+template <class Vector>
+uint4 RemoveUnusedTargets(Vector &targets)
+{
+	uint4 count = 0;
+
+	for (typename Vector::iterator it = targets.begin(); it != targets.end(); )
+		if (!it->WasUsed())
+		{
+			it = targets.erase(it);
+			++count;
+		}
+		else
+			++it;
+
+	return count;
+}
+
+} // namespace
+
+struct TextureTargetPool::M
+{
+	lean::com_ptr<ID3D11Device> pDevice;
+
+	typedef boost::ptr_vector<ColorTextureTarget> color_target_vector;
+	color_target_vector colorTargets;
+	typedef boost::ptr_vector<DepthStencilTextureTarget> depth_stencil_target_vector;
+	depth_stencil_target_vector depthStencilTargets;
+	typedef boost::ptr_vector<StageTextureTarget> stage_target_vector;
+	stage_target_vector stageTargets;
+
+	M(ID3D11Device *pDevice)
+		: pDevice( LEAN_ASSERT_NOT_NULL(pDevice) )
+	{
+	};
+};
+
 // Constructor.
 TextureTargetPool::TextureTargetPool(ID3D11Device *pDevice)
-	: m_pDevice(pDevice),
-	m_colorTargetPool(32),
-	m_depthStencilTargetPool(16),
-	m_stageTargetPool(4)
+	: m( new M(pDevice) )
 {
 }
 
@@ -149,11 +213,32 @@ TextureTargetPool::~TextureTargetPool()
 {
 }
 
+// Resets the usage statistics.
+void TextureTargetPool::ResetUsage()
+{
+	ResetTargetUsage(m->colorTargets.begin(), m->colorTargets.end());
+	ResetTargetUsage(m->depthStencilTargets.begin(), m->depthStencilTargets.end());
+	ResetTargetUsage(m->stageTargets.begin(), m->stageTargets.end());
+}
+
+// Releases unused targets.
+void TextureTargetPool::ReleaseUnused()
+{
+	uint4 releaseCount = 0;
+	
+	releaseCount += RemoveUnusedTargets(m->colorTargets);
+	releaseCount += RemoveUnusedTargets(m->depthStencilTargets);
+	releaseCount += RemoveUnusedTargets(m->stageTargets);
+
+	if (releaseCount > 0)
+		LEAN_LOG("TextureTargetPool released " << releaseCount << " intermediate targets.");
+}
+
 // Acquires a color texture target according to the given description.
 lean::com_ptr<const ColorTextureTarget, true> TextureTargetPool::AcquireColorTextureTarget(const TextureTargetDesc &desc)
 {
 	ColorTextureTarget *pTarget = FindFreeTextureTarget<ColorTextureTarget>(
-		m_colorTargets.begin(), m_colorTargets.end(), desc);
+		m->colorTargets.begin(), m->colorTargets.end(), desc);
 
 	if (!pTarget)
 	{
@@ -164,10 +249,10 @@ lean::com_ptr<const ColorTextureTarget, true> TextureTargetPool::AcquireColorTex
 
 		try
 		{
-			pTexture = CreateTexture(descDX, nullptr, m_pDevice);
+			pTexture = CreateTexture(descDX, nullptr, m->pDevice);
 
 			BE_LOG_DX_ERROR_MSG(
-				m_pDevice->CreateShaderResourceView(pTexture, nullptr, pTextureView.rebind()),
+				m->pDevice->CreateShaderResourceView(pTexture, nullptr, pTextureView.rebind()),
 				"ID3D11Device::CreateShaderResourceView()");
 		}
 		catch (const std::runtime_error&)
@@ -176,7 +261,7 @@ lean::com_ptr<const ColorTextureTarget, true> TextureTargetPool::AcquireColorTex
 			descDX.BindFlags = D3D11_BIND_RENDER_TARGET;
 			descDX.MiscFlags = 0;
 
-			pTexture = CreateTexture(descDX, nullptr, m_pDevice);
+			pTexture = CreateTexture(descDX, nullptr, m->pDevice);
 		}
 
 		lean::com_ptr<ID3D11RenderTargetView> pTargetView;
@@ -206,7 +291,7 @@ lean::com_ptr<const ColorTextureTarget, true> TextureTargetPool::AcquireColorTex
 				}
 
 				BE_THROW_DX_ERROR_MSG(
-					m_pDevice->CreateRenderTargetView(pTexture, &rtvDesc, pTargetViews[i].rebind()),
+					m->pDevice->CreateRenderTargetView(pTexture, &rtvDesc, pTargetViews[i].rebind()),
 					"ID3D11Device::CreateRenderTargetView()");
 			}
 
@@ -215,16 +300,16 @@ lean::com_ptr<const ColorTextureTarget, true> TextureTargetPool::AcquireColorTex
 		else
 		{
 			BE_THROW_DX_ERROR_MSG(
-				m_pDevice->CreateRenderTargetView(pTexture, nullptr, pTargetView.rebind()),
+				m->pDevice->CreateRenderTargetView(pTexture, nullptr, pTargetView.rebind()),
 				"ID3D11Device::CreateRenderTargetView()");
 		}
 
-		pTarget = new (m_colorTargetPool.allocate()) ColorTextureTarget(
+		pTarget = new ColorTextureTarget(
 				desc, pTexture,
 				pTextureView, pTargetView,
 				pTargetViews.detach()
 			);
-		lean::push_sorted(m_colorTargets, pTarget, TargetPointerDescCompare());
+		lean::push_sorted(m->colorTargets, pTarget, TargetPointerDescCompare());
 	}
 
 	return lean::com_ptr<const ColorTextureTarget, true>(pTarget);
@@ -234,7 +319,7 @@ lean::com_ptr<const ColorTextureTarget, true> TextureTargetPool::AcquireColorTex
 lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireDepthStencilTextureTarget(const TextureTargetDesc &desc)
 {
 	DepthStencilTextureTarget *pTarget = FindFreeTextureTarget<DepthStencilTextureTarget>(
-		m_depthStencilTargets.begin(), m_depthStencilTargets.end(), desc);
+		m->depthStencilTargets.begin(), m->depthStencilTargets.end(), desc);
 
 	if (!pTarget)
 	{
@@ -272,7 +357,7 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 
 		try
 		{
-			pTexture = CreateTexture(descDX, nullptr, m_pDevice);
+			pTexture = CreateTexture(descDX, nullptr, m->pDevice);
 
 			// Get actual mip level count AFTER creation
 			pTexture->GetDesc(&descDX);
@@ -305,7 +390,7 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 			}
 
 			BE_LOG_DX_ERROR_MSG(
-				m_pDevice->CreateShaderResourceView(pTexture, &srvDesc, pTextureView.rebind()),
+				m->pDevice->CreateShaderResourceView(pTexture, &srvDesc, pTextureView.rebind()),
 				"ID3D11Device::CreateShaderResourceView()");
 		}
 		catch (const std::runtime_error&)
@@ -314,7 +399,7 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 			descDX.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 			descDX.MiscFlags = 0;
 
-			pTexture = CreateTexture(descDX, nullptr, m_pDevice);
+			pTexture = CreateTexture(descDX, nullptr, m->pDevice);
 		}
 
 		lean::com_ptr<ID3D11DepthStencilView> pTargetView;
@@ -345,7 +430,7 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 				}
 
 				BE_THROW_DX_ERROR_MSG(
-					m_pDevice->CreateDepthStencilView(pTexture, &dsvDesc, pTargetViews[i].rebind()),
+					m->pDevice->CreateDepthStencilView(pTexture, &dsvDesc, pTargetViews[i].rebind()),
 					"ID3D11Device::CreateDepthStencilView()");
 			}
 
@@ -357,16 +442,16 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 			dsvDesc.Texture2D.MipSlice = 0;
 
 			BE_THROW_DX_ERROR_MSG(
-				m_pDevice->CreateDepthStencilView(pTexture, &dsvDesc, pTargetView.rebind()),
+				m->pDevice->CreateDepthStencilView(pTexture, &dsvDesc, pTargetView.rebind()),
 				"ID3D11Device::CreateDepthStencilView()");
 		}
 
-		pTarget = new (m_depthStencilTargetPool.allocate()) DepthStencilTextureTarget(
+		pTarget = new DepthStencilTextureTarget(
 				desc, pTexture,
 				pTextureView, pTargetView,
 				pTargetViews.detach()
 			);
-		lean::push_sorted(m_depthStencilTargets, pTarget, TargetPointerDescCompare());
+		lean::push_sorted(m->depthStencilTargets, pTarget, TargetPointerDescCompare());
 	}
 
 	return lean::com_ptr<const DepthStencilTextureTarget, true>(pTarget);
@@ -376,7 +461,7 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 lean::com_ptr<const StageTextureTarget, true> TextureTargetPool::AcquireStageTextureTarget(const TextureTargetDesc &desc)
 {
 	StageTextureTarget *pTarget = FindFreeTextureTarget<StageTextureTarget>(
-		m_stageTargets.begin(), m_stageTargets.end(), desc);
+		m->stageTargets.begin(), m->stageTargets.end(), desc);
 
 	if (!pTarget)
 	{
@@ -386,10 +471,10 @@ lean::com_ptr<const StageTextureTarget, true> TextureTargetPool::AcquireStageTex
 		descDX.Usage = D3D11_USAGE_STAGING;
 		descDX.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
 
-		pTexture = CreateTexture(descDX, nullptr, m_pDevice);
+		pTexture = CreateTexture(descDX, nullptr, m->pDevice);
 
-		pTarget = new (m_stageTargetPool.allocate()) StageTextureTarget(desc, pTexture);
-		lean::push_sorted(m_stageTargets, pTarget, TargetPointerDescCompare());
+		pTarget = new StageTextureTarget(desc, pTexture);
+		lean::push_sorted(m->stageTargets, pTarget, TargetPointerDescCompare());
 	}
 
 	return lean::com_ptr<const StageTextureTarget, true>(pTarget);
