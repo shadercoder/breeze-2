@@ -362,7 +362,7 @@ void PointLightController::Flush()
 	m_position = m_pEntity->GetPosition();
 	m_orientation = m_pEntity->GetOrientation();
 
-	SetLocalBounds( beMath::fsphere3( beMath::fvec3(), m_range) );
+	m_pEntity->SetScaling( beMath::vec(m_range, m_range, m_range) );
 
 	m_bConstantsChanged = true;
 
