@@ -71,7 +71,7 @@ public:
 	/// Resets the entities' transformation.
 	void undo();
 	/// Applies entities' the new transformation.
-    void redo();
+	void redo();
 };
 
 #endif

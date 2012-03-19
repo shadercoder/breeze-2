@@ -120,6 +120,9 @@
     <ClInclude Include="header\beEntitySystem\beEntityGroup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\beEntitySystem\beAsset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\dllmain.cpp">
@@ -189,6 +192,9 @@
       <Filter>Source Files\Serialization</Filter>
     </ClCompile>
     <ClCompile Include="source\beEntityGroup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beAsset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

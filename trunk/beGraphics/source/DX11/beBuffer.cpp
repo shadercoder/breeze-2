@@ -12,6 +12,34 @@ namespace beGraphics
 namespace DX11
 {
 
+/// Creates a structured buffer.
+lean::com_ptr<ID3D11Buffer, true> CreateStructuredBuffer(ID3D11Device *pDevice, uint4 bindFlags, uint4 size, uint4 count)
+{
+	D3D11_BUFFER_DESC desc;
+	desc.ByteWidth = size * count;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = bindFlags;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	desc.StructureByteStride = size;
+
+	return CreateBuffer(desc, nullptr, pDevice);
+}
+
+/// Creates a constant buffer.
+lean::com_ptr<ID3D11Buffer, true> CreateConstantBuffer(ID3D11Device *pDevice, uint4 size, uint4 count)
+{
+	D3D11_BUFFER_DESC desc;
+	desc.ByteWidth = size * count;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = size;
+
+	return CreateBuffer(desc, nullptr, pDevice);
+}
+
 // Creates a buffer according to the given description.
 lean::com_ptr<ID3D11Buffer, true> CreateBuffer(const D3D11_BUFFER_DESC &desc, const void *pInitialData, ID3D11Device *pDevice)
 {

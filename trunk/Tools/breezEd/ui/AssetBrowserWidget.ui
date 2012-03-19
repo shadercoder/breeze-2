@@ -32,11 +32,8 @@
      <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectItems</enum>
      </property>
-     <property name="sortingEnabled">
-      <bool>true</bool>
-     </property>
-     <attribute name="headerVisible">
-      <bool>false</bool>
+     <attribute name="headerDefaultSectionSize">
+      <number>175</number>
      </attribute>
      <column>
       <property name="text">

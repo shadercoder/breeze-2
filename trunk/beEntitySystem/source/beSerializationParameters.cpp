@@ -22,7 +22,8 @@ const EntitySystemParameterIDs& GetEntitySystemParameterIDs()
 
 	static EntitySystemParameterIDs parameterIDs(
 			layout.Add("beEntitySystem.Simulation"),
-			layout.Add("beEntitySystem.Entity")
+			layout.Add("beEntitySystem.Entity"),
+			layout.Add("beEntitySystem.NoOverwrite")
 		);
 
 	return parameterIDs;
@@ -68,6 +69,24 @@ Entity* GetEntityParameter(const beCore::ParameterSet &parameters)
 	const EntitySystemParameterIDs& parameterIDs = GetEntitySystemParameterIDs();
 
 	return parameters.GetValueChecked< Entity* >(layout, parameterIDs.Entity);
+}
+
+// Sets the given entity system parameters in the given parameter set.
+void SetNoOverwriteParameter(beCore::ParameterSet &parameters, bool bNoOverwrite)
+{
+	const beCore::ParameterLayout &layout = GetSerializationParameters();
+	const EntitySystemParameterIDs& parameterIDs = GetEntitySystemParameterIDs();
+
+	parameters.SetValue(layout, parameterIDs.NoOverwrite, bNoOverwrite);
+}
+
+// Gets the given entity system parameters in the given parameter set.
+bool GetNoOverwriteParameter(const beCore::ParameterSet &parameters)
+{
+	const beCore::ParameterLayout &layout = GetSerializationParameters();
+	const EntitySystemParameterIDs& parameterIDs = GetEntitySystemParameterIDs();
+
+	return parameters.GetValueDefault< bool >(layout, parameterIDs.NoOverwrite, false);
 }
 
 

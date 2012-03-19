@@ -48,6 +48,8 @@ public:
 
 	/// Sets the render context.
 	BE_SCENE_API void SetRenderContext(RenderContext *pRenderContext);
+	/// Gets the render context.
+	LEAN_INLINE RenderContext* GetRenderContext() const { return m_pRenderContext; }
 
 	/// Attaches this controller to its simulation(s) / data source(s).
 	BE_SCENE_API void Attach();

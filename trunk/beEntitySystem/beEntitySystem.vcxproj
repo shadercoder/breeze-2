@@ -183,6 +183,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
   <ItemGroup>
     <ClInclude Include="header\beEntitySystem\beAnimated.h" />
     <ClInclude Include="header\beEntitySystem\beAnimatedHost.h" />
+    <ClInclude Include="header\beEntitySystem\beAsset.h" />
     <ClInclude Include="header\beEntitySystem\beAttachable.h" />
     <ClInclude Include="header\beEntitySystem\beController.h" />
     <ClInclude Include="header\beEntitySystem\beControllerDriven.h" />
@@ -215,6 +216,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\beAnimatedHost.cpp" />
+    <ClCompile Include="source\beAsset.cpp" />
     <ClCompile Include="source\beController.cpp" />
     <ClCompile Include="source\beControllerDriven.cpp" />
     <ClCompile Include="source\beControllerDrivenSerializer.cpp" />

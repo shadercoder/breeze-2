@@ -101,6 +101,8 @@ public:
 		beGraphics::TextureCache &textureCache = *LEAN_ASSERT_NOT_NULL(sceneParameters.ResourceManager)->TextureCache();
 		MaterialCache &materialCache = *LEAN_ASSERT_NOT_NULL(sceneParameters.ResourceManager)->MaterialCache();
 
+		bool bNoOverwrite = beEntitySystem::GetNoOverwriteParameter(parameters);
+
 		for (const rapidxml::xml_node<utf8_t> *materialsNode = root.first_node("materials");
 			materialsNode; materialsNode = materialsNode->next_sibling("materials"))
 			for (const rapidxml::xml_node<utf8_t> *materialNode = materialsNode->first_node();
@@ -108,13 +110,17 @@ public:
 			{
 				utf8_ntr name = lean::get_attribute(*materialNode, "name");
 
-				lean::resource_ptr<Material> pMaterial = LoadMaterial(*materialNode, effectCache, textureCache, &materialCache);
-				materialCache.SetMaterialName(name, pMaterial);
+				// Do not overwrite materials, if not permitted
+				if (!bNoOverwrite || !materialCache.GetMaterialByName(name))
+				{
+					lean::resource_ptr<Material> pMaterial = LoadMaterial(*materialNode, effectCache, textureCache, &materialCache);
+					materialCache.SetMaterialName(name, pMaterial);
+				}
 			}
 	}
 };
 
-const beEntitySystem::LoadTaskPlugin<MaterialLoader> MaterialLoaderPlugin;
+const beEntitySystem::LoadTaskPlugin<MaterialLoader, &beEntitySystem::GetResourceLoadTasks> MaterialLoaderPlugin;
 
 } // namespace
 

@@ -20,62 +20,43 @@
 #include <lean/concurrent/critical_section.h>
 #include <lean/concurrent/event.h>
 
-/// Implementation of the file system class internals.
-class beCore::FileWatch::Impl
+#include <lean/functional/algorithm.h>
+
+namespace beCore
 {
-private:
-	/// Directory.
-	class Directory;
-	/// Filesystem directory.
-	class FileSystemDirectory;
 
-	typedef boost::ptr_map_adapter< Directory, std::unordered_map<lean::utf8_string, void*> > directory_map;
-	directory_map m_directories;
-
-	lean::critical_section m_directoryLock;
-
-	volatile bool m_bShuttingDown;
-	lean::event m_updateEvent;
-
-	lean::thread m_observationThread;
-
-	/// Observes files & directories.
-	void ObservationThread();
-
-public:
-	/// Constructor.
-	Impl();
-	/// Destructor.
-	~Impl();
-
-	/// Adds the given observer to be called when the given file has been modified.
-	bool AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver);
-	/// Adds the given observer, iff it hasn't been added yet.
-	bool AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver);
-	/// Removes the given observer no longer to be called when the given file is modified.
-	void RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObserver);
-};
+namespace
+{
 
 /// Directory.
-class beCore::FileWatch::Impl::Directory : public lean::tags::noncopyable
+class Directory : public lean::tags::noncopyable
 {
+protected:
+	FileWatch::M *m_watch;
+
 private:
-	/// Observer
-	struct ObserverInfo
+	lean::utf8_string m_directory;
+
+	/// File observer.
+	struct FileObserverInfo
 	{
 		lean::utf8_string file;
 		lean::uint8 lastRevision;
 		FileObserver *pObserver;
 
-		ObserverInfo(const lean::utf8_ntri &file,
+		FileObserverInfo(const lean::utf8_ntri &file,
 			lean::uint8 revision,
 			FileObserver *pObserver)
 				: file(file.to<lean::utf8_string>()),
 				lastRevision(revision),
 				pObserver(pObserver) { }
 	};
-	typedef std::unordered_multimap<lean::utf8_string, ObserverInfo> observer_map;
-	observer_map m_observers;
+	typedef std::unordered_multimap<utf8_string, FileObserverInfo> file_observer_map;
+	file_observer_map m_fileObservers;
+
+	/// Directory observer.
+	typedef std::vector<DirectoryObserver*> directory_observer_vector;
+	directory_observer_vector m_directoryObservers;
 
 	lean::critical_section m_observerLock;
 
@@ -83,9 +64,14 @@ protected:
 	/// Gets the revision of the given file.
 	virtual lean::uint8 GetRevision(const lean::utf8_ntri &file) const = 0;
 
+	/// Called when a file observer has been added.
+	virtual void FileObserverAdded() = 0;
+	/// Called when a directory observer has been added.
+	virtual void DirectoryObserverAdded() = 0;
+
 public:
 	/// Constructor.
-	Directory();
+	Directory(FileWatch::M *watch, const utf8_ntri &directory);
 	/// Destructor.
 	virtual ~Directory();
 
@@ -93,186 +79,256 @@ public:
 	bool AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver);
 	/// Adds the given observer, iff it hasn't been added yet.
 	bool AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver);
-	/// Removes the given observer no longer to be called when the given file is modified.
+	/// Removes the given observer, no longer to be called when the given file is modified.
 	void RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObserver);
+
+	/// Adds the given observer to be called when this directory has been modified.
+	bool AddObserver(DirectoryObserver *pObserver);
+	// Removes the given observer, no longer to be called when this directory is modified.
+	void RemoveObserver(DirectoryObserver *pObserver);
 
 	/// Notifies file observers about modifications to the files they are observing. 
 	virtual void FilesChanged();
+	/// Notifies directory observers about modifications to the directory they are observing. 
+	virtual void DirectoryChanged();
 
 	/// Gets the handle to a change notification event or NULL, if unavailable.
-	virtual HANDLE GetChangeNotification() const = 0;
+	virtual HANDLE GetFileChangeNotification() const = 0;
+	/// Gets the handle to a change notification event or NULL, if unavailable.
+	virtual HANDLE GetDirectoryChangeNotification() const = 0;
+
+	/// Gets the directory.
+	const utf8_string& GetDirectory() const { return m_directory; }
+};
+
+struct close_change_notification_handle_policy
+{
+	static LEAN_INLINE HANDLE invalid() { return NULL; }
+	static LEAN_INLINE void release(HANDLE handle) { ::FindCloseChangeNotification(handle); }
 };
 
 // Filesystem directory.
-class beCore::FileWatch::Impl::FileSystemDirectory : public beCore::FileWatch::Impl::Directory
+class FileSystemDirectory : public Directory
 {
 private:
-	struct close_change_notification_handle_policy
-	{
-		static LEAN_INLINE HANDLE invalid() { return NULL; }
-		static LEAN_INLINE void release(HANDLE handle) { ::FindCloseChangeNotification(handle); }
-	};
-	lean::handle_guard<HANDLE, close_change_notification_handle_policy> m_hChangeNotification;
-
-	/// Creates a file change notification handle for the given directory.
-	static HANDLE CreateFileChangeNotification(const lean::utf8_ntri &directory);
+	lean::handle_guard<HANDLE, close_change_notification_handle_policy> m_hFileChangeNotification;
+	lean::handle_guard<HANDLE, close_change_notification_handle_policy> m_hDirectoryChangeNotification;
 
 protected:
 	/// Gets the revision of the given file.
 	virtual lean::uint8 GetRevision(const lean::utf8_ntri &file) const;
 
+	/// Called when a file observer has been added.
+	virtual void FileObserverAdded();
+	/// Called when a directory observer has been added.
+	virtual void DirectoryObserverAdded();
+
 public:
 	/// Constructor.
-	FileSystemDirectory(const lean::utf8_ntri &directory);
+	FileSystemDirectory(FileWatch::M *watch, const lean::utf8_ntri &directory);
 	/// Destructor.
 	virtual ~FileSystemDirectory();
 
 	// Notifies file observers about modifications to the files they are observing. 
 	virtual void FilesChanged();
+	// Notifies observers about modifications to the directories they are observing. 
+	virtual void DirectoryChanged();
 
 	/// Gets the handle to a change notification event or NULL, if unavailable.
-	virtual HANDLE GetChangeNotification() const;
+	virtual HANDLE GetFileChangeNotification() const;
+	/// Gets the handle to a change notification event or NULL, if unavailable.
+	virtual HANDLE GetDirectoryChangeNotification() const;
+};
+
+/// Observes files & directories.
+void ObservationThread(FileWatch::M &m);
+
+} // namespace
+
+/// Implementation of the file system class internals.
+struct FileWatch::M
+{
+	typedef boost::ptr_map_adapter< Directory, std::unordered_map<utf8_string, void*> > directory_map;
+	directory_map directories;
+
+	lean::critical_section directoryLock;
+
+	volatile bool bShuttingDown;
+	lean::event updateFilesEvent;
+	lean::event updateDirectoriesEvent;
+
+	lean::thread observationThread;
+
+	/// Constructor.
+	M();
 };
 
 // Constructor.
-beCore::FileWatch::FileWatch()
-	: m_impl(new Impl())
+LEAN_INLINE FileWatch::M::M()
+	: bShuttingDown(false),
+	observationThread( lean::make_callable(this, &ObservationThread) )
+{
+}
+
+// Constructor.
+FileWatch::FileWatch()
+	: m(new M())
 {
 }
 
 // Destructor.
-beCore::FileWatch::~FileWatch()
+FileWatch::~FileWatch()
 {
+	// ORDER: Signal update AFTER all modifications have been completed
+	m->bShuttingDown = true;
+	m->updateFilesEvent.set();
+	m->updateDirectoriesEvent.set();
+
+	// Wait for observation thread to exit gracefully
+	m->observationThread.join();
 }
 
+namespace
+{
+
+/// Notifies file observation thread about new directories.
+void FileObservationChanged(FileWatch::M &m)
+{
+	m.updateFilesEvent.set();
+}
+
+/// Notifies directory observation thread about new directories.
+void DirectoryObservationChanged(FileWatch::M &m)
+{
+	m.updateDirectoriesEvent.set();
+}
+
+/// Gets the given directory.
+FileWatch::M::directory_map::iterator GetDirectory(FileWatch::M &m, const utf8_string &directory)
+{
+	FileWatch::M::directory_map::iterator itDirectory = m.directories.find(directory);
+
+	if (itDirectory == m.directories.end())
+	{
+		// Don't modify directory map while being accessed from the observer thread
+		lean::scoped_cs_lock lock(m.directoryLock);
+
+		itDirectory = m.directories.insert( const_cast<utf8_string&>(directory), new FileSystemDirectory(&m, directory) ).first;
+	}
+
+	return itDirectory;
+}
+
+} // namespace
+
 // Adds the given observer to be called when the given file has been modified.
-bool beCore::FileWatch::AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
+bool FileWatch::AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
 {
-	return m_impl->AddObserver(file, pObserver);
+	lean::utf8_string canonicalFile = lean::absolute_path<lean::utf8_string>(file);
+	lean::utf8_string directory = lean::get_directory<lean::utf8_string>(canonicalFile);
+
+	return GetDirectory(*m, directory)->second->AddObserver(canonicalFile, pObserver);
 }
+
 // Adds the given observer, iff it hasn't been added yet.
-bool beCore::FileWatch::AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
+bool FileWatch::AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
 {
-	return m_impl->AddOrKeepObserver(file, pObserver);
+	lean::utf8_string canonicalFile = lean::absolute_path<lean::utf8_string>(file);
+	lean::utf8_string directory = lean::get_directory<lean::utf8_string>(canonicalFile);
+
+	return GetDirectory(*m, directory)->second->AddOrKeepObserver(canonicalFile, pObserver);
 }
+
 // Removes the given observer no longer to be called when the given file is modified.
-void beCore::FileWatch::RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
+void FileWatch::RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
 {
-	m_impl->RemoveObserver(file, pObserver);
+	lean::utf8_string canonicalFile = lean::absolute_path<lean::utf8_string>(file);
+	lean::utf8_string directory = lean::get_directory<lean::utf8_string>(canonicalFile);
+
+	M::directory_map::iterator itDirectory = m->directories.find(directory);
+
+	if (itDirectory != m->directories.end())
+		itDirectory->second->RemoveObserver(canonicalFile, pObserver);
+}
+
+// Adds the given observer to be called when the given directory is modified.
+bool FileWatch::AddObserver(const lean::utf8_ntri &unresolvedDirectory, DirectoryObserver *pObserver)
+{
+	lean::utf8_string directory = lean::absolute_path<lean::utf8_string>(unresolvedDirectory);
+
+	return GetDirectory(*m, directory)->second->AddObserver(pObserver);
+}
+
+// Removes the given observer, no longer to be called when the given directory is modified.
+void FileWatch::RemoveObserver(const lean::utf8_ntri &unresolvedDirectory, DirectoryObserver *pObserver)
+{
+	lean::utf8_string directory = lean::absolute_path<lean::utf8_string>(unresolvedDirectory);
+
+	M::directory_map::iterator itDirectory = m->directories.find(directory);
+
+	if (itDirectory != m->directories.end())
+		itDirectory->second->RemoveObserver(pObserver);
 }
 
 // Gets the file watch.
-beCore::FileWatch& beCore::GetFileWatch()
+FileWatch& GetFileWatch()
 {
 	static FileWatch instance;
 	return instance;
 }
 
-// Constructor.
-LEAN_INLINE beCore::FileWatch::Impl::Impl()
-	: m_bShuttingDown(false),
-	m_observationThread( lean::make_callable(this, &Impl::ObservationThread) )
+namespace
 {
-}
-// Destructor.
-LEAN_INLINE beCore::FileWatch::Impl::~Impl()
-{
-	// ORDER: Signal update AFTER all modifications have been completed
-	m_bShuttingDown = true;
-	m_updateEvent.set();
-
-	// Wait for observation thread to exit gracefully
-	m_observationThread.join();
-}
-
-// Adds the given observer to be called when the given file has been modified.
-LEAN_INLINE bool beCore::FileWatch::Impl::AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
-{
-	lean::utf8_string canonicalFile = lean::absolute_path<lean::utf8_string>(file);
-	lean::utf8_string directory = lean::get_directory<lean::utf8_string>(canonicalFile);
-
-	directory_map::iterator itDirectory = m_directories.find(directory);
-
-	if (itDirectory == m_directories.end())
-	{
-		// Don't modify directory map while being accessed from the observer thread
-		lean::scoped_cs_lock lock(m_directoryLock);
-
-		itDirectory = m_directories.insert(directory, new FileSystemDirectory(directory) ).first;
-
-		// Notify observation thread about new directory
-		// ORDER: Signal update AFTER all modifications have been completed
-		m_updateEvent.set();
-	}
-
-	return itDirectory->second->AddObserver(canonicalFile, pObserver);
-}
-
-// Adds the given observer, iff it hasn't been added yet.
-LEAN_INLINE bool beCore::FileWatch::Impl::AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
-{
-	lean::utf8_string canonicalFile = lean::absolute_path<lean::utf8_string>(file);
-	lean::utf8_string directory = lean::get_directory<lean::utf8_string>(canonicalFile);
-
-	directory_map::iterator itDirectory = m_directories.find(directory);
-
-	// Either delegate to directory or add directory + observer if neither existent yet
-	return (itDirectory == m_directories.end())
-		? AddObserver(file, pObserver)
-		: itDirectory->second->AddOrKeepObserver(canonicalFile, pObserver);
-}
-
-// Removes the given observer no longer to be called when the given file is modified.
-LEAN_INLINE void beCore::FileWatch::Impl::RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
-{
-	lean::utf8_string canonicalFile = lean::absolute_path<lean::utf8_string>(file);
-	lean::utf8_string directory = lean::get_directory<lean::utf8_string>(canonicalFile);
-
-	directory_map::iterator itDirectory = m_directories.find(directory);
-
-	if (itDirectory != m_directories.end())
-		itDirectory->second->RemoveObserver(canonicalFile, pObserver);
-}
 
 // Observes files & directories.
-void beCore::FileWatch::Impl::ObservationThread()
+void ObservationThread(FileWatch::M &m)
 {
 	try
 	{
 		std::vector<Directory*> directories;
 		std::vector<HANDLE> events;
 
-		while (!m_bShuttingDown)
+		while (!m.bShuttingDown)
 		{
 			events.clear();
 			directories.clear();
 
 			{
 				// Don't modify directory map while accessed from this thread
-				lean::scoped_cs_lock lock(m_directoryLock);
+				lean::scoped_cs_lock lock(m.directoryLock);
 
-				const size_t directoryCount = m_directories.size();
+				const size_t directoryCount = m.directories.size();
 
-				directories.reserve(directoryCount + 1);
-				events.reserve(directoryCount + 1);
+				directories.reserve(2 * directoryCount + 2);
+				events.reserve(2 * directoryCount + 2);
 
 				// Interrupt waiting when there are updates outside this thread
 				directories.push_back(nullptr);
-				events.push_back(m_updateEvent.native_handle());
+				events.push_back(m.updateFilesEvent.native_handle());
 
-				const directory_map::iterator itDirectoryEnd = m_directories.end();
+				directories.push_back(nullptr);
+				events.push_back(m.updateDirectoriesEvent.native_handle());
 
-				for (directory_map::iterator itDirectory = m_directories.begin();
-					itDirectory != itDirectoryEnd; ++itDirectory)
+				for (FileWatch::M::directory_map::iterator itDirectory = m.directories.begin();
+					itDirectory != m.directories.end(); ++itDirectory)
 				{
 					Directory *pDirectory = itDirectory->second;
-					HANDLE hChangeNotification = pDirectory->GetChangeNotification();
+					
+					HANDLE hFileChangeNotification = pDirectory->GetFileChangeNotification();
+					HANDLE hDirectoryChangeNotification = pDirectory->GetDirectoryChangeNotification();
 
-					if (hChangeNotification != NULL)
+					if (hFileChangeNotification != NULL)
 					{
 						// Store changed notification event handles along with their corresponding directory instances
 						directories.push_back(pDirectory);
-						events.push_back(hChangeNotification);
+						events.push_back(hFileChangeNotification);
+					}
+
+					if (hDirectoryChangeNotification != NULL)
+					{
+						// Store changed notification event handles along with their corresponding directory instances
+						directories.push_back(pDirectory);
+						events.push_back(hDirectoryChangeNotification);
 					}
 				}
 			}
@@ -282,21 +338,26 @@ void beCore::FileWatch::Impl::ObservationThread()
 			if (dwSignal == WAIT_FAILED)
 				LEAN_LOG_WIN_ERROR_CTX("WaitForMultipleObjects()", "Waiting on file changed notifications");
 
-			// Exclude update event (index 0)
-			if (WAIT_OBJECT_0 < dwSignal && dwSignal < WAIT_OBJECT_0 + events.size())
+			// Exclude update events (index 0 & 1)
+			if (WAIT_OBJECT_0 + 2 <= dwSignal && dwSignal < WAIT_OBJECT_0 + events.size())
 			{
 				LEAN_ASSERT(events.size() == directories.size());
-			
+				
 				// Get the directory that triggered the changed notification event
-				Directory *pDirectory = directories[dwSignal - WAIT_OBJECT_0];
+				Directory *directory = directories[dwSignal - WAIT_OBJECT_0];
 
-				LEAN_ASSERT(pDirectory);
+				LEAN_ASSERT(directory);
 
-				pDirectory->FilesChanged();
+				// Update files or directories
+				if (events[dwSignal - WAIT_OBJECT_0] == directory->GetFileChangeNotification())
+					directory->FilesChanged();
+				else
+					directory->DirectoryChanged();
 			}
 
-			// Updating now
-			m_updateEvent.reset();
+			// ORDER: Reset BEFORE re-checking shut down flag
+			m.updateFilesEvent.reset();
+			m.updateDirectoriesEvent.reset();
 		}
 	}
 	catch (const std::exception &exc)
@@ -310,17 +371,19 @@ void beCore::FileWatch::Impl::ObservationThread()
 }
 
 // Constructor.
-beCore::FileWatch::Impl::Directory::Directory()
+Directory::Directory(FileWatch::M *watch, const utf8_ntri &directory)
+	: m_watch(watch),
+	m_directory( directory.to<utf8_string>() )
 {
 }
 
 // Destructor.
-beCore::FileWatch::Impl::Directory::~Directory()
+Directory::~Directory()
 {
 }
 
 // Adds the given observer to be called when the given file has been modified.
-bool beCore::FileWatch::Impl::Directory::AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
+bool Directory::AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
 {
 	if (!pObserver)
 	{
@@ -331,24 +394,25 @@ bool beCore::FileWatch::Impl::Directory::AddObserver(const lean::utf8_ntri &file
 	// Do not modify observers while processing changed notifications
 	lean::scoped_cs_lock lock(m_observerLock);
 
-	m_observers.insert( observer_map::value_type(
+	m_fileObservers.insert( file_observer_map::value_type(
 		lean::get_filename<lean::utf8_string>(file),
-		ObserverInfo(file, GetRevision(file), pObserver) ) );
+		FileObserverInfo(file, GetRevision(file), pObserver) ) );
 
+	FileObserverAdded();
 	return true;
 }
 
 // Adds the given observer, iff it hasn't been added yet.
-bool beCore::FileWatch::Impl::Directory::AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
+bool Directory::AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
 {
 	lean::utf8_string fileName = lean::get_filename<lean::utf8_string>(file);
 
 	// Do not modify observers while processing changed notifications
 	lean::scoped_cs_lock lock(m_observerLock);
 
-	const observer_map::iterator itObserverInfoEnd = m_observers.upper_bound(fileName);
+	const file_observer_map::iterator itObserverInfoEnd = m_fileObservers.upper_bound(fileName);
 
-	for (observer_map::iterator itObserverInfo = m_observers.lower_bound(fileName);
+	for (file_observer_map::iterator itObserverInfo = m_fileObservers.lower_bound(fileName);
 		itObserverInfo != itObserverInfoEnd; ++itObserverInfo)
 		// Keep matching observer
 		if (itObserverInfo->second.pObserver == pObserver)
@@ -359,34 +423,61 @@ bool beCore::FileWatch::Impl::Directory::AddOrKeepObserver(const lean::utf8_ntri
 }
 
 // Removes the given observer no longer to be called when the given file is modified.
-void beCore::FileWatch::Impl::Directory::RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
+void Directory::RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
 {
 	lean::utf8_string fileName = lean::get_filename<lean::utf8_string>(file);
 
 	// Do not modify observers while processing changed notifications
 	lean::scoped_cs_lock lock(m_observerLock);
 
-	const observer_map::iterator itObserverInfoEnd = m_observers.upper_bound(fileName);
+	const file_observer_map::iterator itObserverInfoEnd = m_fileObservers.upper_bound(fileName);
 
-	for (observer_map::iterator itObserverInfo = m_observers.lower_bound(fileName);
+	for (file_observer_map::iterator itObserverInfo = m_fileObservers.lower_bound(fileName);
 		itObserverInfo != itObserverInfoEnd; ++itObserverInfo)
 		// Erase ALL matching observation entries
 		if (itObserverInfo->second.pObserver == pObserver)
-			m_observers.erase(itObserverInfo);
+			m_fileObservers.erase(itObserverInfo);
+}
+
+// Adds the given observer to be called when this directory has been modified.
+bool Directory::AddObserver(DirectoryObserver *pObserver)
+{
+	if (!pObserver)
+	{
+		LEAN_LOG_ERROR_MSG("pObserver == nullptr");
+		return false;
+	}
+
+	// Do not modify observers while processing changed notifications
+	lean::scoped_cs_lock lock(m_observerLock);
+
+	lean::push_unique(m_directoryObservers, pObserver);
+	
+	DirectoryObserverAdded();
+	return true;
+}
+
+// Removes the given observer, no longer to be called when this directory is modified.
+void Directory::RemoveObserver(DirectoryObserver *pObserver)
+{
+	// Do not modify observers while processing changed notifications
+	lean::scoped_cs_lock lock(m_observerLock);
+	
+	lean::remove(m_directoryObservers, pObserver);
 }
 
 // Notifies file observers about modifications to the files they are observing. 
-void beCore::FileWatch::Impl::Directory::FilesChanged()
+void Directory::FilesChanged()
 {
 	// Do not modify observers while processing changed notifications
 	lean::scoped_cs_lock lock(m_observerLock);
 
-	const observer_map::iterator itObserverInfoEnd = m_observers.end();
+	const file_observer_map::iterator itObserverInfoEnd = m_fileObservers.end();
 
-	for (observer_map::iterator itObserverInfo = m_observers.begin();
+	for (file_observer_map::iterator itObserverInfo = m_fileObservers.begin();
 		itObserverInfo != itObserverInfoEnd; ++itObserverInfo)
 	{
-		ObserverInfo &info = itObserverInfo->second;
+		FileObserverInfo &info = itObserverInfo->second;
 
 		// Source of revision depends on type of directory
 		lean::uint8 currentRevision = GetRevision(info.file);
@@ -413,13 +504,40 @@ void beCore::FileWatch::Impl::Directory::FilesChanged()
 	}
 }
 
-// Creates a file change notification handle for the given directory.
-HANDLE beCore::FileWatch::Impl::FileSystemDirectory::CreateFileChangeNotification(const lean::utf8_ntri &directory)
+// Notifies directory observers about modifications to the directory they are observing. 
+void Directory::DirectoryChanged()
+{
+	// Do not modify observers while processing changed notifications
+	lean::scoped_cs_lock lock(m_observerLock);
+
+	for (directory_observer_vector::iterator itObserver = m_directoryObservers.begin();
+		itObserver != m_directoryObservers.end(); ++itObserver)
+	{
+		try
+		{
+			(*itObserver)->DirectoryChanged(m_directory);
+		}
+		catch (const std::exception &exc)
+		{
+			LEAN_LOG_ERROR_CTX(exc.what(), m_directory.c_str());
+		}
+		catch (...)
+		{
+			LEAN_LOG_ERROR_CTX("Unhandled exception on file observer notificatio.", m_directory.c_str());
+		}
+	}
+}
+
+/// Creates a file change notification handle for the given directory.
+HANDLE CreateChangeNotification(const lean::utf8_ntri &directory, bool bDirectory)
 {
 	HANDLE hChangeNotification = ::FindFirstChangeNotificationW(
-		lean::utf_to_utf16(directory).c_str(),
-		FALSE,
-		FILE_NOTIFY_CHANGE_LAST_WRITE);
+			lean::utf_to_utf16(directory).c_str(),
+			bDirectory,
+			(bDirectory) 
+				? FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME
+				: FILE_NOTIFY_CHANGE_LAST_WRITE
+		);
 
 	if (hChangeNotification == INVALID_HANDLE_VALUE || hChangeNotification == (HANDLE)ERROR_INVALID_FUNCTION)
 	{
@@ -432,36 +550,78 @@ HANDLE beCore::FileWatch::Impl::FileSystemDirectory::CreateFileChangeNotificatio
 }
 
 // Constructor.
-beCore::FileWatch::Impl::FileSystemDirectory::FileSystemDirectory(const lean::utf8_ntri &directory)
-	: m_hChangeNotification( CreateFileChangeNotification(directory) )
+FileSystemDirectory::FileSystemDirectory(FileWatch::M *watch, const lean::utf8_ntri &directory)
+	: Directory(watch, directory)
 {
 }
 
 // Destructor.
-beCore::FileWatch::Impl::FileSystemDirectory::~FileSystemDirectory()
+FileSystemDirectory::~FileSystemDirectory()
 {
 }
 
 // Gets the revision of the given file.
-lean::uint8 beCore::FileWatch::Impl::FileSystemDirectory::GetRevision(const lean::utf8_ntri &file) const
+lean::uint8 FileSystemDirectory::GetRevision(const lean::utf8_ntri &file) const
 {
 	return lean::file_revision(file);
 }
 
-// Gets the handle to a change notification event or NULL, if unavailable.
-HANDLE beCore::FileWatch::Impl::FileSystemDirectory::GetChangeNotification() const
+// Called when a file observer has been added.
+void FileSystemDirectory::FileObserverAdded()
 {
-	return m_hChangeNotification;
+	if (m_hFileChangeNotification == NULL)
+	{
+		m_hFileChangeNotification = CreateChangeNotification(GetDirectory(), false);
+		FileObservationChanged(*m_watch);
+	}
+}
+
+// Called when a directory observer has been added.
+void FileSystemDirectory::DirectoryObserverAdded()
+{
+	if (m_hDirectoryChangeNotification == NULL)
+	{
+		m_hDirectoryChangeNotification = CreateChangeNotification(GetDirectory(), true);
+		DirectoryObservationChanged(*m_watch);
+	}
+}
+
+// Gets the handle to a change notification event or NULL, if unavailable.
+HANDLE FileSystemDirectory::GetFileChangeNotification() const
+{
+	return m_hFileChangeNotification;
+}
+
+// Gets the handle to a change notification event or NULL, if unavailable.
+HANDLE FileSystemDirectory::GetDirectoryChangeNotification() const
+{
+	return m_hDirectoryChangeNotification;
 }
 
 // Notifies file observers about modifications to the files they are observing. 
-void beCore::FileWatch::Impl::FileSystemDirectory::FilesChanged()
+void FileSystemDirectory::FilesChanged()
 {
-	if (m_hChangeNotification != NULL)
+	if (m_hFileChangeNotification != NULL)
 	{
-		if (!::FindNextChangeNotification(m_hChangeNotification))
-			LEAN_LOG_WIN_ERROR_CTX("FindNextChangeNotification()", "???");
+		if (!::FindNextChangeNotification(m_hFileChangeNotification))
+			LEAN_LOG_WIN_ERROR_CTX("FindNextChangeNotification()", GetDirectory().c_str());
 	}
 
 	Directory::FilesChanged();
 }
+
+// Notifies file observers about modifications to the directory they are observing. 
+void FileSystemDirectory::DirectoryChanged()
+{
+	if (m_hDirectoryChangeNotification != NULL)
+	{
+		if (!::FindNextChangeNotification(m_hDirectoryChangeNotification))
+			LEAN_LOG_WIN_ERROR_CTX("FindNextChangeNotification()", GetDirectory().c_str());
+	}
+
+	Directory::DirectoryChanged();
+}
+
+} // namespace
+
+} // namespace

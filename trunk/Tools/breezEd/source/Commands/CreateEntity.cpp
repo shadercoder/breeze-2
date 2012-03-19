@@ -9,11 +9,26 @@
 // Constructor.
 CreateEntityCommand::CreateEntityCommand(SceneDocument *pDocument, beEntitySystem::World *pWorld, beEntitySystem::Entity *pEntity, QUndoCommand *pParent)
 	: QUndoCommand(
-		QCoreApplication::translate("CreateEntityCommand", "Created entity '%1'").arg( makeName(toQt(pEntity->GetName())) ),
-		pParent ),
+			QCoreApplication::translate("CreateEntityCommand", "Created entity '%1'").arg( makeName(toQt(pEntity->GetName())) ),
+			pParent
+		),
 	m_pDocument( LEAN_ASSERT_NOT_NULL(pDocument) ),
 	m_pWorld( LEAN_ASSERT_NOT_NULL(pWorld) ),
-	m_pEntity( LEAN_ASSERT_NOT_NULL(pEntity) ),
+	m_prevSelection( m_pDocument->selection() )
+{
+	m_entities.push_back( LEAN_ASSERT_NOT_NULL(pEntity) );
+}
+
+// Constructor.
+CreateEntityCommand::CreateEntityCommand(SceneDocument *pDocument, beEntitySystem::World *pWorld,
+		beEntitySystem::Entity *const *entities, uint4 entityCount, const QString &name, QUndoCommand *pParent)
+	: QUndoCommand(
+			QCoreApplication::translate("CreateEntityCommand", "Created asset '%1'").arg( makeName(name) ),
+			pParent
+		),
+	m_pDocument( LEAN_ASSERT_NOT_NULL(pDocument) ),
+	m_pWorld( LEAN_ASSERT_NOT_NULL(pWorld) ),
+	m_entities( entities, entities + entityCount ),
 	m_prevSelection( m_pDocument->selection() )
 {
 }
@@ -26,8 +41,11 @@ CreateEntityCommand::~CreateEntityCommand()
 // Removes the created entity.
 void CreateEntityCommand::undo()
 {
-	m_pWorld->RemoveEntity(m_pEntity, true);
-	m_pEntity->Detach();
+	for (entity_vector::const_iterator it = m_entities.begin(); it != m_entities.end(); ++it)
+	{
+		m_pWorld->RemoveEntity(*it, true);
+		(*it)->Detach();
+	}
 
 	m_pDocument->setSelection(m_prevSelection);
 }
@@ -35,8 +53,16 @@ void CreateEntityCommand::undo()
 // Adds the created entity.
 void CreateEntityCommand::redo()
 {
-	m_pWorld->AddEntity(m_pEntity, true);
-	m_pEntity->Attach();
+	QVector<beEntitySystem::Entity*> selection;
+	selection.reserve( static_cast<int>(m_entities.size()) );
 
-	m_pDocument->setSelection(m_pEntity);
+	for (entity_vector::const_iterator it = m_entities.begin(); it != m_entities.end(); ++it)
+	{
+		m_pWorld->AddEntity(*it, true);
+		(*it)->Attach();
+
+		selection.push_back(*it);
+	}
+
+	m_pDocument->setSelection(selection);
 }

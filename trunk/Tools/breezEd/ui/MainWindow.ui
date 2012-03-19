@@ -120,6 +120,8 @@
       <string>Scene</string>
      </property>
      <addaction name="actionAdd_Scene_View"/>
+     <addaction name="actionEntity_Selection"/>
+     <addaction name="actionWorld_Tree"/>
     </widget>
     <widget class="QMenu" name="menuOther">
      <property name="title">
@@ -258,9 +260,11 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionEntity_Properties"/>
+   <addaction name="actionWorld_Tree"/>
+   <addaction name="actionEntity_Selection"/>
    <addaction name="actionAsset_Browser"/>
    <addaction name="actionEntity_Builder"/>
-   <addaction name="actionEntity_Properties"/>
   </widget>
   <action name="actionNew">
    <property name="icon">
@@ -598,7 +602,7 @@
   <action name="actionEntity_Builder">
    <property name="icon">
     <iconset resource="../resource/breezEd.qrc">
-     <normaloff>:/breezEd/icons/tree/star</normaloff>:/breezEd/icons/tree/star</iconset>
+     <normaloff>:/breezEd/icons/tools/entity</normaloff>:/breezEd/icons/tools/entity</iconset>
    </property>
    <property name="text">
     <string>Entity Builder</string>
@@ -607,7 +611,7 @@
   <action name="actionAsset_Browser">
    <property name="icon">
     <iconset resource="../resource/breezEd.qrc">
-     <normaloff>:/breezEd/icons/tree/asset</normaloff>:/breezEd/icons/tree/asset</iconset>
+     <normaloff>:/breezEd/icons/tools/asset</normaloff>:/breezEd/icons/tools/asset</iconset>
    </property>
    <property name="text">
     <string>Asset Browser</string>
@@ -631,7 +635,7 @@
   <action name="actionEntity_Properties">
    <property name="icon">
     <iconset resource="../resource/breezEd.qrc">
-     <normaloff>:/breezEd/icons/specific/properties</normaloff>:/breezEd/icons/specific/properties</iconset>
+     <normaloff>:/breezEd/icons/tools/properties</normaloff>:/breezEd/icons/tools/properties</iconset>
    </property>
    <property name="text">
     <string>Entity Properties</string>
@@ -640,6 +644,24 @@
   <action name="actionMaterial_Properties">
    <property name="text">
     <string>Material Properties</string>
+   </property>
+  </action>
+  <action name="actionEntity_Selection">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/tools/selection</normaloff>:/breezEd/icons/tools/selection</iconset>
+   </property>
+   <property name="text">
+    <string>Entity Selection</string>
+   </property>
+  </action>
+  <action name="actionWorld_Tree">
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/tools/world</normaloff>:/breezEd/icons/tools/world</iconset>
+   </property>
+   <property name="text">
+    <string>World Tree</string>
    </property>
   </action>
  </widget>

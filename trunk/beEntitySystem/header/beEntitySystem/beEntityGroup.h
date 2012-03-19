@@ -18,22 +18,31 @@ namespace beEntitySystem
 class Entity;
 
 /// Entity group class.
-class EntityGroup : public lean::noncopyable_chain<beCore::Resource>
+class EntityGroup : public lean::nonassignable_chain<beCore::Shared>
 {
 private:
 	typedef std::vector< lean::resource_ptr<Entity> > entity_vector;
 	entity_vector m_entities;
 
 public:
+	/// Entity Range.
+	typedef lean::range<Entity *const *> EntityRange;
+	/// Entity Range.
+	typedef lean::range<const Entity *const *> ConstEntityRange;
+
 	/// Creates an empty group.
 	BE_ENTITYSYSTEM_API EntityGroup();
+	/// Copies and entity group.
+	BE_ENTITYSYSTEM_API EntityGroup(const EntityGroup &right);
+	/// Copies and entity group.
+	BE_ENTITYSYSTEM_API EntityGroup(Entity *const *entities, uint4 count);
 	/// Destructor.
-	BE_ENTITYSYSTEM_API virtual ~EntityGroup();
+	BE_ENTITYSYSTEM_API ~EntityGroup();
 
 	/// Adds the given entity to this group.
-	BE_ENTITYSYSTEM_API void AddEntity(Entity *pEntity, bool bKeepPersistentId = false);
+	BE_ENTITYSYSTEM_API void AddEntity(Entity *pEntity);
 	/// Removes the given entity from this group.
-	BE_ENTITYSYSTEM_API bool RemoveEntity(Entity *pEntity, bool bKeepPersistentId = false);
+	BE_ENTITYSYSTEM_API bool RemoveEntity(Entity *pEntity);
 
 	/// Gets the number of entities.
 	BE_ENTITYSYSTEM_API uint4 GetEntityCount() const;
@@ -44,6 +53,17 @@ public:
 	}
 	/// Gets the n-th entity.
 	BE_ENTITYSYSTEM_API const Entity* GetEntity(uint4 id) const;
+	
+	/// Gets a range of all entities.
+	LEAN_INLINE EntityRange GetEntities()
+	{
+		return EntityRange( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
+	}
+	/// Gets a range of all entities.
+	LEAN_INLINE ConstEntityRange GetEntities() const
+	{
+		return ConstEntityRange( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
+	}
 
 	/// Attaches all entities to their simulations.
 	BE_ENTITYSYSTEM_API void Attach() const;
