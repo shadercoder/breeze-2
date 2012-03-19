@@ -545,6 +545,24 @@
     <ClCompile Include="source\Commands\SetComponent.cpp">
       <Filter>Source Files\Commands</Filter>
     </ClCompile>
+    <ClCompile Include="source\Tiles\EntitySelectionWidget.cpp">
+      <Filter>Source Files\Tiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_EntitySelectionWidget.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_EntitySelectionWidget.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_FileTreeBinder.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_FileTreeBinder.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Binders\FileTreeBinder.cpp">
+      <Filter>Source Files\Binders</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
@@ -657,6 +675,9 @@
     </ClInclude>
     <ClInclude Include="header\Commands\SetComponent.h">
       <Filter>Header Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_EntitySelectionWidget.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -863,6 +884,15 @@
     </CustomBuild>
     <CustomBuild Include="header\Widgets\ComponentSelectorWidget.h">
       <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\EntitySelectionWidget.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Tiles\EntitySelectionWidget.h">
+      <Filter>Header Files\Tiles</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Binders\FileTreeBinder.h">
+      <Filter>Header Files\Binders</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

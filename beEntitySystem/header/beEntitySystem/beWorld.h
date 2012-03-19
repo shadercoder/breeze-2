@@ -78,6 +78,17 @@ public:
 	/// Gets the n-th entity.
 	BE_ENTITYSYSTEM_API const Entity* GetEntity(uint4 id) const;
 
+	/// Gets a range of all entities.
+	LEAN_INLINE lean::range<Entity *const *> GetEntities()
+	{
+		return lean::range<Entity *const *>( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
+	}
+	/// Gets a range of all entities.
+	LEAN_INLINE lean::range<const Entity *const *> GetEntities() const
+	{
+		return lean::range<const Entity *const *>( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
+	}
+
 	/// Attaches all entities to their simulations.
 	BE_ENTITYSYSTEM_API void Attach() const;
 	/// Detaches all entities from their simulations.

@@ -105,7 +105,7 @@ public:
 };
 
 /// Instantiate this to add a serializer of the given type to the global queue of save tasks.
-template <class SaveTask>
+template <class SaveTask, SaveQueue& (*GetSaveTasks)()>
 struct SaveTaskPlugin
 {
 	/// Adds a global save task of the given type.
@@ -116,7 +116,7 @@ struct SaveTaskPlugin
 };
 
 /// Instantiate this to add a loader of the given type to the global queue of load tasks.
-template <class LoadTask>
+template <class LoadTask, LoadQueue& (*GetLoadTasks)()>
 struct LoadTaskPlugin
 {
 	/// Adds a global load task of the given type.

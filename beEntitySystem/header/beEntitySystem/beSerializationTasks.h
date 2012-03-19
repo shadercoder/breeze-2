@@ -12,9 +12,14 @@ namespace beEntitySystem
 {
 
 /// Gets generic tasks to perform when saving.
-BE_ENTITYSYSTEM_API SaveQueue& GetSaveTasks();
+BE_ENTITYSYSTEM_API SaveQueue& GetWorldSaveTasks();
 /// Gets generic tasks to perform when loading.
-BE_ENTITYSYSTEM_API LoadQueue& GetLoadTasks();
+BE_ENTITYSYSTEM_API LoadQueue& GetWorldLoadTasks();
+
+/// Gets generic tasks to perform when saving.
+BE_ENTITYSYSTEM_API SaveQueue& GetResourceSaveTasks();
+/// Gets generic tasks to perform when loading.
+BE_ENTITYSYSTEM_API LoadQueue& GetResourceLoadTasks();
 
 } // namespace
 

@@ -23,13 +23,15 @@ struct EntitySystemParameterIDs
 {
 	uint4 Simulation;
 	uint4 Entity;
+	uint4 NoOverwrite;
 
 	/// Non-initializing constructor.
 	EntitySystemParameterIDs() { }
 	/// Constructor.
-	EntitySystemParameterIDs(uint4 simulationID, uint4 entityID)
+	EntitySystemParameterIDs(uint4 simulationID, uint4 entityID, uint4 noOverwriteID)
 			: Simulation(simulationID),
-			Entity(entityID) { }
+			Entity(entityID),
+			NoOverwrite(noOverwriteID) { }
 };
 
 /// Scene parameters.
@@ -60,6 +62,11 @@ BE_ENTITYSYSTEM_API EntitySystemParameters GetEntitySystemParameters(const beCor
 BE_ENTITYSYSTEM_API void SetEntityParameter(beCore::ParameterSet &parameters, Entity *pEntity);
 /// Gets the given entity system parameters in the given parameter set.
 BE_ENTITYSYSTEM_API  Entity* GetEntityParameter(const beCore::ParameterSet &parameters);
+
+/// Sets the given entity system parameters in the given parameter set.
+BE_ENTITYSYSTEM_API void SetNoOverwriteParameter(beCore::ParameterSet &parameters, bool bNoOverwrite);
+/// Gets the given entity system parameters in the given parameter set.
+BE_ENTITYSYSTEM_API  bool GetNoOverwriteParameter(const beCore::ParameterSet &parameters);
 
 } // namespace
 

@@ -7,7 +7,6 @@
 #include "beEntitySystem/beEntity.h"
 
 #include "beEntitySystem/beEntitySerialization.h"
-#include "beEntitySystem/beEntitySerializer.h"
 #include "beEntitySystem/beSerializationParameters.h"
 #include "beEntitySystem/beSerializationJob.h"
 #include "beEntitySystem/beSerializationTasks.h"
@@ -40,6 +39,8 @@ World::World(const utf8_ntri &name, const utf8_ntri &file, beCore::ParameterSet 
 
 	if (root)
 		LoadWorld(*root, parameters);
+	else
+		LEAN_THROW_ERROR_CTX("No world node found", file.c_str());
 }
 
 // Loads the world from the given XML node.
@@ -172,10 +173,11 @@ void World::Detach() const
 void World::Serialize(const lean::utf8_ntri &file) const
 {
 	lean::xml_file<lean::utf8_t> xml;
-	rapidxml::xml_node<lean::utf8_t> &root = *lean::allocate_node<utf8_t>(xml.document(), "world");
 
+	rapidxml::xml_node<lean::utf8_t> &root = *lean::allocate_node<utf8_t>(xml.document(), "world");
 	// ORDER: Append FIRST, otherwise parent document == nullptr
 	xml.document().append_node(&root);
+	
 	Serialize(root);
 
 	xml.save(file);
@@ -200,27 +202,12 @@ void World::SaveWorld(rapidxml::xml_node<utf8_t> &worldNode) const
 	beCore::ParameterSet parameters(&GetSerializationParameters());
 	
 	// Execute generic save tasks first
-	GetSaveTasks().Save(worldNode, parameters);
+	GetResourceSaveTasks().Save(worldNode, parameters);
+	GetWorldSaveTasks().Save(worldNode, parameters);
 	
 	SaveQueue saveJobs;
 
-	rapidxml::xml_node<utf8_t> &entitiesNode = *lean::allocate_node<utf8_t>(document, "entities");
-	// ORDER: Append FIRST, otherwise parent document == nullptrs
-	worldNode.append_node(&entitiesNode);
-
-	const EntitySerialization &entitySerialization = GetEntitySerialization();
-
-	for (entity_vector::const_iterator itEntity = m_entities.begin();
-		itEntity != m_entities.end(); itEntity++)
-	{
-		Entity *pEntity = *itEntity;
-
-		rapidxml::xml_node<utf8_t> &entityNode = *lean::allocate_node<utf8_t>(document, "e");
-		// ORDER: Append FIRST, otherwise parent document == nullptr
-		entitiesNode.append_node(&entityNode);
-
-		entitySerialization.Save(pEntity, entityNode, parameters, saveJobs);
-	}
+	SaveEntities(&m_entities[0].get(), static_cast<uint4>(m_entities.size()), worldNode, &parameters, &saveJobs);
 
 	// Execute any additionally scheduled save jobs
 	saveJobs.Save(worldNode, parameters);
@@ -235,24 +222,30 @@ void World::LoadWorld(const rapidxml::xml_node<lean::utf8_t> &worldNode, beCore:
 	m_persistentIDs.SkipIDs( lean::get_int_attribute<utf8_t>(worldNode, "nextPersistentID", m_persistentIDs.GetNextID()) );
 
 	// Execute generic load tasks first
-	GetLoadTasks().Load(worldNode, parameters);
+	GetResourceLoadTasks().Load(worldNode, parameters);
+	GetWorldLoadTasks().Load(worldNode, parameters);
 
 	LoadQueue loadJobs;
 
-	const EntitySerialization &entitySerialization = GetEntitySerialization();
+	struct WorldInserter : public EntityInserter
+	{
+		World *world;
 
-	for (const rapidxml::xml_node<utf8_t> *pEntitiesNode = worldNode.first_node("entities");
-		pEntitiesNode; pEntitiesNode = pEntitiesNode->next_sibling("entities"))
-		for (const rapidxml::xml_node<utf8_t> *pEntityNode = pEntitiesNode->first_node();
-			pEntityNode; pEntityNode = pEntityNode->next_sibling())
+		WorldInserter(World &world)
+			: world(&world) { }
+		
+		void GrowEntities(uint4 count)
 		{
-			lean::resource_ptr<Entity> pEntity = entitySerialization.Load(*pEntityNode, parameters, loadJobs);
-
-			if (pEntity)
-				AddEntity(pEntity, true);
-			else
-				LEAN_LOG_ERROR_CTX("EntitySerialization::Load()", EntitySerializer::GetName(*pEntityNode));
+			world->m_entities.reserve( world->m_entities.size() + count );
 		}
+		
+		void AddEntity(Entity *pEntity)
+		{
+			world->AddEntity(pEntity, true);
+		}
+	} inserter(*this);
+
+	LoadEntities(inserter, worldNode, parameters, &loadJobs);
 
 	// Execute any additionally scheduled load jobs
 	loadJobs.Load(worldNode, parameters);

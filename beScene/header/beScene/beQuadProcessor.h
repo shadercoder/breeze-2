@@ -42,6 +42,9 @@ private:
 	typedef std::vector<Layer> layer_vector;
 	layer_vector m_layers;
 
+	/// Applies this processor.
+	void Render(uint4 layerIdx, uint4 stageID, uint4 queueID, const Perspective *pPerspective, const RenderContext &context, bool &bProcessorReady) const;
+
 public:
 	/// Constructor.
 	BE_SCENE_API QuadProcessor(const beGraphics::Device *pDevice, EffectBinderCache<AbstractProcessingEffectDriver> *pEffectBinderCache);
@@ -52,6 +55,11 @@ public:
 	BE_SCENE_API void Render(const Perspective *pPerspective, const RenderContext &context) const;
 	/// Applies this processor (classified passes only).
 	BE_SCENE_API void Render(uint4 stageID, uint4 queueID, const Perspective *pPerspective, const RenderContext &context) const;
+
+	/// Applies this processor (unclassified passes only).
+	BE_SCENE_API void Render(uint4 layerIdx, const Perspective *pPerspective, const RenderContext &context) const;
+	/// Applies this processor (classified passes only).
+	BE_SCENE_API void Render(uint4 layerIdx, uint4 stageID, uint4 queueID, const Perspective *pPerspective, const RenderContext &context) const;
 
 	/// Sets the processing effect.
 	BE_SCENE_API virtual void SetMaterial(Material *pSetup);

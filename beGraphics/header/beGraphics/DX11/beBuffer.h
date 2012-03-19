@@ -18,6 +18,11 @@ namespace beGraphics
 namespace DX11
 {
 
+/// Creates a structured buffer.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateStructuredBuffer(ID3D11Device *pDevice, uint4 bindFlags, uint4 size, uint4 count = 1);
+/// Creates a constant buffer.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateConstantBuffer(ID3D11Device *pDevice, uint4 size, uint4 count = 1);
+
 /// Creates a buffer according to the given description.
 BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateBuffer(const D3D11_BUFFER_DESC &desc, const void *pInitialData, ID3D11Device *pDevice);
 /// Updates the given unstructured buffer with the given data.

@@ -51,7 +51,7 @@ private:
 	beEntitySystem::Entity* entity()
 	{
 		if (m_pCommand)
-			return m_pCommand->entity();
+			return m_pCommand->entities()[0];
 
 		QString name = m_pUI->nameLineEdit->text();
 
@@ -92,7 +92,7 @@ private:
 				);
 		}
 
-		return (m_pCommand) ? m_pCommand->entity() : nullptr;
+		return (m_pCommand) ? m_pCommand->entities()[0] : nullptr;
 	}
 
 public:

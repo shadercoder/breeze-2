@@ -18,13 +18,28 @@ EntityGroup::EntityGroup()
 {
 }
 
+// Copies and entity group.
+EntityGroup::EntityGroup(const EntityGroup &right)
+	: m_entities(right.m_entities)
+{
+}
+
+// Copies and entity group.
+EntityGroup::EntityGroup(Entity *const *entities, uint4 count)
+{
+	m_entities.reserve(count);
+
+	for (uint4 i = 0; i < count; ++i)
+		m_entities.push_back(entities[i]);
+}
+
 // Destructor.
 EntityGroup::~EntityGroup()
 {
 }
 
 // Adds the given entity to this group.
-void EntityGroup::AddEntity(Entity *pEntity, bool bKeepPersistentID)
+void EntityGroup::AddEntity(Entity *pEntity)
 {
 	if (!pEntity)
 	{
@@ -37,7 +52,7 @@ void EntityGroup::AddEntity(Entity *pEntity, bool bKeepPersistentID)
 }
 
 // Removes the given entity from this group.
-bool EntityGroup::RemoveEntity(Entity *pEntity, bool bKeepPersistentID)
+bool EntityGroup::RemoveEntity(Entity *pEntity)
 {
 	return lean::remove_ordered(m_entities, pEntity);
 }

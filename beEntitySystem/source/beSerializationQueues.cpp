@@ -12,14 +12,28 @@ namespace beEntitySystem
 {
 
 // Gets generic tasks to perform when saving.
-SaveQueue& GetSaveTasks()
+SaveQueue& GetWorldSaveTasks()
 {
 	static SaveQueue saveTasks;
 	return saveTasks;
 }
 
 // Gets generic tasks to perform when loading.
-LoadQueue& GetLoadTasks()
+LoadQueue& GetWorldLoadTasks()
+{
+	static LoadQueue loadTasks;
+	return loadTasks;
+}
+
+// Gets generic tasks to perform when saving.
+SaveQueue& GetResourceSaveTasks()
+{
+	static SaveQueue saveTasks;
+	return saveTasks;
+}
+
+// Gets generic tasks to perform when loading.
+LoadQueue& GetResourceLoadTasks()
 {
 	static LoadQueue loadTasks;
 	return loadTasks;

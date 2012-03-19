@@ -37,8 +37,8 @@ QString ShapeCreationParameterWidget::onBrowse(const QString &path)
 		ShapeImportDialog::tr("Select a shape resource for '%1'").arg(name()),
 		location,
 		QString("%1 (*.shape);;%2 (*.dae *.obj *.3ds *.dxf *.x *.mdl *.*);;%3 (*.*)")
-			.arg( ShapeImportDialog::tr("breeze Shapees") )
-			.arg( ShapeImportDialog::tr("Importable Shapees") )
+			.arg( ShapeImportDialog::tr("breeze Shapes") )
+			.arg( ShapeImportDialog::tr("Importable Shapes") )
 			.arg( ShapeImportDialog::tr("All Files") ),
 		&selectedFilter );
 

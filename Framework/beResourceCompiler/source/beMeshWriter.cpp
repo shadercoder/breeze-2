@@ -132,19 +132,15 @@ uint4 WriteVertexDescChunk(lean::raw_file &file, uint4 vertexAttributes)
 				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::TexCoord, 0, beGraphics::Format::R32G32F)
 			);
 
-	beGraphics::Format::T handednessFormat = (vertexAttributes & beScene::MeshVertexAttributes::Handedness)
-		? beGraphics::Format::R32G32B32A32F
-		: beGraphics::Format::R32G32B32F;
-
 	if (vertexAttributes & beScene::MeshVertexAttributes::Tangent)
 		descChunk.Size += WriteData<beScene::MeshDataVertexElementDesc>(
 				file,
-				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::Tangent, 0, handednessFormat)
+				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::Tangent, 0, beGraphics::Format::R32G32B32F)
 			);
 	if (vertexAttributes & beScene::MeshVertexAttributes::BiTangent)
 		descChunk.Size += WriteData<beScene::MeshDataVertexElementDesc>(
 				file,
-				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::BiTangent, 0, handednessFormat)
+				beScene::MeshDataVertexElementDesc(beScene::MeshVertexAttributes::BiTangent, 0, beGraphics::Format::R32G32B32F)
 			);
 
 	metaSize += EndChunk(file, descChunk);
@@ -187,22 +183,23 @@ uint4 WriteVertexChunk(lean::raw_file &file, const aiMesh &mesh, uint4 vertexAtt
 
 		if (vertexAttributes & beScene::MeshVertexAttributes::TangentFrame)
 		{
-			float handedness = (mesh.mTangents[i] ^ mesh.mBitangents[i]) * mesh.mNormals[i];
+			float handednessFactor = 1.0f;
+
+			if (vertexAttributes & beScene::MeshVertexAttributes::Handedness)
+			{
+				// NOTE: Apparently, Assimp flips the bitangent
+				float handedness = (mesh.mTangents[i] ^ -mesh.mBitangents[i]) * mesh.mNormals[i];
+
+				// Scale flipped tangent frames by 1/2
+				if (handedness < 0.0f)
+					handednessFactor *= 0.5f;
+			}
 			
 			if (vertexAttributes & beScene::MeshVertexAttributes::Tangent)
-			{
-				vertexChunk.Size += WriteData<aiVector3D>(file, mesh.mTangents[i]);
-				
-				if (vertexAttributes & beScene::MeshVertexAttributes::Handedness)
-					vertexChunk.Size += WriteData<float>(file, handedness);
-			}
+				vertexChunk.Size += WriteData<aiVector3D>(file, mesh.mTangents[i] * handednessFactor);
 			if (vertexAttributes & beScene::MeshVertexAttributes::BiTangent)
-			{
-				vertexChunk.Size += WriteData<aiVector3D>(file, mesh.mBitangents[i]);
-
-				if (vertexAttributes & beScene::MeshVertexAttributes::Handedness)
-					vertexChunk.Size += WriteData<float>(file, handedness);
-			}
+				// NOTE: Apparently, Assimp flips the bitangent
+				vertexChunk.Size += WriteData<aiVector3D>(file, -mesh.mBitangents[i] * handednessFactor);
 		}
 	}
 
