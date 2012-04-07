@@ -235,15 +235,24 @@ LEAN_INLINE const Material* MaybeGetMaterial(const RenderableMaterial *pMaterial
 }
 /// Gets the file, if available.
 template <class Resource, class ResourceCache>
-LEAN_INLINE utf8_ntr MaybeGetFile(const Resource *pResource, const ResourceCache *pCache, bool *pIsFile)
+LEAN_INLINE beCore::Exchange::utf8_string MaybeGetFile(const Resource *pResource, const ResourceCache *pCache, bool &bIsFile)
 {
-	return (pCache) ? pCache->GetFile(pResource, pIsFile) : utf8_ntr("");
+	beCore::Exchange::utf8_string result;
+	
+	utf8_ntr file = (pCache) ? pCache->GetFile(pResource, &bIsFile) : utf8_ntr("");
+
+	if (pCache && bIsFile)
+		result = pCache->GetPathResolver().Shorten(file);
+	else
+		result.assign(file.begin(), file.end());
+
+	return result;
 }
 /// Gets the file, if available.
 template <class Resource>
-LEAN_INLINE utf8_ntr MaybeGetFile(const Resource *pResource, bool *pIsFile)
+LEAN_INLINE beCore::Exchange::utf8_string MaybeGetFile(const Resource *pResource, bool &bIsFile)
 {
-	return MaybeGetFile(pResource, (pResource) ? pResource->GetCache() : nullptr, pIsFile);
+	return MaybeGetFile(pResource, (pResource) ? pResource->GetCache() : nullptr, bIsFile);
 }
 
 // Saves the given resource in one of the given attributes. Returns true, if saved by name, false otherwise.
@@ -251,7 +260,7 @@ template <class Resource>
 inline bool AppendResourceAttribute(rapidxml::xml_node<lean::utf8_t> &node, const utf8_ntri &fileAtt, const utf8_ntri &nameAtt, const Resource *pResource)
 {
 	bool bFile = false;
-	utf8_ntr file = MaybeGetFile(pResource, &bFile);
+	beCore::Exchange::utf8_string file = MaybeGetFile(pResource, bFile);
 
 	if (bFile)
 	{

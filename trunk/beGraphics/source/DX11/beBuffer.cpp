@@ -53,6 +53,14 @@ lean::com_ptr<ID3D11Buffer, true> CreateBuffer(const D3D11_BUFFER_DESC &desc, co
 	return pBuffer.transfer();
 }
 
+// Gets the description of the given buffer.
+D3D11_BUFFER_DESC GetDesc(ID3D11Buffer *pBuffer)
+{
+	D3D11_BUFFER_DESC desc;
+	pBuffer->GetDesc(&desc);
+	return desc;
+}
+
 // Constructor.
 Buffer::Buffer(const D3D11_BUFFER_DESC &desc, const void *pInitialData, ID3D11Device *pDevice)
 	: m_pBuffer( CreateBuffer(desc, pInitialData, pDevice) )

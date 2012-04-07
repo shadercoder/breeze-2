@@ -4,13 +4,13 @@
 #include "Engine/BindPoints.fx"
 
 #ifdef BE_SCENE_SETUP
-	#define BE_SCENE_TEXTURE(name) name
+	#define BE_SCENE_PREBOUND_S(semantic) semantic
 #else
-	#define BE_SCENE_TEXTURE(name) prebound(name)
+	#define BE_SCENE_PREBOUND_S(semantic) prebound_s(semantic)
 #endif
 
 /// Scene texture.
-Texture2D BE_SCENE_TEXTURE(SceneTexture) : bindpoint_s(SceneTarget, t15)
+Texture2D SceneTexture : BE_SCENE_PREBOUND_S(bindpoint_s(SceneTarget, t15))
 <
 	string TargetType = "Permanent";
 	string Format = "R16G16B16A16F";

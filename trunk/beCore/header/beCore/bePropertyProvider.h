@@ -15,23 +15,44 @@
 namespace beCore
 {
 
+/// Widget enumeration.
+namespace Widget
+{
+	/// Enumeration.
+	enum T
+	{
+		None,			///< No widget.
+		Raw,			///< Raw value widget.
+		Slider,			///< Slider widget.
+		Color,			///< Color widget.
+		Angle,			///< Angle widget.
+		Orientation,	///< Orientation widget.
+
+		End
+	};
+}
+
 /// Property description.
 struct PropertyDesc
 {
 	const lean::property_type_info *TypeInfo;	///< Value (component) type.
-	size_t Count;								///< Value (component) count.
-	uint4 TypeID;								///< Serialization type.
+	uint4 Count;								///< Value (component) count.
+	uint2 TypeID;								///< Serialization type.
+	int2 Widget;								///< UI widget.
 
 	/// Default Constructor.
 	PropertyDesc()
 		: TypeInfo(nullptr),
 		Count(0),
-		TypeID(TypeIndex::InvalidID) { }
-	/// Constructor.
-	PropertyDesc(const lean::property_type_info &typeInfo, size_t count, uint4 typeID)
+		TypeID(TypeIndex::InvalidShortID),
+		Widget(Widget::None) { }
+	/// Constructor. Truncates type ID to 2 bytes.
+	PropertyDesc(const lean::property_type_info &typeInfo, uint4 count, uint4 typeID, int2 widget)
 		: TypeInfo(&typeInfo),
 		Count(count),
-		TypeID(typeID) { }
+		// MONITOR: Type ID truncated to two bytes.
+		TypeID(static_cast<uint2>(typeID)),
+		Widget(widget) { }
 };
 
 class PropertyVisitor;
@@ -65,7 +86,7 @@ public:
 	/// Visits a property for modification.
 	virtual bool WriteProperty(uint4 id, PropertyVisitor &visitor, bool bWriteOnly = true) = 0;
 	/// Visits a property for reading.
-	virtual bool ReadProperty(uint4 id, PropertyVisitor &visitor) const = 0;
+	virtual bool ReadProperty(uint4 id, PropertyVisitor &visitor, bool bPersistentOnly = false) const = 0;
 
 	/// Sets the given value.
 	template <class Value>
@@ -169,7 +190,7 @@ public:
 	/// Visits a property for modification.
 	virtual bool WriteProperty(uint4 id, PropertyVisitor &visitor, bool bWriteOnly = true) { return false; }
 	/// Visits a property for reading.
-	virtual bool ReadProperty(uint4 id, PropertyVisitor &visitor) const { return false; }
+	virtual bool ReadProperty(uint4 id, PropertyVisitor &visitor, bool bPersistentOnly = false) const { return false; }
 
 	/// Gets the type index.
 	virtual const TypeIndex* GetPropertyTypeIndex() const { return nullptr; }
@@ -193,6 +214,9 @@ public:
 	/// Gets a range maximum provider.
 	virtual const PropertyProvider* GetUpperPropertyLimits() const = 0;
 };
+
+/// Transfers all from the given source property provider to the given destination property provider.
+BE_CORE_API void TransferProperties(PropertyProvider &dest, const PropertyProvider &source);
 
 } // namespace
 

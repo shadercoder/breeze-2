@@ -47,6 +47,9 @@ public:
 	virtual beGraphics::EffectCache* GetEffectCache() const = 0;
 	/// Gets the texture cache.
 	virtual beGraphics::TextureCache* GetTextureCache() const = 0;
+
+	/// Gets the path resolver.
+	virtual const beCore::PathResolver& GetPathResolver() const = 0;
 };
 
 /// Creates a new material cache.

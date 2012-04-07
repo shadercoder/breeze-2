@@ -8,8 +8,10 @@
 
 #include "beCore/bePropertyVisitor.h"
 
+#include <lean/functional/predicates.h>
 #include <lean/xml/utility.h>
 #include <sstream>
+
 #include <lean/logging/log.h>
 
 namespace beCore
@@ -115,7 +117,7 @@ struct PropertyDeserializer : public PropertyVisitor
 } // namespace
 
 // Saves the given property provider to the given XML node.
-void SaveProperties(const PropertyProvider &properties, rapidxml::xml_node<lean::utf8_t> &node)
+void SaveProperties(const PropertyProvider &properties, rapidxml::xml_node<lean::utf8_t> &node, bool bPersistentOnly)
 {
 	const uint4 propertyCount = properties.GetPropertyCount();
 
@@ -130,15 +132,15 @@ void SaveProperties(const PropertyProvider &properties, rapidxml::xml_node<lean:
 		PropertySerializer serializer(properties, propertiesNode);
 
 		for (uint4 i = 0; i < propertyCount; ++i)
-			properties.ReadProperty(i, serializer);
+			properties.ReadProperty(i, serializer, bPersistentOnly);
 	}
 }
 
 // Saves the given property provider to the given XML node.
-void SaveProperties(const PropertyProvider &properties, uint4 propertyID, rapidxml::xml_node<lean::utf8_t> &node)
+void SaveProperties(const PropertyProvider &properties, uint4 propertyID, rapidxml::xml_node<lean::utf8_t> &node, bool bPersistentOnly)
 {
 	PropertySerializer serializer(properties, node);
-	properties.ReadProperty(propertyID, serializer);
+	properties.ReadProperty(propertyID, serializer, bPersistentOnly);
 }
 
 // Load the given property provider from the given XML node.
@@ -146,8 +148,7 @@ void LoadProperties(PropertyProvider &properties, const rapidxml::xml_node<lean:
 {
 	const uint4 propertyCount = properties.GetPropertyCount();
 
-	uint4 lowerPropertyID = 0;
-	uint4 upperPropertyID = 0;
+	uint4 nextPropertyID = 0;
 
 	for (const rapidxml::xml_node<lean::utf8_t> *propertiesNode = node.first_node("properties");
 		propertiesNode; propertiesNode = propertiesNode->next_sibling("properties"))
@@ -156,9 +157,13 @@ void LoadProperties(PropertyProvider &properties, const rapidxml::xml_node<lean:
 		{
 			const utf8_t *nodeName = propertyNode->first_attribute() ? propertyNode->first_attribute()->value() : propertyNode->name();
 
+			uint4 lowerPropertyID = nextPropertyID;
+			uint4 upperPropertyID = nextPropertyID;
+
 			for (uint4 i = 0; i < propertyCount; ++i)
 			{
-				uint4 propertyID = (((i & 1) != 0) | (upperPropertyID == propertyCount)) & (lowerPropertyID != 0)
+				// Perform bi-directional search: even == forward; odd == backward
+				uint4 propertyID = (lean::is_odd(i) | (upperPropertyID == propertyCount)) & (lowerPropertyID != 0)
 					? --lowerPropertyID
 					: upperPropertyID++;
 
@@ -167,7 +172,8 @@ void LoadProperties(PropertyProvider &properties, const rapidxml::xml_node<lean:
 					PropertyDeserializer serializer(properties, *propertyNode);
 					properties.WriteProperty(propertyID, serializer);
 
-					lowerPropertyID = upperPropertyID = propertyID + 1;
+					// Start next search with next property
+					nextPropertyID = propertyID + 1;
 					break;
 				}
 			}

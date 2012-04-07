@@ -37,6 +37,7 @@ EntityPropertyBinder::EntityPropertyBinder(beEntitySystem::Entity *pEntity,
 	
 	GenericPropertyBinder *pEntityBinder = new GenericPropertyBinder(m_pEntity, m_pEntity, pDocument, pTree, pEntityItem, this);
 	checkedConnect(this, SIGNAL(propagateUpdateProperties()), pEntityBinder, SLOT(updateProperties()));
+	checkedConnect(pEntityBinder, SIGNAL(propertiesChanged()), this, SIGNAL(propertiesChanged()));
 	pTree->expand( pEntityItem->index() );
 
 	beEntitySystem::Entity::Controllers controllers = m_pEntity->GetControllers();
@@ -53,6 +54,7 @@ EntityPropertyBinder::EntityPropertyBinder(beEntitySystem::Entity *pEntity,
 
 		GenericPropertyBinder *pBinder = new GenericPropertyBinder(pController, pController, pDocument, pTree, pControllerItem, this);
 		checkedConnect(this, SIGNAL(propagateUpdateProperties()), pBinder, SLOT(updateProperties()));
+		checkedConnect(pBinder, SIGNAL(propertiesChanged()), this, SIGNAL(propertiesChanged()));
 		pTree->expand( pControllerItem->index() );
 	}
 }

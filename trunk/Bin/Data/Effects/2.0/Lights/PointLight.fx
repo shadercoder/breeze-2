@@ -54,8 +54,8 @@ float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 {
 	float2 texCoord = p.ScreenSpace.xy / p.ScreenSpace.w;
 
-	float4 eyeGeometry = BE_SCENE_TEXTURE(SceneGeometryTexture).SampleLevel(DefaultSampler, texCoord, 0);
-	float4 diffuseColor = BE_SCENE_TEXTURE(SceneDiffuseTexture).SampleLevel(DefaultSampler, texCoord, 0);
+	float4 eyeGeometry = SceneGeometryTexture.SampleLevel(DefaultSampler, texCoord, 0);
+	float4 diffuseColor = SceneDiffuseTexture.SampleLevel(DefaultSampler, texCoord, 0);
 
 	float3 world = Perspective.CamPos.xyz + p.CamDir * eyeGeometry.x / dot(p.CamDir, Perspective.CamDir.xyz);
 

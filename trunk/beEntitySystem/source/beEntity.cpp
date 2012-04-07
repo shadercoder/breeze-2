@@ -8,6 +8,8 @@
 #include <beCore/beReflectionProperties.h>
 #include <beCore/bePersistentIDs.h>
 
+#include <beMath/beMatrix.h>
+
 namespace beEntitySystem
 {
 
@@ -18,13 +20,16 @@ const beCore::ReflectionProperties EntityProperties = beCore::ReflectionProperti
 	<< beCore::MakeReflectionProperty<float[3]>("position", beCore::Widget::Raw)
 		.set_setter( BE_CORE_PROPERTY_SETTER_UNION(&Entity::SetPosition, float) )
 		.set_getter( BE_CORE_PROPERTY_GETTER_UNION(&Entity::GetPosition, float) )
-	<< beCore::MakeReflectionProperty<float[9]>("orientation", beCore::Widget::Orientation)
+	<< beCore::MakeReflectionProperty<float[9]>("orientation", beCore::Widget::None, false)
 		.set_setter( BE_CORE_PROPERTY_SETTER_UNION(&Entity::SetOrientation, float) )
 		.set_getter( BE_CORE_PROPERTY_GETTER_UNION(&Entity::GetOrientation, float) )
+	<< beCore::MakeReflectionProperty<float[3]>("angles", beCore::Widget::Angle)
+		.set_setter( BE_CORE_PROPERTY_SETTER_UNION(&Entity::SetAngles, float) )
+		.set_getter( BE_CORE_PROPERTY_GETTER_UNION(&Entity::GetAngles, float) )
 	<< beCore::MakeReflectionProperty<float[3]>("scaling", beCore::Widget::Raw)
 		.set_setter( BE_CORE_PROPERTY_SETTER_UNION(&Entity::SetScaling, float) )
 		.set_getter( BE_CORE_PROPERTY_GETTER_UNION(&Entity::GetScaling, float) )
-	<< beCore::MakeReflectionProperty<uint8>("id", beCore::Widget::Raw)
+	<< beCore::MakeReflectionProperty<uint8>("id", beCore::Widget::Raw, false)
 		.set_getter( BE_CORE_PROPERTY_GETTER(&Entity::GetPersistentID) );
 
 // Constructor.
@@ -40,6 +45,24 @@ Entity::Entity(const utf8_ntri &name)
 // Destructor.
 Entity::~Entity()
 {
+}
+
+// Sets the orientation.
+void Entity::SetAngles(const fvec3 &angles)
+{
+	SetOrientation(
+			beMath::mat_rot_yxz<3>(
+				angles[0] * beMath::Constants::degrees<float>::deg2rad,
+				angles[1] * beMath::Constants::degrees<float>::deg2rad,
+				angles[2] * beMath::Constants::degrees<float>::deg2rad
+			)
+		);
+}
+
+// Gets the orientation.
+fvec3 Entity::GetAngles() const
+{
+	return angles_rot_yxz(m_orientation) * beMath::Constants::degrees<float>::rad2deg;
 }
 
 // Sets the name.

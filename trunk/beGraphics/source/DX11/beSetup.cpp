@@ -5,7 +5,11 @@
 #include "beGraphicsInternal/stdafx.h"
 #include "beGraphics/DX11/beSetup.h"
 #include "beGraphics/DX11/beDeviceContext.h"
+#include "beGraphics/DX11/beDevice.h"
+
 #include "beGraphics/beTextureCache.h"
+#include "beGraphics/DX11/beBuffer.h"
+
 #include "beGraphics/DX/beError.h"
 
 #include <beCore/bePropertyVisitor.h>
@@ -33,7 +37,7 @@ const uint4 FloatTypeID = beCore::RegisterType<FLOAT>();
 const uint4 DoubleTypeID = beCore::RegisterType<DOUBLE>();
 
 /// Gets a property description from the given effect type description. Returns count of zero if unknown.
-PropertyDesc GetPropertyDesc(const D3DX11_EFFECT_TYPE_DESC &typeDesc)
+PropertyDesc GetPropertyDesc(const D3DX11_EFFECT_TYPE_DESC &typeDesc, int2 widget)
 {
 	size_t componentCount = max<size_t>(typeDesc.Rows, 1)
 		* max<size_t>(typeDesc.Columns, 1)
@@ -42,22 +46,42 @@ PropertyDesc GetPropertyDesc(const D3DX11_EFFECT_TYPE_DESC &typeDesc)
 	switch (typeDesc.Type)
 	{
 	case D3D_SVT_BOOL:
-		return PropertyDesc(lean::get_property_type_info<BOOL>(), componentCount, BoolTypeID);
+		return PropertyDesc(lean::get_property_type_info<BOOL>(), componentCount, BoolTypeID, widget);
 
 	case D3D_SVT_INT:
-		return PropertyDesc(lean::get_property_type_info<INT>(), componentCount, IntTypeID);
+		return PropertyDesc(lean::get_property_type_info<INT>(), componentCount, IntTypeID, widget);
 	case D3D_SVT_UINT:
-		return PropertyDesc(lean::get_property_type_info<UINT>(), componentCount, UintTypeID);
+		return PropertyDesc(lean::get_property_type_info<UINT>(), componentCount, UintTypeID, widget);
 	case D3D_SVT_UINT8:
-		return PropertyDesc(lean::get_property_type_info<UINT8>(), componentCount, UlongTypeID);
+		return PropertyDesc(lean::get_property_type_info<UINT8>(), componentCount, UlongTypeID, widget);
 
 	case D3D_SVT_FLOAT:
-		return PropertyDesc(lean::get_property_type_info<FLOAT>(), componentCount, FloatTypeID);
+		return PropertyDesc(lean::get_property_type_info<FLOAT>(), componentCount, FloatTypeID, widget);
 	case D3D_SVT_DOUBLE:
-		return PropertyDesc(lean::get_property_type_info<DOUBLE>(), componentCount, DoubleTypeID);
+		return PropertyDesc(lean::get_property_type_info<DOUBLE>(), componentCount, DoubleTypeID, widget);
 	}
 
 	return PropertyDesc();
+}
+
+/// Gets the widget by name.
+int2 GetWidgetByName(const utf8_ntri &name)
+{
+	if (_stricmp(name.c_str(), "color") == 0)
+		return beCore::Widget::Color;
+	else if (_stricmp(name.c_str(), "slider") == 0)
+		return beCore::Widget::Slider;
+	else if (_stricmp(name.c_str(), "raw") == 0)
+		return beCore::Widget::Raw;
+	else if (_stricmp(name.c_str(), "angle") == 0)
+		return beCore::Widget::Angle;
+	else if (_stricmp(name.c_str(), "none") == 0)
+		return beCore::Widget::None;
+	else if (_stricmp(name.c_str(), "orientation") == 0)
+		return beCore::Widget::Orientation;
+	else
+		// Default to raw value
+		return beCore::Widget::Raw;
 }
 
 /// Gets the setup constant buffer.
@@ -68,9 +92,10 @@ ID3DX11EffectConstantBuffer* MaybeGetSetupConstants(ID3DX11Effect *pEffect)
 }
 
 /// Clones the given constant buffer, if valid.
-lean::com_ptr<ID3D11Buffer, true> MaybeCloneConstantBuffer(ID3DX11EffectConstantBuffer *pConstants)
+lean::com_ptr<ID3D11Buffer, true> MaybeCloneConstantBuffer(ID3DX11EffectConstantBuffer *pConstants, uint4 &bufferSize)
 {
 	lean::com_ptr<ID3D11Buffer> pClone;
+	bufferSize = 0;
 
 	if (pConstants)
 	{
@@ -81,15 +106,10 @@ lean::com_ptr<ID3D11Buffer, true> MaybeCloneConstantBuffer(ID3DX11EffectConstant
 
 		if (pOriginal)
 		{
-			D3D11_BUFFER_DESC desc;
-			pOriginal->GetDesc(&desc);
+			D3D11_BUFFER_DESC desc = GetDesc(pOriginal);
 
-			lean::com_ptr<ID3D11Device> pDevice;
-			pOriginal->GetDevice(pDevice.rebind());
-		
-			BE_THROW_DX_ERROR_MSG(
-				pDevice->CreateBuffer(&desc, nullptr, pClone.rebind()),
-				"ID3D11Device::CreateBuffer()" );
+			pClone = CreateBuffer(desc, nullptr, GetDevice(*pOriginal));
+			bufferSize = desc.ByteWidth;
 		}
 	}
 
@@ -97,59 +117,49 @@ lean::com_ptr<ID3D11Buffer, true> MaybeCloneConstantBuffer(ID3DX11EffectConstant
 }
 
 // Gets all properties.
-Setup::property_vector GetProperties(ID3DX11Effect *pEffect, ID3DX11EffectConstantBuffer *pConstants, ID3D11Buffer *pConstantBuffer,
-	lean::scoped_ptr<char[]> &pBackingStore)
+Setup::property_vector GetProperties(ID3DX11Effect *pEffect,
+	ID3DX11EffectConstantBuffer *pConstants, ID3D11Buffer *pConstantBuffer, uint4 constantBufferSize,
+	uint4 &unbufferedBeginID, uint4 &unbufferedEndID,
+	lean::scoped_ptr<char[]> &backingStore, uint4 &backingStoreSize)
 {
 	Setup::property_vector properties;
 
-	D3DX11_EFFECT_DESC effectDesc;
-	BE_THROW_DX_ERROR_MSG(pEffect->GetDesc(&effectDesc), "ID3DX11Effect::GetDesc()");
+	D3DX11_EFFECT_DESC effectDesc = GetDesc(pEffect);
+	properties.reserve(effectDesc.GlobalVariables);
 
-	Setup::property_vector tempProperties;
-	tempProperties.reserve(effectDesc.GlobalVariables);
+	// Allocate dedicated block of memory for buffered constants only
+	uint4 globalConstantOffset = constantBufferSize;
 
 	bool bHasBuffered = (pConstants && pConstantBuffer);
-	size_t constantBufferOffset = 0;
-	size_t constantDataSize = 0;
 
-	if (bHasBuffered)
-	{
-		D3D11_BUFFER_DESC desc;
-		pConstantBuffer->GetDesc(&desc);
-		constantBufferOffset = desc.ByteWidth;
-		constantDataSize += desc.ByteWidth;
-	}
+	unbufferedBeginID = static_cast<uint4>(-1);
+	unbufferedEndID = 0;
 
 	for (uint4 id = 0; id < effectDesc.GlobalVariables; ++id)
 	{
 		ID3DX11EffectVariable *pVariable = pEffect->GetVariableByIndex(id);
-		
 		// Valid variable
-		if (!pVariable->IsValid())
-			LEAN_THROW_ERROR_MSG("ID3DX11Effect::GetVariableByIndex()");
-
-		D3DX11_EFFECT_VARIABLE_DESC variableDesc;
-		BE_THROW_DX_ERROR_MSG(pVariable->GetDesc(&variableDesc), "ID3DX11EffectVariable::GetDesc()");
+		D3DX11_EFFECT_VARIABLE_DESC variableDesc = GetDesc(pVariable);
 		
 		// Not bound by semantic
 		if (variableDesc.Semantic)
 			continue;
 
 		ID3DX11EffectType *pType = pVariable->GetType();
-
 		// Of valid type
-		if (!pType->IsValid())
-			LEAN_THROW_ERROR_MSG("ID3DX11EffectVariable::GetType()");
-
-		D3DX11_EFFECT_TYPE_DESC typeDesc;
-		BE_THROW_DX_ERROR_MSG(pType->GetDesc(&typeDesc), "ID3DX11EffectType::GetDesc()");
+		D3DX11_EFFECT_TYPE_DESC typeDesc = GetDesc(pType);
 
 		// Some kind of numeric primitive
 		if (typeDesc.Class != D3D_SVC_SCALAR && typeDesc.Class != D3D_SVC_VECTOR &&
 			typeDesc.Class != D3D_SVC_MATRIX_ROWS && typeDesc.Class != D3D_SVC_MATRIX_COLUMNS)
 			continue;
 
-		PropertyDesc propertyDesc = GetPropertyDesc(typeDesc);
+		const char *widgetName = nullptr;
+		SUCCEEDED(pVariable->GetAnnotationByName("UIWidget")->AsString()->GetString(&widgetName))
+			|| SUCCEEDED(pVariable->GetAnnotationByName("Widget")->AsString()->GetString(&widgetName));
+
+		int2 widget = (widgetName) ? GetWidgetByName(widgetName) : beCore::Widget::Raw;
+		PropertyDesc propertyDesc = GetPropertyDesc(typeDesc, widget);
 
 		// Of valid numeric base type
 		if (!propertyDesc.Count)
@@ -159,78 +169,45 @@ Setup::property_vector GetProperties(ID3DX11Effect *pEffect, ID3DX11EffectConsta
 		SUCCEEDED(pVariable->GetAnnotationByName("UIName")->AsString()->GetString(&propertyName))
 			|| SUCCEEDED(pVariable->GetAnnotationByName("Name")->AsString()->GetString(&propertyName));
 
-		uint4 bufferOffset = (bHasBuffered && pVariable->GetParentConstantBuffer() == pConstants)
-			? variableDesc.BufferOffset
-			: Setup::PropertyData::InvalidBufferOffset;
+		// Add to buffered or to unbuffered block
+		bool bBuffered = (bHasBuffered && pVariable->GetParentConstantBuffer() == pConstants);
+		uint4 backingStoreOffset = (bBuffered) ? variableDesc.BufferOffset : globalConstantOffset;
 
-		tempProperties.push_back(
+		uint4 propertyID = static_cast<uint4>(properties.size());
+		
+		properties.push_back(
 				Setup::Property(
 						propertyName,
 						propertyDesc,
-						Setup::PropertyData(pVariable, nullptr, typeDesc.UnpackedSize, static_cast<uint4>(typeDesc.PackedSize / propertyDesc.Count), bufferOffset)
+						Setup::PropertyData(
+								pVariable,
+								backingStoreOffset,
+								static_cast<uint2>(typeDesc.UnpackedSize),
+								static_cast<uint2>(typeDesc.PackedSize / propertyDesc.Count)
+							)
 					)
 			);
 		
-		// Need additional memory, if unbuffered
-		if (bufferOffset == Setup::PropertyData::InvalidBufferOffset)
-			constantDataSize += typeDesc.UnpackedSize;
+		if (!bBuffered)
+		{
+			// Need additional memory, if unbuffered
+			globalConstantOffset += typeDesc.UnpackedSize;
+
+			unbufferedBeginID = min(propertyID, unbufferedBeginID);
+			unbufferedEndID = max(propertyID + 1, unbufferedEndID);
+		}
 	}
 
 	// Allocate fitting properties vector
-	properties.reserve(tempProperties.size());
+	properties.shrink_to_fit();
 
 	// Allocate backing store memory
-	pBackingStore = new char[constantDataSize];
+	backingStoreSize = globalConstantOffset;
+	backingStore = new char[backingStoreSize];
 
-	// Locate unbuffered properties right after buffered properties
-	char *pBackingStoreOffset = pBackingStore + constantBufferOffset;
-
-	// Prepend unbuffered properties
-	for (Setup::property_vector::iterator itProperty = tempProperties.begin();
-		itProperty != tempProperties.end(); ++itProperty)
-	{
-		Setup::Property &tempProperty = *itProperty;
-
-		if (!tempProperty.data.IsBuffered())
-		{
-			properties.push_back(
-				Setup::Property(
-						tempProperty.name,
-						tempProperty.desc,
-						Setup::PropertyData(tempProperty.data.pVariable, pBackingStoreOffset,
-							tempProperty.data.size, tempProperty.data.elementSize, tempProperty.data.bufferOffset)
-					)
-				);
-
-			tempProperty.data.pVariable->GetRawValue(pBackingStoreOffset, 0, tempProperty.data.size);
-
-			pBackingStoreOffset += tempProperty.data.size;
-		}
-	}
-
-	if (bHasBuffered)
-	{
-		// Append buffered properties
-		for (Setup::property_vector::iterator itProperty = tempProperties.begin();
-			itProperty != tempProperties.end(); ++itProperty)
-		{
-			Setup::Property &tempProperty = *itProperty;
-
-			if (tempProperty.data.IsBuffered())
-			{
-				properties.push_back(
-					Setup::Property(
-							tempProperty.name,
-							tempProperty.desc,
-							Setup::PropertyData(tempProperty.data.pVariable, pBackingStore + tempProperty.data.bufferOffset,
-								tempProperty.data.size, tempProperty.data.elementSize, tempProperty.data.bufferOffset)
-						)
-					);
-
-				tempProperty.data.pVariable->GetRawValue(pBackingStore + tempProperty.data.bufferOffset, 0, tempProperty.data.size);
-			}
-		}
-	}
+	// Get default values
+	for (Setup::property_vector::const_iterator it = properties.begin(); it != properties.end(); ++it)
+		it->data.pVariable->GetRawValue(backingStore + it->data.offset, 0, it->data.size);
 
 	return properties;
 }
@@ -282,26 +259,45 @@ Setup::texture_vector GetTextures(ID3DX11Effect *pEffect, beGraphics::TextureCac
 	return textures;
 }
 
+// Gets all properties.
+char* CloneBackingStore(const char *storeData, uint4 storeSize)
+{
+	char* backingStore = new char[storeSize];
+	memcpy(backingStore, storeData, storeSize);
+	return backingStore;
+}
+
 } // namespace
 
 // Constructor.
 Setup::Setup(const Effect *pEffect, beGraphics::TextureCache *pTextures)
 	: m_pEffect( LEAN_ASSERT_NOT_NULL(pEffect) ),
 	m_pConstants( MaybeGetSetupConstants(*m_pEffect) ),
-	m_pConstantBuffer( MaybeCloneConstantBuffer(m_pConstants) ),
-	m_properties( GetProperties(*m_pEffect, m_pConstants, m_pConstantBuffer, m_pBackingStore) ),
+	m_pConstantBuffer( MaybeCloneConstantBuffer(m_pConstants, m_constantBufferSize) ),
+	m_properties(
+		GetProperties(
+				*m_pEffect,
+				m_pConstants, m_pConstantBuffer, m_constantBufferSize,
+				m_unbufferedPropertiesBegin, m_unbufferedPropertiesEnd,
+				m_backingStore, m_backingStoreSize
+			)
+		),
 	m_textures( GetTextures(*m_pEffect, pTextures) ),
 	m_bPropertiesChanged( true )
 {
 }
 
-// Constructor.
-Setup::Setup(ID3DX11Effect *pEffect, beGraphics::TextureCache *pTextures)
-	: m_pEffect( lean::bind_resource(new Effect(pEffect)) ),
-	m_pConstants( MaybeGetSetupConstants(*m_pEffect) ),
-	m_pConstantBuffer( MaybeCloneConstantBuffer(m_pConstants) ),
-	m_properties( GetProperties(*m_pEffect, m_pConstants, m_pConstantBuffer, m_pBackingStore) ),
-	m_textures( GetTextures(*m_pEffect, pTextures) ),
+// Copy constructor.
+Setup::Setup(const Setup &right)
+	: m_pEffect( right.m_pEffect ),
+	m_backingStoreSize( right.m_backingStoreSize ),
+	m_backingStore( CloneBackingStore(right.m_backingStore, right.m_backingStoreSize) ),
+	m_pConstants( right.m_pConstants ),
+	m_pConstantBuffer( MaybeCloneConstantBuffer(m_pConstants, m_constantBufferSize) ),
+	m_unbufferedPropertiesBegin( right.m_unbufferedPropertiesBegin ),
+	m_unbufferedPropertiesEnd( right.m_unbufferedPropertiesEnd ),
+	m_properties( right.m_properties ),
+	m_textures( right.m_textures ),
 	m_bPropertiesChanged( true )
 {
 }
@@ -319,18 +315,20 @@ void Setup::Apply(const beGraphics::DeviceContext &context) const
 	{
 		if (m_bPropertiesChanged)
 		{
-			ToImpl(context)->UpdateSubresource(m_pConstantBuffer, 0, nullptr, m_pBackingStore, 0, 0);
+			ToImpl(context)->UpdateSubresource(m_pConstantBuffer, 0, nullptr, m_backingStore, 0, 0);
 			m_bPropertiesChanged = false;
 		}
 		m_pConstants->SetConstantBuffer(m_pConstantBuffer);
 	}
 
 	// Set unbuffered properties
-	for (property_vector::const_iterator it = m_properties.begin(); it != m_properties.end() && !it->data.IsBuffered(); ++it)
+	for (uint4 i = m_unbufferedPropertiesBegin; i < m_unbufferedPropertiesEnd; ++i)
 	{
-		const PropertyData &propertyData = it->data;
+		const PropertyData &propertyData = m_properties[i].data;
 
-		propertyData.pVariable->SetRawValue(propertyData.pData, 0, propertyData.size);
+		// Check if unbuffered
+		if (propertyData.offset >= m_constantBufferSize)
+			propertyData.pVariable->SetRawValue(m_backingStore + propertyData.offset, 0, propertyData.size);
 	}
 
 	// Set textures
@@ -385,8 +383,9 @@ bool Setup::SetProperty(uint4 id, const std::type_info &type, const void *values
 		// TODO: Realtime Debugging?
 		if (property.desc.TypeInfo->type == type)
 		{
-			memcpy(property.data.pData, values, min(count, property.desc.Count) * property.data.elementSize);
-			m_bPropertiesChanged |= property.data.IsBuffered();
+			memcpy(m_backingStore + property.data.offset, values, min(count, property.desc.Count) * property.data.elementSize);
+			// Check if buffered
+			m_bPropertiesChanged |= (property.data.offset < m_constantBufferSize);
 			EmitPropertyChanged();
 			return true;
 		}
@@ -403,7 +402,7 @@ bool Setup::GetProperty(uint4 id, const std::type_info &type, void *values, size
 
 		if (property.desc.TypeInfo->type == type)
 		{
-			memcpy(values, property.data.pData, min(count, property.desc.Count) * property.data.elementSize);
+			memcpy(values, m_backingStore + property.data.offset, min(count, property.desc.Count) * property.data.elementSize);
 			return true;
 		}
 	}
@@ -417,13 +416,17 @@ bool Setup::WriteProperty(uint4 id, beCore::PropertyVisitor &visitor, bool bWrit
 	{
 		const Property &property = m_properties[id];
 
-		bool bModified = visitor.Visit(*this,id,
-			property.desc,
-			property.data.pData);
+		bool bModified = visitor.Visit(
+				*this,
+				id,
+				property.desc,
+				m_backingStore + property.data.offset
+			);
 
 		if (bModified)
 		{
-			m_bPropertiesChanged |= property.data.IsBuffered();
+			// Check if buffered
+			m_bPropertiesChanged |= (property.data.offset < m_constantBufferSize);
 			EmitPropertyChanged();
 		}
 
@@ -434,16 +437,19 @@ bool Setup::WriteProperty(uint4 id, beCore::PropertyVisitor &visitor, bool bWrit
 }
 
 // Visits a property for reading.
-bool Setup::ReadProperty(uint4 id, beCore::PropertyVisitor &visitor) const
+bool Setup::ReadProperty(uint4 id, beCore::PropertyVisitor &visitor, bool bPersistentOnly) const
 {
 	if (id < m_properties.size())
 	{
 		const Property &property = m_properties[id];
 
 		// WARNING: Call read-only overload!
-		visitor.Visit(*this, id,
-			property.desc,
-			const_cast<const void*>(property.data.pData));
+		visitor.Visit(
+				*this,
+				id,
+				property.desc,
+				const_cast<const char*>(m_backingStore + property.data.offset)
+			);
 
 		return true;
 	}
@@ -498,6 +504,20 @@ const TextureView* Setup::GetTexture(uint4 id) const
 	return (id < m_textures.size())
 		? m_textures[id].pView
 		: nullptr;
+}
+
+// Updates the given texture.
+void Setup::DependencyChanged(beGraphics::Texture *oldTexture, beGraphics::Texture *newTexture)
+{
+	ID3D11Resource *oldTextureResource = ToImpl(oldTexture)->GetResource();
+
+	for (texture_vector::const_iterator it = m_textures.begin(); it != m_textures.end(); ++it)
+		// Find & replace textures
+		if (it->pView->GetResource() == oldTextureResource)
+			SetTexture(
+					static_cast<uint4>(it - m_textures.begin()),
+					LEAN_ASSERT_NOT_NULL(newTexture->GetCache())->GetTextureView(*newTexture)
+				);
 }
 
 // Gets the number of child components.

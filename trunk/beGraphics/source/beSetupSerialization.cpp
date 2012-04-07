@@ -12,6 +12,7 @@
 
 #include <lean/xml/numeric.h>
 #include <lean/xml/xml_file.h>
+#include <lean/functional/predicates.h>
 
 #include <lean/logging/errors.h>
 #include <lean/logging/log.h>
@@ -31,7 +32,7 @@ void SaveEffect(const Effect &effect, rapidxml::xml_node<lean::utf8_t> &node)
 
 		if (!file.empty())
 		{
-			lean::append_attribute(*node.document(), node, "effect", file);
+			lean::append_attribute(*node.document(), node, "effect", pCache->GetPathResolver().Shorten(file));
 
 			if (!macroString.empty())
 				lean::append_attribute(*node.document(), node, "effectOptions", macroString);
@@ -107,7 +108,7 @@ void SaveTextures(const TextureProvider &textures, rapidxml::xml_node<lean::utf8
 				utf8_ntr file = pCache->GetFile(*pTexture, &bIsFile);
 
 				if (bIsFile)
-					lean::append_attribute(document, textureNode, "file", file);
+					lean::append_attribute(document, textureNode, "file", pCache->GetPathResolver().Shorten(file));
 				else if (!file.empty())
 					lean::append_attribute(document, textureNode, "name", file);
 				else
@@ -124,8 +125,7 @@ void LoadTextures(TextureProvider &textures, const rapidxml::xml_node<lean::utf8
 {
 	const uint4 textureCount = textures.GetTextureCount();
 
-	uint4 lowerTextureID = 0;
-	uint4 upperTextureID = 0;
+	uint4 nextTextureID = 0;
 
 	for (const rapidxml::xml_node<lean::utf8_t> *texturesNode = node.first_node("textures");
 		texturesNode; texturesNode = texturesNode->next_sibling("textures"))
@@ -140,10 +140,14 @@ void LoadTextures(TextureProvider &textures, const rapidxml::xml_node<lean::utf8
 			utf8_ntr file = lean::get_attribute(*textureNode, "file");
 			utf8_ntr name = lean::get_attribute(*textureNode, "name");
 
+			uint4 lowerTextureID = nextTextureID;
+			uint4 upperTextureID = nextTextureID;
+
 			if (!file.empty() || !name.empty())
 				for (uint4 i = 0; i < textureCount; ++i)
 				{
-					uint4 textureID = (((i & 1) != 0) | (upperTextureID == textureCount)) & (lowerTextureID != 0)
+					// Perform bi-directional search: even == forward; odd == backward
+					uint4 textureID = (lean::is_odd(i) | (upperTextureID == textureCount)) & (lowerTextureID != 0)
 						? --lowerTextureID
 						: upperTextureID++;
 
@@ -161,7 +165,8 @@ void LoadTextures(TextureProvider &textures, const rapidxml::xml_node<lean::utf8
 							textures.SetTexture(textureID, pTexture);
 						}
 
-						lowerTextureID = upperTextureID = textureID + 1;
+						// Start next search with next texture
+						nextTextureID = textureID + 1;
 						break;
 					}
 				}

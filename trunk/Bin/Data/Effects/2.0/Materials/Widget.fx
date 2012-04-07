@@ -10,6 +10,7 @@ cbuffer SetupConstants
 	float4 Color
 	<
 		String UIName = "Color";
+		String UIWidget = "Color";
 	> = float4(1.0f, 0.0f, 0.0f, 0.7f);
 }
 

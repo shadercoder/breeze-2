@@ -54,6 +54,9 @@ public:
 	/// Searches for the given file or directory in the given virtual location.
 	BE_CORE_API Exchange::utf8_string Search(const lean::utf8_ntri &location, const lean::utf8_ntri &file, bool bThrow = false) const;
 
+	/// Shortens the given path, returning a path relative to the given location, if possible.
+	BE_CORE_API Exchange::utf8_string Shorten(const lean::utf8_ntri &location, const lean::utf8_ntri &file, bool *pMatch = nullptr) const;
+
 	/// Loads a configuration from the given file.
 	BE_CORE_API void LoadConfiguration(const lean::utf8_ntri &file);
 	/// Saves the current configuration to the given file.

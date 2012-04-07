@@ -48,7 +48,7 @@ public:
 	/// Visits a property for modification.
 	BE_CORE_API bool WriteProperty(uint4 id, PropertyVisitor &visitor, bool bWriteOnly = true);
 	/// Visits a property for reading.
-	BE_CORE_API bool ReadProperty(uint4 id, PropertyVisitor &visitor) const;
+	BE_CORE_API bool ReadProperty(uint4 id, PropertyVisitor &visitor, bool bPersistentOnly = false) const;
 
 	/// Gets the type index.
 	BE_CORE_API const TypeIndex* GetPropertyTypeIndex() const;

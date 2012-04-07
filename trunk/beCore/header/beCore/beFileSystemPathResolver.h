@@ -28,6 +28,8 @@ public:
 
 	// Resolves the given file name.
 	BE_CORE_API Exchange::utf8_string Resolve(const utf8_ntri &file, bool bThrow = false) const;
+	/// Shortens the given path.
+	BE_CORE_API Exchange::utf8_string Shorten(const utf8_ntri &path) const;
 
 	/// Constructs and returns a clone of this path resolver.
 	BE_CORE_API FileSystemPathResolver* clone() const;

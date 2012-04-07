@@ -11,16 +11,14 @@
 #include "beTextureProvider.h"
 #include "beDeviceContext.h"
 #include "beEffect.h"
+#include <lean/tags/noncopyable.h>
 
 namespace beGraphics
 {
 
 /// Setup interface.
-class Setup : public beCore::Resource, public beCore::ReflectedComponent, public TextureProvider, public Implementation
+class Setup : public lean::nonassignable, public beCore::Resource, public beCore::ReflectedComponent, public TextureProvider, public Implementation
 {
-protected:
-	LEAN_INLINE Setup& operator =(const Setup&) { return *this; }
-
 public:
 	virtual ~Setup() throw() { }
 
@@ -30,6 +28,9 @@ public:
 	/// Gets the effect.
 	virtual const Effect* GetEffect() const = 0;
 };
+
+/// Transfers all data from the given source setup to the given destination setup.
+BE_GRAPHICS_API void Transfer(Setup &dest, const Setup &source);
 
 } // namespace
 

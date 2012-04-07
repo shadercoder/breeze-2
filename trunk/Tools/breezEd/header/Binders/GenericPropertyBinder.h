@@ -69,6 +69,8 @@ public Q_SLOTS:
 	void updateProperties();
 
 Q_SIGNALS:
+	/// Properties have changed.
+	void propertiesChanged();
 	/// Propagates property update calls.
 	void propagateUpdateProperties();
 };

@@ -322,6 +322,12 @@ void MaterialCache::M::ObservedMaterial::FileChanged(const lean::utf8_ntri &file
 	this->pCache->m->dependencies.DependencyChanged(this->dependency, this->pMaterial);
 }
 
+/// Gets the path resolver.
+const beCore::PathResolver& MaterialCache::GetPathResolver() const
+{
+	return m->resolver;
+}
+
 } // namespace
 
 // Creates a new material cache.

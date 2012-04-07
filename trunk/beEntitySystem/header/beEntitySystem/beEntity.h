@@ -62,6 +62,11 @@ public:
 	/// Gets the scaling.
 	LEAN_INLINE const fvec3& GetScaling() const { return m_scaling; }
 
+	/// Sets the orientation.
+	BE_ENTITYSYSTEM_API void SetAngles(const fvec3 &angles);
+	/// Gets the orientation.
+	BE_ENTITYSYSTEM_API fvec3 GetAngles() const;
+
 	/// Sets the name.
 	BE_ENTITYSYSTEM_API void SetName(const utf8_ntri &name);
 	/// Gets the name.

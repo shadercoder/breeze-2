@@ -125,7 +125,7 @@ static const float2 SignedPoissonKernel[PoissonKernelSize] = {
 
 float4 PSShadow(Pixel p) : SV_Target0
 {
-	float4 eyeGeometry = BE_SCENE_TEXTURE(SceneGeometryTexture).SampleLevel(DefaultSampler, p.TexCoord, 0);
+	float4 eyeGeometry = SceneGeometryTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
 	float eyeDepth = ExtractDepth(eyeGeometry);
 	
 	int splitIndex = (int) dot(eyeDepth >= DirectionalLight.ShadowSplitPlanes, 1.0f);
@@ -186,29 +186,30 @@ float4 PSShadow(Pixel p) : SV_Target0
 
 float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 {
-	float4 eyeGeometry = BE_SCENE_TEXTURE(SceneGeometryTexture).SampleLevel(DefaultSampler, p.TexCoord, 0);
-	float4 diffuseColor = BE_SCENE_TEXTURE(SceneDiffuseTexture).SampleLevel(DefaultSampler, p.TexCoord, 0);
-	float4 specularColor = BE_SCENE_TEXTURE(SceneSpecularTexture).SampleLevel(DefaultSampler, p.TexCoord, 0);
+	float4 eyeGeometry = SceneGeometryTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
+	float4 diffuseColor = SceneDiffuseTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
+	float4 specularColor = SceneSpecularTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
 	
 //	return diffuseColor;
 
 	float3 worldNormal = normalize( ExtractNormal(eyeGeometry) );
+	float3 camDir = normalize(p.CamDir);
 
 	float4 intensity = 1.0f;
 
 	if (bShadowed)
 		intensity = ShadowTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
-	
+
 	// Angle fallof
 	float cosAngle = dot(worldNormal, -DirectionalLight.Dir);
 	float negIntensity = saturate(0.5f - 0.25f * cosAngle); // * AmbientTexture.SampleLevel(DefaultSampler, p.TexCoord, 0).a;
+	float rimIntensity = (1 - abs(cosAngle)) * pow(1 - dot(-camDir, worldNormal), 8) * saturate( dot(camDir, -DirectionalLight.Dir) );
 	float4 posIntensity = saturate(cosAngle) * intensity;
-	
-	float roundFactor = frac(diffuseColor.a);
-	float3 diffuse = diffuseColor.xyz * lerp(posIntensity, negIntensity, roundFactor);
+
+	float3 diffuse = diffuseColor.xyz * lerp(posIntensity, negIntensity, DirectionalLight.Color.w);
 
 	// Specular
-	float3 halfway = -normalize( normalize(p.CamDir) + DirectionalLight.Dir );
+	float3 halfway = -normalize(camDir + DirectionalLight.Dir);
 	float3 specular = specularColor.xyz * intensity * pow( saturate( dot(worldNormal, halfway) ) , 1024.0f * specularColor.a );
 	
 	return float4( (diffuse + specular) * DirectionalLight.Color.xyz, 0.0f );
@@ -247,7 +248,7 @@ technique11 Shadowed <
 		SetGeometryShader( NULL );
 		SetPixelShader( CompileShader(ps_4_0, PSBilateralAverage(
 			float2(1.0f, 0.0f), 3, 4,
-			BE_SCENE_TEXTURE(SceneGeometryTexture), DefaultSampler,
+			SceneGeometryTexture, DefaultSampler,
 			ShadowTexture, ShadowSampler, DestinationResolution.zw )) );
 	}
 
@@ -262,7 +263,7 @@ technique11 Shadowed <
 		SetGeometryShader( NULL );
 		SetPixelShader( CompileShader(ps_4_0, PSBilateralAverage(
 			float2(0.0f, 1.0f), 3, 4,
-			BE_SCENE_TEXTURE(SceneGeometryTexture), DefaultSampler,
+			SceneGeometryTexture, DefaultSampler,
 			ShadowTexture, ShadowSampler, DestinationResolution.zw )) );
 	}
 	

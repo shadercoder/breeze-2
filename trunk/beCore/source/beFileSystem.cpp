@@ -39,6 +39,9 @@ public:
 	/// Searches for the given file or directory in the given virtual location.
 	Exchange::utf8_string Search(const lean::utf8_ntri &location, const lean::utf8_ntri &file, bool bThrow) const;
 
+	/// Shortens the given path, returning a path relative to the given location, if possible.
+	Exchange::utf8_string Shorten(const lean::utf8_ntri &location, const lean::utf8_ntri &file, bool *pMatch) const;
+
 	/// Loads a configuration from the given node.
 	void LoadConfiguration(const rapidxml::xml_node<lean::utf8_t> &node);
 	/// Saves the current configuration to the given node.
@@ -100,6 +103,12 @@ beCore::Exchange::utf8_string beCore::FileSystem::GetPrimaryPath(const lean::utf
 beCore::Exchange::utf8_string beCore::FileSystem::Search(const lean::utf8_ntri &location, const lean::utf8_ntri &file, bool bThrow) const
 {
 	return m_impl->Search(location, file, bThrow);
+}
+
+// Shortens the given path, returning a path relative to the given location, if possible.
+beCore::Exchange::utf8_string beCore::FileSystem::Shorten(const lean::utf8_ntri &location, const lean::utf8_ntri &file, bool *pMatch) const
+{
+	return m_impl->Shorten(location, file, pMatch);
 }
 
 // Loads a configuration from the given file.
@@ -181,9 +190,6 @@ LEAN_INLINE beCore::Exchange::utf8_string beCore::FileSystem::Impl::GetPrimaryPa
 	if (itLocation != m_locations.end() && !itLocation->second.empty())
 		result = itLocation->second.front();
 
-	if (result.empty())
-		result.assign(location.begin(), location.end());
-
 	if (bThrow && result.empty())
 		LEAN_THROW_ERROR_CTX("Location unknown", location.c_str());
 
@@ -203,7 +209,7 @@ LEAN_INLINE beCore::Exchange::utf8_string beCore::FileSystem::Impl::Search(const
 
 		for (path_list::const_iterator itPath = paths.begin(); itPath != paths.end(); ++itPath)
 		{
-			lean::utf8_string potentialResult = lean::absolute_path<lean::utf8_string>(*itPath, file);
+			lean::utf8_string potentialResult = lean::absolute_path<lean::utf8_string>(file, *itPath);
 
 			if (lean::file_exists(potentialResult))
 			{
@@ -215,7 +221,7 @@ LEAN_INLINE beCore::Exchange::utf8_string beCore::FileSystem::Impl::Search(const
 
 	if (result.empty())
 	{
-		lean::utf8_string potentialResult = lean::absolute_path<lean::utf8_string>(location, file);
+		lean::utf8_string potentialResult = lean::absolute_path<lean::utf8_string>(file, location);
 
 		if (lean::file_exists(potentialResult))
 			result.assign(potentialResult.begin(), potentialResult.end());
@@ -223,6 +229,46 @@ LEAN_INLINE beCore::Exchange::utf8_string beCore::FileSystem::Impl::Search(const
 
 	if (bThrow && result.empty())
 		LEAN_THROW_ERROR_XCTX("Fild not found in location", file.c_str(), location.c_str());
+
+	return result;
+}
+
+// Shortens the given path, returning a path relative to the given location, if possible.
+LEAN_INLINE beCore::Exchange::utf8_string beCore::FileSystem::Impl::Shorten(const lean::utf8_ntri &location, const lean::utf8_ntri &file, bool *pMatch) const
+{
+	Exchange::utf8_string result;
+	
+	location_map::const_iterator itLocation = m_locations.find(location.to<lean::utf8_string>());
+
+	if (itLocation != m_locations.end())
+	{
+		const path_list &paths = itLocation->second;
+		size_t maxLength = 0;
+
+		for (path_list::const_iterator it = paths.begin(); it != paths.end(); ++it)
+			if (lean::contains_path(file, *it) && it->size() > maxLength)
+			{
+				bool bMatch = false;
+
+				Exchange::utf8_string relativeFile = lean::relative_path<Exchange::utf8_string>(
+						file,
+						lean::absolute_path<Exchange::utf8_string>(*it),
+						true, &bMatch
+					);
+
+				if (bMatch)
+				{
+					result = relativeFile;
+					maxLength = it->size();
+				}
+			}
+	}
+
+	if (pMatch)
+		*pMatch = !result.empty();
+
+	if (result.empty())
+		result.assign(file.begin(), file.end());
 
 	return result;
 }
@@ -239,7 +285,7 @@ LEAN_INLINE void beCore::FileSystem::Impl::LoadConfiguration(const rapidxml::xml
 
 		for (const rapidxml::xml_node<lean::utf8_t> *pathNode = locationNode->first_node("path");
 			pathNode; pathNode = pathNode->next_sibling("path"))
-			paths.push_back(pathNode->value());
+			paths.push_back( lean::canonical_path<path_type>(pathNode->value()) );
 	}
 }
 

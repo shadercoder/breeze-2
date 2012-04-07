@@ -22,6 +22,7 @@
     <None Include="..\Bin\Data\Effects\2.0\Engine\Renderable.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Engine\Shadow.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Engine\SpotLight.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\GI\RayBundles.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\DirectionalLight.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\PointLight.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\SpotLight.fx" />
@@ -56,6 +57,7 @@
     <None Include="..\Bin\Data\Effects\2.0\Processing\SSGI.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Prototypes\Feedback.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Prototypes\Shadow.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Utility\Bits.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Utility\Math.fx" />
     <None Include="..\Bin\Data\Effects\Source\Blur.fx" />
     <None Include="..\Bin\Data\Effects\Source\DepthPrePipeline.fx" />

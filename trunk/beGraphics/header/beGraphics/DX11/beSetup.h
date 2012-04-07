@@ -14,6 +14,8 @@
 #include <vector>
 #include <lean/smart/scoped_ptr.h>
 
+#include <beCore/beDependencies.h>
+
 namespace beGraphics
 {
 
@@ -25,30 +27,25 @@ namespace DX11
 using beCore::PropertyDesc;
 
 /// Setup implementation.
-class Setup : public beCore::PropertyFeedbackProvider<beGraphics::Setup>
+class Setup : public beCore::PropertyFeedbackProvider<beGraphics::Setup>, public beCore::Dependent<beGraphics::Texture*>
 {
+	LEAN_RENEW_RESOURCE
+
 public:
 	/// Property data.
 	struct PropertyData
 	{
-		static const uint4 InvalidBufferOffset = static_cast<uint4>(-1);
-
 		ID3DX11EffectVariable *pVariable;
-		void *pData;
-		uint4 size;
-		uint4 elementSize;
-		uint4 bufferOffset;
+		uint4 offset;
+		uint2 size;
+		uint2 elementSize;
 
 		/// Constructor.
-		PropertyData(ID3DX11EffectVariable *pVariable, void *pData, uint4 size, uint4 elementSize, uint4 bufferOffset = InvalidBufferOffset)
+		PropertyData(ID3DX11EffectVariable *pVariable, uint4 offset, uint2 size, uint2 elementSize)
 			: pVariable(pVariable),
-			pData(pData),
+			offset(offset),
 			size(size),
-			elementSize(elementSize),
-			bufferOffset(bufferOffset) { }
-
-		/// Returns true, iff buffered.
-		LEAN_INLINE bool IsBuffered() const { return (bufferOffset != InvalidBufferOffset); }
+			elementSize(elementSize) { }
 	};
 
 	/// Property.
@@ -60,7 +57,8 @@ public:
 		bool bChanged;
 
 		/// Constructor.
-		Property(const utf8_ntri& name, const PropertyDesc &desc,
+		Property(const utf8_ntri& name,
+			const PropertyDesc &desc,
 			const PropertyData& data)
 				: name(name.to<utf8_string>()),
 				desc(desc),
@@ -90,21 +88,29 @@ public:
 private:
 	lean::resource_ptr<const Effect> m_pEffect;
 	
-	lean::scoped_ptr<char[]> m_pBackingStore;
+	uint4 m_backingStoreSize;
+	lean::scoped_ptr<char[]> m_backingStore;
 
 	ID3DX11EffectConstantBuffer *m_pConstants;
+	uint4 m_constantBufferSize;
 	lean::com_ptr<ID3D11Buffer> m_pConstantBuffer;
 
+	uint4 m_unbufferedPropertiesBegin;
+	uint4 m_unbufferedPropertiesEnd;
 	property_vector m_properties;
 	mutable bool m_bPropertiesChanged;
 	
 	texture_vector m_textures;
 
+protected:
+	/// Updates the given texture.
+	void DependencyChanged(beGraphics::Texture *oldTexture, beGraphics::Texture *newTexture);
+
 public:
 	/// Constructor.
 	BE_GRAPHICS_DX11_API Setup(const Effect *pEffect, beGraphics::TextureCache *pTextures);
-	/// Constructor.
-	BE_GRAPHICS_DX11_API Setup(ID3DX11Effect *pEffect, beGraphics::TextureCache *pTextures);
+	/// Copy constructor.
+	BE_GRAPHICS_DX11_API Setup(const Setup &right);
 	/// Destructor.
 	BE_GRAPHICS_DX11_API ~Setup();
 
@@ -128,7 +134,7 @@ public:
 	/// Visits a property for modification.
 	BE_GRAPHICS_DX11_API bool WriteProperty(uint4 id, beCore::PropertyVisitor &visitor, bool bWriteOnly = true);
 	/// Visits a property for reading.
-	BE_GRAPHICS_DX11_API bool ReadProperty(uint4 id, beCore::PropertyVisitor &visitor) const;
+	BE_GRAPHICS_DX11_API bool ReadProperty(uint4 id, beCore::PropertyVisitor &visitor, bool bPersistentOnly = false) const;
 
 	/// Gets the number of textures.
 	BE_GRAPHICS_DX11_API uint4 GetTextureCount() const;

@@ -40,6 +40,9 @@ public:
 	virtual void NotifyDependents() = 0;
 	/// Gets the dependencies registered for the given mesh.
 	virtual beCore::Dependency<MeshCompound*>* GetDependencies(const MeshCompound *pMesh) = 0;
+
+	/// Gets the path resolver.
+	virtual const beCore::PathResolver& GetPathResolver() const = 0;
 };
 
 /// Creates a new mesh cache.

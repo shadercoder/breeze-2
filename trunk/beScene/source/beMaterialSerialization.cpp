@@ -24,53 +24,27 @@ namespace beScene
 // Saves the given material to the given XML node.
 void SaveMaterial(const Material &material, rapidxml::xml_node<lean::utf8_t> &node)
 {
-	const beGraphics::Effect *pMainEffect = material.GetEffect();
-	SaveEffect(*pMainEffect, node);
+	const beGraphics::Effect *mainEffect = material.GetEffect();
+	SaveEffect(*mainEffect, node);
 
+	const uint4 setupCount = material.GetSetupCount();
 	const uint4 techniqueCount = material.GetTechniqueCount();
-	
-	typedef lean::dynamic_array<beGraphics::Setup*> setup_array;
-	typedef lean::dynamic_array<uint4> idx_array;
-	idx_array setupIndices(techniqueCount);
-	setup_array setups(techniqueCount);
-
-	// Collect unique setups
-	for (uint4 techniqueIdx = 0; techniqueIdx < techniqueCount; ++techniqueIdx)
-	{
-		beGraphics::Setup *pSetup = material.GetSetup(techniqueIdx);
-		uint4 setupIdx = techniqueCount;
-
-		// Find shared setups
-		for (setup_array::const_iterator it = setups.begin(); it != setups.end(); ++it)
-			if (*it == pSetup)
-			{
-				setupIdx = static_cast<uint4>( it - setups.begin() );
-				break;
-			}
-
-		if (setupIdx == techniqueCount)
-		{
-			setupIdx = static_cast<uint4>( setups.size() );
-			setups.push_back(pSetup);
-		}
-
-		setupIndices.push_back(setupIdx);
-	}
 
 	// Save setups
-	for (setup_array::const_iterator it = setups.begin(); it != setups.end(); ++it)
+	for (uint4 setupIdx = 0; setupIdx < setupCount; ++setupIdx)
 	{
 		rapidxml::xml_node<utf8_t> &setupNode = *lean::allocate_node<utf8_t>(*node.document(), "setup");
 		// ORDER: Append FIRST, otherwise parent document == nullptrs
 		node.append_node(&setupNode);
 
-		const beGraphics::Effect *pEffect = (*it)->GetEffect();
+		const beGraphics::Setup &setup = *material.GetSetup(setupIdx);
+		const beGraphics::Effect *effect = setup.GetEffect();
 
 		// Only save effect if different from main material effect
-		if (pEffect != pMainEffect)
-			SaveEffect(*pEffect, setupNode);
+		if (effect != mainEffect)
+			SaveEffect(*effect, setupNode);
 
-		SaveSetup(**it, setupNode);
+		SaveSetup(setup, setupNode);
 	}
 
 	// Save technique mapping
@@ -81,13 +55,20 @@ void SaveMaterial(const Material &material, rapidxml::xml_node<lean::utf8_t> &no
 		node.append_node(&techniqueNode);
 
 		utf8_ntr techniqueName = material.GetTechniqueName(techniqueIdx);
+		const beGraphics::Setup *setup = material.GetTechniqueSetup(techniqueIdx);
 
 		// Allow for robust re-mapping on load
 		if (!techniqueName.empty())
 			lean::append_attribute(*techniqueNode.document(), techniqueNode, "name", material.GetTechniqueName(techniqueIdx));
 		lean::append_int_attribute(*techniqueNode.document(), techniqueNode, "idx", techniqueIdx);
 
-		lean::append_int_attribute(*techniqueNode.document(), techniqueNode, "setup", setupIndices[techniqueIdx]);
+		// Find setup index
+		for (uint4 setupIdx = 0; setupIdx < setupCount; ++setupIdx)
+			if (setup == material.GetSetup(setupIdx))
+			{
+				lean::append_int_attribute(*techniqueNode.document(), techniqueNode, "setup", setupIdx);
+				break;
+			}
 	}
 }
 
@@ -108,163 +89,117 @@ void SaveMaterial(const Material &material, const utf8_ntri &file)
 lean::resource_ptr<Material, true> LoadMaterial(const rapidxml::xml_node<lean::utf8_t> &node,
 	beGraphics::EffectCache &effects, beGraphics::TextureCache &textures, MaterialCache *pCache)
 {
-	lean::resource_ptr<Material> pMaterial;
-
-	pMaterial = lean::new_resource<Material>(
+	lean::resource_ptr<Material> material = lean::new_resource<Material>(
 			LoadEffect(node, effects),
 			effects, textures, pCache
 		);
 
-	const beGraphics::Effect *pMainEffect = pMaterial->GetEffect();
-	const uint4 techniqueCount = pMaterial->GetTechniqueCount();
+	const uint4 count = material->GetSetupCount();
+	const uint4 techniqueCount = material->GetTechniqueCount();
 
-	// TODO: Move to material itself (already has setup index)
-	typedef lean::dynamic_array<beGraphics::Setup*> setup_array;
-	typedef lean::dynamic_array<uint4> idx_array;
-	idx_array setupIndices(techniqueCount);
-	setup_array setups(techniqueCount);
+	const beGraphics::Effect &mainEffect = *material->GetEffect();
+	bool bLossy = false;
 
-	// Collect unique setups
-	for (uint4 techniqueIdx = 0; techniqueIdx < techniqueCount; ++techniqueIdx)
+	for (uint4 setupIdx = 0; setupIdx < count; ++setupIdx)
 	{
-		beGraphics::Setup *pSetup = pMaterial->GetSetup(techniqueIdx);
-		uint4 setupIdx = techniqueCount;
+		beGraphics::Setup &setup = *material->GetSetup(setupIdx);
+		const beGraphics::Effect &effect = *setup.GetEffect();
 
-		// Find shared setups
-		for (setup_array::const_iterator it = setups.begin(); it != setups.end(); ++it)
-			if (*it == pSetup)
-			{
-				setupIdx = static_cast<uint4>( it - setups.begin() );
-				break;
-			}
+		bool bLoaded = false;
 
-		if (setupIdx == techniqueCount)
-		{
-			setupIdx = static_cast<uint4>( setups.size() );
-			setups.push_back(pSetup);
-		}
-
-		setupIndices.push_back(setupIdx);
-	}
-
-	typedef lean::dynamic_array<const rapidxml::xml_node<utf8_t>*> node_array;
-	node_array setupNodes( lean::node_count(node, "setup") );
-
-	uint4 setupLoadCount = 0;
-
-	// Load setups by effect
-	for (const rapidxml::xml_node<utf8_t> *setupNode = node.first_node("setup");
-		setupNode; setupNode = setupNode->next_sibling("setup"))
-	{
-		setupNodes.push_back(setupNode);
-
-		if (!beGraphics::HasEffect(*setupNode))
-		{
-			// Load main setup (skips explicit effect identification)
-			for (setup_array::iterator itSetup = setups.begin(); itSetup != setups.end(); ++itSetup)
-			{
-				beGraphics::Setup *&pSetup = *itSetup;
-
-				if (pSetup && pSetup->GetEffect() == pMainEffect)
-				{
-					LoadSetup(*pSetup, *setupNode, textures);
-					// Mark as loaded
-					pSetup = nullptr;
-					++setupLoadCount;
-				}
-			}
-		}
-		else
+		// Load setups by effect
+		for (const rapidxml::xml_node<utf8_t> *srcSetupNode = node.first_node("setup");
+			srcSetupNode; srcSetupNode = srcSetupNode->next_sibling("setup"))
 		{
 			// Identify corresponding effect
-			const beGraphics::Effect *pSetupEffect = IdentifyEffect(*setupNode, effects);
+			const beGraphics::Effect *pSrcEffect = beGraphics::HasEffect(*srcSetupNode)
+				? IdentifyEffect(*srcSetupNode, effects)
+				: &mainEffect;
 
-			// Apply effect-specific setups
-			if (pSetupEffect)
-				for (setup_array::iterator itSetup = setups.begin(); itSetup != setups.end(); ++itSetup)
-				{
-					beGraphics::Setup *&pSetup = *itSetup;
-
-					if (pSetup && pSetup->GetEffect() == pSetupEffect)
-					{
-						LoadSetup(*pSetup, *setupNode, textures);
-						// Mark as loaded
-						pSetup = nullptr;
-						++setupLoadCount;
-					}
-				}
-		}
-	}
-
-	if (setupLoadCount < setups.size())
-	{
-		// Load techniques by name
-		for (const rapidxml::xml_node<utf8_t> *techniqueNode = node.first_node();
-			techniqueNode; techniqueNode = techniqueNode->next_sibling())
-		{
-			utf8_ntr techniqueName = lean::get_attribute(*techniqueNode, "name");
-		
-			if (!techniqueName.empty())
+			if (&effect == pSrcEffect)
 			{
-				uint4 setupIdx = lean::get_int_attribute(*techniqueNode, "setup", static_cast<uint4>(-1));
-
-				if (setupIdx < setupNodes.size())
-				{
-					// Find matching technique names
-					for (uint4 techniqueIdx = 0; techniqueIdx < techniqueCount; ++techniqueIdx)
-						if (pMaterial->GetTechniqueName(techniqueIdx) == techniqueName)
-						{
-							beGraphics::Setup *&pSetup = setups[setupIndices[techniqueIdx]];
-
-							if (pSetup)
-							{
-								LoadSetup(*pSetup, *setupNodes[setupIdx], textures);
-								// Mark as loaded
-								pSetup = nullptr;
-								++setupLoadCount;
-							}
-						}
-				}
-				else
-					LEAN_LOG_ERROR_CTX("Technique setup index out of range", techniqueName.c_str());
+				LoadSetup(setup, *srcSetupNode, textures);
+				bLoaded = true;
+				break;
 			}
 		}
 
-		if (setupLoadCount < setups.size())
+		if (bLoaded)
+			continue;
+		else
+			// Anything that follows is speculative
+			bLossy = true;
+
+		// Load setups by technique name
+		for (uint4 techniqueIdx = 0; techniqueIdx < techniqueCount; ++techniqueIdx)
 		{
-			// Load techniques by index
-			for (const rapidxml::xml_node<utf8_t> *techniqueNode = node.first_node();
-				techniqueNode; techniqueNode = techniqueNode->next_sibling())
+			if (&setup == material->GetTechniqueSetup(techniqueIdx))
 			{
-				uint4 techniqueIdx = lean::get_int_attribute(*techniqueNode, "idx", static_cast<uint4>(-1));
-		
-				if (techniqueIdx < techniqueCount)
+				utf8_ntr techniqueName = material->GetTechniqueName(techniqueIdx);
+
+				for (const rapidxml::xml_node<utf8_t> *srcTechniqueNode = node.first_node("technique");
+					srcTechniqueNode; srcTechniqueNode = srcTechniqueNode->next_sibling("technique"))
 				{
-					uint4 setupIdx = lean::get_int_attribute(*techniqueNode, "setup", static_cast<uint4>(-1));
+					utf8_ntr srcTechniqueName = lean::get_attribute(*srcTechniqueNode, "name");
 
-					if (setupIdx < setupNodes.size())
+					if (srcTechniqueName == techniqueName)
 					{
-						beGraphics::Setup *&pSetup = setups[setupIndices[techniqueIdx]];
+						uint4 srcSetupIdx = lean::get_int_attribute(*srcTechniqueNode, "setup", 0);
+						const rapidxml::xml_node<utf8_t> *pSrcSetupNode = lean::nth_child(node, srcSetupIdx, "setup");
 
-						if (pSetup)
+						if (pSrcSetupNode)
 						{
-							LoadSetup(*pSetup, *setupNodes[setupIdx], textures);
-							// Mark as loaded
-							pSetup = nullptr;
-							++setupLoadCount;
+							LoadSetup(setup, *pSrcSetupNode, textures);
+							bLoaded = true;
+							break;
 						}
 					}
-					else
-						LEAN_LOG_ERROR_MSG("Technique setup index out of range");
 				}
-			}
 
-			if (setupLoadCount < setups.size())
-				LEAN_LOG_ERROR_MSG("Not all setups could be matched, some information might be lost");
+				if (bLoaded)
+					break;
+			}
 		}
+
+		if (bLoaded)
+			continue;
+
+		// Load setups by technique index
+		for (uint4 techniqueIdx = 0; techniqueIdx < techniqueCount; ++techniqueIdx)
+		{
+			if (&setup == material->GetTechniqueSetup(techniqueIdx))
+			{
+				for (const rapidxml::xml_node<utf8_t> *srcTechniqueNode = node.first_node("technique");
+					srcTechniqueNode; srcTechniqueNode = srcTechniqueNode->next_sibling("technique"))
+				{
+					uint4 srcTechniqueIdx = lean::get_int_attribute(*srcTechniqueNode, "idx", static_cast<uint4>(-1));
+
+					if (srcTechniqueIdx == techniqueIdx)
+					{
+						uint4 srcSetupIdx = lean::get_int_attribute(*srcTechniqueNode, "setup", 0);
+						const rapidxml::xml_node<utf8_t> *pSrcSetupNode = lean::nth_child(node, srcSetupIdx, "setup");
+
+						if (pSrcSetupNode)
+						{
+							LoadSetup(setup, *pSrcSetupNode, textures);
+							bLoaded = true;
+							break;
+						}
+					}
+				}
+
+				if (bLoaded)
+					break;
+			}
+		}
+
+		// bLoaded == false => nothing loaded (== keep defaults)
 	}
 
-	return pMaterial.transfer();
+	if (bLossy)
+		LEAN_LOG_ERROR_MSG("Not all setups could be matched, some information might be lost");
+
+	return material.transfer();
 }
 
 // Load the given material from the given XML node.

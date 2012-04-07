@@ -37,7 +37,7 @@ RenderableMaterial::technique_vector LoadTechniques(const Material &material, Ef
 	for (uint4 techniqueIdx = 0; techniqueIdx < techniqueCount; ++techniqueIdx)
 	{
 		AbstractRenderableEffectDriver *pEffectDriver = driverCache.GetEffectBinder(*material.GetTechnique(techniqueIdx));
-		techniques.emplace_back(material.GetSetup(techniqueIdx), pEffectDriver);
+		techniques.emplace_back(material.GetTechniqueSetup(techniqueIdx), pEffectDriver);
 	}
 
 	return techniques;

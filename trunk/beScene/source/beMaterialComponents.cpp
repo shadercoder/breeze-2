@@ -43,24 +43,29 @@ class RenderableMaterialReflector : public beCore::ComponentReflector
 		return beCore::ComponentParameters(parameters, parameters + lean::arraylen(parameters));
 	}
 	/// Creates a component from the given parameters.
-	lean::cloneable_obj<lean::any, true> CreateComponent(const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const
+	lean::cloneable_obj<lean::any, true> CreateComponent(const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters, const lean::any *pPrototype) const
 	{
 		SceneParameters sceneParameters = GetSceneParameters(parameters);
 
-		lean::resource_ptr<Material> pMaterial = lean::new_resource<Material>(
+		lean::resource_ptr<Material> material = lean::new_resource<Material>(
 				creationParameters.GetValueChecked<beGraphics::Effect*>("Effect"),
 				*sceneParameters.ResourceManager->EffectCache(),
 				*sceneParameters.ResourceManager->TextureCache(),
 				sceneParameters.ResourceManager->MaterialCache()
 			);
 
+		RenderableMaterial *pPrototypeMaterial = lean::any_cast_default<RenderableMaterial*>(pPrototype);
+
+		if (pPrototypeMaterial)
+			Transfer(*material, *pPrototypeMaterial->GetMaterial());
+
 		sceneParameters.ResourceManager->MaterialCache()->SetMaterialName(
 				creationParameters.GetValueChecked<beCore::Exchange::utf8_string>("Name"),
-				pMaterial
+				material
 			);
 
 		return lean::any_value<RenderableMaterial*>(
-				sceneParameters.Renderer->RenderableMaterials()->GetMaterial(pMaterial)
+				sceneParameters.Renderer->RenderableMaterials()->GetMaterial(material)
 			);
 	}
 
@@ -109,7 +114,7 @@ class RenderableMaterialReflector : public beCore::ComponentReflector
 	}
 
 	/// Gets the name or file of the given component.
-	beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, beCore::ComponentState::T *pState = nullptr) const
+	beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, beCore::ComponentState::T *pState) const
 	{
 		beCore::Exchange::utf8_string result;
 

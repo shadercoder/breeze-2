@@ -11,6 +11,7 @@
 #include <beGraphics/beDevice.h>
 #include <beCore/beOpaqueHandle.h>
 #include <lean/smart/resource_ptr.h>
+#include <lean/tags/noncopyable.h>
 
 namespace beGraphics
 {
@@ -54,7 +55,7 @@ namespace TextureType
 class TextureCache;
 
 /// Texture resource interface.
-class Texture : public beCore::OptionalResource, public Implementation
+class Texture : public lean::nonassignable, public beCore::OptionalResource, public Implementation
 {
 protected:
 	LEAN_INLINE Texture& operator =(const Texture&) { return *this; }

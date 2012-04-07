@@ -22,6 +22,8 @@ private:
 public:
 	/// Invalid ID.
 	static const uint4 InvalidID = static_cast<uint4>(-1);
+	/// Invalid short ID.
+	static const uint2 InvalidShortID = static_cast<uint2>(-1);
 
 	/// Constructor.
 	BE_CORE_API Identifiers();

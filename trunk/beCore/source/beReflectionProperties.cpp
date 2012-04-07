@@ -40,7 +40,7 @@ PropertyDesc ReflectionPropertyProvider::GetPropertyDesc(uint4 id) const
 	if (id < properties.size())
 	{
 		const ReflectionProperty &property = properties[id];
-		desc = PropertyDesc(*property.type_info, property.count, property.typeID);
+		desc = PropertyDesc(*property.type_info, property.count, property.typeID, property.widget);
 	}
 
 	return desc;
@@ -107,7 +107,7 @@ bool ReflectionPropertyProvider::WriteProperty(uint4 id, PropertyVisitor &visito
 
 			if (bWriteOnly || (*desc.getter)(*this, desc.type_info->type, values, desc.count))
 			{
-				bool bModified = visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.typeID), values);
+				bool bModified = visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.typeID, desc.widget), values);
 
 				if (bModified)
 				{
@@ -126,7 +126,7 @@ bool ReflectionPropertyProvider::WriteProperty(uint4 id, PropertyVisitor &visito
 	return false;
 }
 /// Visits a property for reading.
-bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor) const
+bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor, bool bPersistentOnly) const
 {
 	Properties properties = GetReflectionProperties();
 
@@ -134,7 +134,7 @@ bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor
 	{
 		const ReflectionProperty &desc = properties[id];
 
-		if (desc.getter.valid())
+		if (desc.getter.valid() && (!bPersistentOnly || desc.persistent))
 		{
 			const lean::property_type &propertyType = *desc.type_info->property_type;
 			size_t size = propertyType.size(desc.count);
@@ -152,7 +152,7 @@ bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor
 			if ((*desc.getter)(*this, desc.type_info->type, values,  desc.count))
 			{
 				// WARNING: Call read-only overload!
-				visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.typeID), const_cast<const void*>(values));
+				visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.typeID, desc.widget), const_cast<const void*>(values));
 				return true;
 			}
 		}

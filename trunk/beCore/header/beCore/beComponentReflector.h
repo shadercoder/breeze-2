@@ -60,7 +60,12 @@ public:
 	/// Gets a list of creation parameters.
 	virtual ComponentParameters GetCreationParameters() const { return ComponentParameters(); };
 	/// Creates a component from the given parameters.
-	virtual lean::cloneable_obj<lean::any, true> CreateComponent(const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const { return nullptr; }
+	virtual lean::cloneable_obj<lean::any, true> CreateComponent(
+		const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters,
+		const lean::any *pPrototype = nullptr) const
+	{
+		return nullptr;
+	}
 
 	/// Returns true, if the component can be named.
 	virtual bool HasName() const { return CanBeNamed(); }

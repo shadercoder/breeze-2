@@ -32,6 +32,9 @@ BE_GRAPHICS_DX11_API bool Map(ID3D11DeviceContext *pDeviceContext, ID3D11Buffer 
 /// Unmaps this buffer to allow for GPU access.
 BE_GRAPHICS_DX11_API void Unmap(ID3D11DeviceContext *pDeviceContext, ID3D11Buffer *pBuffer);
 
+/// Gets the description of the given buffer.
+BE_GRAPHICS_DX11_API D3D11_BUFFER_DESC GetDesc(ID3D11Buffer *pBuffer);
+
 /// Buffer wrapper.
 class Buffer : public beCore::IntransitiveWrapper<ID3D11Buffer, Buffer>, public beGraphics::Buffer
 {

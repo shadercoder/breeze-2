@@ -41,6 +41,9 @@ public Q_SLOTS:
 	void setDocument(AbstractDocument *pDocument);
 	/// Sets the active selection of the given document.
 	void setActiveSelection(SceneDocument *pDocument);
+
+	/// Properties have changed.
+	void propertiesChanged();
 };
 
 #endif

@@ -237,6 +237,12 @@ void TextureCache::M::ObservedTexture::FileChanged(const lean::utf8_ntri &file, 
 	this->pCache->m->dependencies.DependencyChanged(this->dependency, this->pTexture);
 }
 
+/// Gets the path resolver.
+const beCore::PathResolver& TextureCache::GetPathResolver() const
+{
+	return m->resolver;
+}
+
 } // namespace
 
 // Creates a new texture cache.
