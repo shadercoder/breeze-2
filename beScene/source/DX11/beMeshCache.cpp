@@ -255,6 +255,12 @@ void MeshCache::M::ObservedMesh::FileChanged(const lean::utf8_ntri &file, lean::
 	this->pCache->dependencies.DependencyChanged(this->dependency, this->pMesh);
 }
 
+/// Gets the path resolver.
+const beCore::PathResolver& MeshCache::GetPathResolver() const
+{
+	return m->resolver;
+}
+
 // Gets the device.
 ID3D11Device* MeshCache::GetDevice() const
 {

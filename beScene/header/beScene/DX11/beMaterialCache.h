@@ -56,6 +56,9 @@ public:
 	/// Gets the texture cache.
 	BE_SCENE_API beGraphics::TextureCache* GetTextureCache() const;
 
+	/// Gets the path resolver.
+	BE_SCENE_API const beCore::PathResolver& GetPathResolver() const;
+
 	/// Gets the implementation identifier.
 	LEAN_INLINE beGraphics::ImplementationID GetImplementationID() const { return beGraphics::DX11Implementation; }
 };

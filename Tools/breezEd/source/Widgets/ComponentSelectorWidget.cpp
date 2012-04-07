@@ -222,7 +222,8 @@ void initUI(ComponentSelectorWidget &selector, Ui::ComponentSelectorWidget &ui, 
 ComponentSelectorWidget::ComponentSelectorWidget(const beCore::ComponentReflector *pReflector, const lean::any *pCurrent, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
 	: QWidget(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
-	m_pReflector( LEAN_ASSERT_NOT_NULL(pReflector) )
+	m_pReflector( LEAN_ASSERT_NOT_NULL(pReflector) ),
+	m_pCurrent( pCurrent )
 {
 	ui.setupUi(this);
 
@@ -230,7 +231,7 @@ ComponentSelectorWidget::ComponentSelectorWidget(const beCore::ComponentReflecto
 	adaptUI(*this, ui, *m_pReflector, m_pEditor);
 
 	// Initialize from current element or from stored configuration
-	initUI(*this, ui, *m_pReflector, pCurrent, *m_pEditor);
+	initUI(*this, ui, *m_pReflector, m_pCurrent, *m_pEditor);
 
 	checkedConnect(ui.browseWidget, SIGNAL(browse()), this, SLOT(browse()));
 }
@@ -303,28 +304,31 @@ lean::cloneable_obj<lean::any> ComponentSelectorWidget::acquireComponent(SceneDo
 
 		for (int idx = 0; idx < parameterCount; ++idx)
 		{
-			QGroupBox &groupBox = *LEAN_ASSERT_NOT_NULL( qobject_cast<QGroupBox*>( ui.newLayout->itemAt(idx)->widget() ) );
+			QGroupBox *pGroupBox = qobject_cast<QGroupBox*>( ui.newLayout->itemAt(idx)->widget() );
 
-			lean::utf8_string parameterName = toUtf8( groupBox.title() );
-			QWidget &parameterWidget = *LEAN_ASSERT_NOT_NULL( groupBox.layout()->itemAt(0)->widget() );
-
-			QLineEdit *pString = qobject_cast<QLineEdit*>(&parameterWidget);
-
-			if (pString)
-				creationParameters.SetValue<beCore::Exchange::utf8_string>(
-						creationParameters.Add(parameterName),
-						toUtf8Range(pString->text()).get().to<beCore::Exchange::utf8_string>()
-					);
-			else
+			if (pGroupBox)
 			{
-				ComponentSelectorWidget *pSubComponent = qobject_cast<ComponentSelectorWidget*>(&parameterWidget);
+				lean::utf8_string parameterName = toUtf8( pGroupBox->title() );
+				QWidget &parameterWidget = *LEAN_ASSERT_NOT_NULL( pGroupBox->layout()->itemAt(0)->widget() );
+				
+				QLineEdit *pString = qobject_cast<QLineEdit*>(&parameterWidget);
 
-				if (pSubComponent)
-					creationParameters.SetAnyValue( creationParameters.Add(parameterName), &*pSubComponent->acquireComponent(document) );
+				if (pString)
+					creationParameters.SetValue<beCore::Exchange::utf8_string>(
+							creationParameters.Add(parameterName),
+							toUtf8Range(pString->text()).get().to<beCore::Exchange::utf8_string>()
+						);
+				else
+				{
+					ComponentSelectorWidget *pSubComponent = qobject_cast<ComponentSelectorWidget*>(&parameterWidget);
+
+					if (pSubComponent)
+						creationParameters.SetAnyValue( creationParameters.Add(parameterName), &*pSubComponent->acquireComponent(document) );
+				}
 			}
 		}
 
-		return *m_pReflector->CreateComponent( creationParameters, parameters );
+		return *m_pReflector->CreateComponent( creationParameters, parameters, ui.cloneCheckBox->isChecked() ? m_pCurrent : nullptr );
 	}
 }
 

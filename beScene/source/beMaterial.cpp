@@ -40,10 +40,26 @@ struct Material::Setup
 namespace
 {
 
-void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache);
+void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups,
+	const beGraphics::Any::Effect *pEffect, beGraphics::Any::Setup *pSetup,
+	beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache);
+
+/// Gets a setup for the given effect.
+beGraphics::Any::Setup* GetSetup(Material::setup_vector &setups, const beGraphics::Any::Effect *pEffect, beGraphics::TextureCache &textureCache)
+{
+	for (Material::setup_vector::const_iterator it = setups.begin(); it != setups.end(); ++it)
+		// Try to find matching setup
+		if (pEffect == it->setup->GetEffect())
+			return it->setup;
+
+	// Create new setup for material, if non existent, yet
+	lean::resource_ptr<beGraphics::Any::Setup> pSetup = lean::new_resource<beGraphics::Any::Setup>(pEffect, &textureCache);
+	setups.emplace_back(pSetup);
+	return pSetup;
+}
 
 /// Adds the given technique.
-void AddTechnique(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::Any::Setup *pSetup,
+void AddTechnique(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Any::Effect *pEffect, beGraphics::Any::Setup *pSetup,
 	ID3DX11EffectTechnique *pTechniqueDX, beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache)
 {
 	const char *includeEffect = "";
@@ -80,65 +96,44 @@ void AddTechnique(Material::technique_vector &techniques, Material::setup_vector
 		}
 
 		// Load nested effect
-		const beGraphics::Effect *pNestedEffect = effectCache.GetEffect(includeEffect, &includeMacros[0], includeMacros.size());
+		const beGraphics::Any::Effect *pNestedEffect = ToImpl( effectCache.GetEffect(includeEffect, &includeMacros[0], includeMacros.size()) );
+		
+		beGraphics::Any::Setup *pNestedSetup = GetSetup(setups, pNestedEffect, textureCache);
 
 		const char *includeTechnique = "";
 
 		// Check for single technique
 		if (SUCCEEDED(pTechniqueDX->GetAnnotationByName("IncludeTechnique")->AsString()->GetString(&includeTechnique)))
 		{
-			ID3DX11EffectTechnique *pNestedTechniqueDX = ToImpl(*pNestedEffect)->GetTechniqueByName(includeTechnique);
+			ID3DX11EffectTechnique *pNestedTechniqueDX = pNestedEffect->Get()->GetTechniqueByName(includeTechnique);
 
 			if (!pNestedTechniqueDX->IsValid())
 				LEAN_THROW_ERROR_CTX("ID3DX11Effect::GetTechniqueByName()", includeTechnique);
-
-			lean::resource_ptr<beGraphics::Any::Setup> pNestedSetup;
-
-			for (Material::technique_vector::const_iterator it = techniques.begin(); it != techniques.end(); ++it) // TODO: Material sharing partly broken
-				// Try to find matching setup
-				if (pNestedEffect == it->technique->GetEffect())
-				{
-					pNestedSetup = it->setup;
-					break;
-				}
-
-			// Create new setup for material, if non existent, yet
-			if (!pNestedSetup)
-			{
-				pNestedSetup = lean::new_resource<beGraphics::Any::Setup>( &ToImpl(*pNestedEffect), &textureCache );
-				setups.emplace_back( pNestedSetup );
-			}
 
 			// Add single technique
 			AddTechnique(techniques, setups, pNestedEffect, pNestedSetup, pNestedTechniqueDX, effectCache, textureCache);
 		}
 		else
 			// Add all techniques
-			LoadTechniques(techniques, setups, pNestedEffect, effectCache, textureCache); // TODO: Material sharing partly broken
+			LoadTechniques(techniques, setups, pNestedEffect, pNestedSetup, effectCache, textureCache);
 	}
 	else
 		// Simply add the technique
 		techniques.push_back(
 				Material::Technique(
-					lean::new_resource<beGraphics::Any::Technique>(&ToImpl(*pEffect), pTechniqueDX).get(),
+					lean::new_resource<beGraphics::Any::Technique>(pEffect, pTechniqueDX).get(),
 					pSetup
 				)
 			);
 }
 
 /// Loads techniques from the given effect.
-void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups, const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache)
+void LoadTechniques(Material::technique_vector &techniques, Material::setup_vector &setups,
+	const beGraphics::Any::Effect *pEffect, beGraphics::Any::Setup *pSetup,
+	beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache)
 {
-	ID3DX11Effect *pEffectDX = ToImpl(*pEffect);
-
-	// Create new setup for material
-	lean::resource_ptr<beGraphics::Any::Setup> pSetup = lean::new_resource<beGraphics::Any::Setup>(
-			&ToImpl(*pEffect), &textureCache // TODO: Material sharing partly broken
-		);
-	setups.emplace_back( pSetup );
-
-	D3DX11_EFFECT_DESC effectDesc;
-	BE_THROW_DX_ERROR_MSG(pEffectDX->GetDesc(&effectDesc), "ID3DX11Effect::GetDesc()");
+	ID3DX11Effect *pEffectDX = *pEffect;
+	D3DX11_EFFECT_DESC effectDesc = beGraphics::DX11::GetDesc(pEffectDX);
 
 	techniques.reserve(effectDesc.Techniques);
 
@@ -154,6 +149,40 @@ void LoadTechniques(Material::technique_vector &techniques, Material::setup_vect
 	}
 }
 
+/// Clones the given techniques.
+void CloneTechniques(Material::technique_vector &techniques, Material::setup_vector &setups,
+	const Material::technique_vector &sourceTechniques, const Material::setup_vector &sourceSetups)
+{
+	setups.reserve(sourceSetups.size());
+
+	// Clone setups first
+	for (Material::setup_vector::const_iterator it = sourceSetups.begin(); it != sourceSetups.end(); ++it)
+		setups.emplace_back( lean::new_resource<beGraphics::Any::Setup>(*it->setup).get() );
+
+	techniques.reserve(sourceTechniques.size());
+
+	for (Material::technique_vector::const_iterator itTechnique = sourceTechniques.begin(); itTechnique != sourceTechniques.end(); ++itTechnique)
+	{
+		beGraphics::Any::Setup *clonedSetup = nullptr;
+
+		// Find cloned setup
+		for (Material::setup_vector::const_iterator it = sourceSetups.begin(); it != sourceSetups.end(); ++it)
+			if (itTechnique->setup == it->setup)
+				clonedSetup = setups[it - sourceSetups.begin()].setup;
+
+		LEAN_ASSERT(clonedSetup != nullptr);
+
+		// Add technique using cloned setup
+		techniques.push_back(
+				Material::Technique(
+					itTechnique->technique,
+					clonedSetup
+				)
+			);
+	}
+	
+}
+
 } // namespace
 
 // Constructor.
@@ -161,7 +190,19 @@ Material::Material(const beGraphics::Effect *pEffect, beGraphics::EffectCache &e
 	: m_pEffect(pEffect),
 	m_pCache(pCache)
 {
-	LoadTechniques(m_techniques, m_setups, m_pEffect, effectCache, textureCache);
+	LoadTechniques(
+			m_techniques, m_setups,
+			&ToImpl(*m_pEffect), beScene::GetSetup(m_setups, &ToImpl(*m_pEffect), textureCache),
+			effectCache, textureCache
+		);
+}
+
+// Constructor.
+Material::Material(const Material &right)
+	: m_pEffect(right.m_pEffect),
+	m_pCache(right.m_pCache)
+{
+	CloneTechniques(m_techniques, m_setups, right.m_techniques, right.m_setups);
 }
 
 // Destructor.
@@ -176,7 +217,7 @@ uint4 Material::GetTechniqueCount() const
 }
 
 // Gets the setup for the given technique.
-beGraphics::Setup* Material::GetSetup(uint4 techniqueIdx) const
+beGraphics::Setup* Material::GetTechniqueSetup(uint4 techniqueIdx) const
 {
 	return (techniqueIdx < m_techniques.size())
 		? m_techniques[techniqueIdx].setup
@@ -208,6 +249,20 @@ utf8_ntr Material::GetTechniqueName(uint4 techniqueIdx) const
 	}
 
 	return name;
+}
+
+// Gets the number of setups.
+uint4 Material::GetSetupCount() const
+{
+	return static_cast<uint4>(m_setups.size());
+}
+
+// Gets the setup identified by the given index.
+beGraphics::Setup* Material::GetSetup(uint4 setupIdx) const
+{
+	return (setupIdx < m_setups.size())
+		? m_setups[setupIdx].setup
+		: nullptr;
 }
 
 // Gets the input signature of this pass.
@@ -261,6 +316,85 @@ const beCore::ReflectedComponent* Material::GetReflectedComponent(uint4 idx) con
 	return (idx < m_setups.size())
 		? m_setups[idx].setup
 		: nullptr;
+}
+
+// Transfers all data from the given source material to the given destination material.
+void Transfer(Material &dest, const Material &source)
+{
+	const uint4 count = dest.GetSetupCount();
+	const uint4 techniqueCount = dest.GetTechniqueCount();
+	const uint4 srcCount = source.GetSetupCount();
+	const uint4 srcTechniqueCount = source.GetTechniqueCount();
+
+	const beGraphics::Setup &srcMainSetup = *source.GetSetup(0);
+
+	for (uint4 setupIdx = 0; setupIdx < count; ++setupIdx)
+	{
+		beGraphics::Setup &setup = *dest.GetSetup(setupIdx);
+		const beGraphics::Effect *effect = setup.GetEffect();
+		const beGraphics::EffectCache *pCache = effect->GetCache();
+		
+		bool bTransferred = false;
+
+		// Transfer by effect
+		for (uint4 srcSetupIdx = 0; srcSetupIdx < srcCount; ++srcSetupIdx)
+		{
+			const beGraphics::Setup &srcSetup = *source.GetSetup(srcSetupIdx);
+			const beGraphics::Effect *srcEffect = srcSetup.GetEffect();
+
+			if (effect == srcEffect || pCache && pCache->Equivalent(*effect, *srcEffect))
+			{
+				beGraphics::Transfer(setup, srcSetup);
+				bTransferred = true;
+				break;
+			}
+		}
+
+		if (bTransferred)
+			continue;
+
+		if (pCache)
+			// Transfer by effect file
+			for (uint4 srcSetupIdx = 0; srcSetupIdx < srcCount; ++srcSetupIdx)
+			{
+				const beGraphics::Setup &srcSetup = *source.GetSetup(srcSetupIdx);
+				const beGraphics::Effect *srcEffect = srcSetup.GetEffect();
+
+				if (pCache->Equivalent(*effect, *srcEffect, true))
+				{
+					beGraphics::Transfer(setup, srcSetup);
+					bTransferred = true;
+					break;
+				}
+			}
+
+		if (bTransferred)
+			continue;
+		
+		// Transfer by name
+		for (uint4 techniqueIdx = 0; techniqueIdx < techniqueCount; ++techniqueIdx)
+		{
+			if (&setup == dest.GetTechniqueSetup(techniqueIdx))
+			{
+				utf8_ntr techniqueName = dest.GetTechniqueName(techniqueIdx);
+
+				for (uint4 srcTechniqueIdx = 0; srcTechniqueIdx < srcTechniqueCount; ++srcTechniqueIdx)
+					if (techniqueName == source.GetTechniqueName(srcTechniqueIdx))
+					{
+						beGraphics::Transfer(setup, *source.GetTechniqueSetup(srcTechniqueIdx));
+						bTransferred = true;
+						break;
+					}
+
+				if (bTransferred)
+					break;
+			}
+		}
+
+		// Transfer main
+		if (!bTransferred)
+			beGraphics::Transfer(setup, srcMainSetup);
+	}
 }
 
 } // namespace

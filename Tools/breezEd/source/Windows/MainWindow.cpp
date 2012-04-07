@@ -481,7 +481,7 @@ void MainWindow::documentClosing(AbstractDocument *pDocument)
 	{
 		Mode *pDocumentMode = *itDocumentMode;
 		m_documentModes.erase(itDocumentMode);
-		pDocumentMode->deleteLater();
+		delete pDocumentMode;
 	}
 }
 

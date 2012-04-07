@@ -27,7 +27,7 @@ public:
 	virtual ~Dependent() throw() { }
 
 	/// Notifies the dependent about dependency changes.
-	virtual void DependencyChanged(const Value &oldValue, const Value &newValue) = 0;
+	virtual void DependencyChanged(Value oldValue, Value newValue) = 0;
 };
 
 /// Dependency interface.

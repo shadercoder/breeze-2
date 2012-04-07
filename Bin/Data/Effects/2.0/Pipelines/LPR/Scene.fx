@@ -5,28 +5,28 @@
 #include "Engine/BindPoints.fx"
 
 /// Scene depth texture.
-Texture2D BE_SCENE_TEXTURE(SceneGeometryTexture) : bindpoint_s(SceneGeometryTarget, t14)
+Texture2D SceneGeometryTexture : BE_SCENE_PREBOUND_S(bindpoint_s(SceneGeometryTarget, t14))
 <
 	string TargetType = "Permanent";
 	string Format = "R16G16B16A16F";
 >;
 
 /// Scene texture.
-Texture2D BE_SCENE_TEXTURE(SceneDiffuseTexture) : bindpoint_s(SceneDiffuseTarget, t13)
+Texture2D SceneDiffuseTexture : BE_SCENE_PREBOUND_S(bindpoint_s(SceneDiffuseTarget, t13))
 <
 	string TargetType = "Permanent";
 	string Format = "R8G8B8A8U_SRGB";
 >;
 
 /// Scene texture.
-Texture2D BE_SCENE_TEXTURE(SceneSpecularTexture) : bindpoint_s(SceneSpecularTarget, t12)
+Texture2D SceneSpecularTexture : BE_SCENE_PREBOUND_S(bindpoint_s(SceneSpecularTarget, t12))
 <
 	string TargetType = "Permanent";
 	string Format = "R8G8B8A8U_SRGB";
 >;
 
 /// Depth buffer.
-Texture2D BE_SCENE_TEXTURE(SceneDepthBuffer) : SceneDepthBuffer
+Texture2D SceneDepthBuffer : BE_SCENE_PREBOUND_S(SceneDepthBuffer)
 <
 	string TargetType = "Permanent";
 	string Format = "D24S8";

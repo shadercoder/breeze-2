@@ -142,7 +142,7 @@ float4 PSAO(Pixel p, uniform float2 centerOffset = 0.0f) : SV_Target0
 	// Sample random 2D matrix
 	float4 noise = NoiseTexture.SampleLevel(NoiseSampler, p.Position.xy / 32.0f, 0) * 2.0f - 1.0f;
 
-	float4 eyeGeometry = BE_SCENE_TEXTURE(SceneGeometryTexture).SampleLevel(DefaultSampler, p.TexCoord + centerOffset, 0);
+	float4 eyeGeometry = SceneGeometryTexture.SampleLevel(DefaultSampler, p.TexCoord + centerOffset, 0);
 	float eyeDepth = ExtractDepth(eyeGeometry);
 	float3 eyeNormal = ExtractNormal(eyeGeometry);
 	
@@ -186,7 +186,7 @@ float4 PSAO(Pixel p, uniform float2 centerOffset = 0.0f) : SV_Target0
 		clipping += dot(sampleClip, 1.0f);
 
 		float sampleDepth = ExtractDepth(
-			BE_SCENE_TEXTURE(SceneGeometryTexture).SampleLevel(DefaultSampler, sampleCoord, 0) );
+			SceneGeometryTexture.SampleLevel(DefaultSampler, sampleCoord, 0) );
 		
 		// Compute sample position
 		float3 sampleCamDir = p.CamDir + sampleOffset.x * camDirDDU + sampleOffset.y * camDirDDV;
@@ -319,7 +319,7 @@ technique11 Default <
 		SetPixelShader( CompileShader(ps_4_0,
 				PSBilateralAverage(
 					float2(1.0f, 0.0f), 4, 3,
-					BE_SCENE_TEXTURE(SceneGeometryTexture), DefaultSampler,
+					SceneGeometryTexture, DefaultSampler,
 					AmbientTexture, DefaultSampler, DestinationResolution.zw,
 					AmbientTextureResolution.zw / 4
 				)
@@ -336,7 +336,7 @@ technique11 Default <
 		SetPixelShader( CompileShader(ps_4_0,
 				PSBilateralAverage(
 					float2(0.0f, 1.0f), 4, 3,
-					BE_SCENE_TEXTURE(SceneGeometryTexture), DefaultSampler,
+					SceneGeometryTexture, DefaultSampler,
 					AmbientTexture, DefaultSampler, DestinationResolution.zw,
 					AmbientTextureResolution.zw / 4
 				)
@@ -357,7 +357,7 @@ technique11 Default <
 		SetGeometryShader( NULL );
 		SetPixelShader( CompileShader(ps_4_0,
 				PSBilateralUpsample(
-					BE_SCENE_TEXTURE(SceneGeometryTexture), DefaultSampler, AmbientTextureResolution.zw / 4,
+					SceneGeometryTexture, DefaultSampler, AmbientTextureResolution.zw / 4,
 					AmbientTexture, DefaultSampler, AmbientTextureResolution.zw
 				)
 			) );

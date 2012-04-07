@@ -7,6 +7,7 @@
 
 #include "beGraphics.h"
 #include <beCore/beShared.h>
+#include <lean/tags/noncopyable.h>
 
 namespace beGraphics
 {
@@ -14,7 +15,7 @@ namespace beGraphics
 class EffectCache;
 
 /// Effect interface.
-class Effect : public beCore::OptionalResource, public Implementation
+class Effect : public lean::nonassignable, public beCore::OptionalResource, public Implementation
 {
 protected:
 	LEAN_INLINE Effect& operator =(const Effect&) { return *this; }

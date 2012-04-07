@@ -48,6 +48,9 @@ public:
 	virtual beCore::Dependency<Texture*>* GetDependencies(const beGraphics::Texture &texture) = 0;
 	/// Gets the dependencies registered for the given texture.
 	virtual beCore::Dependency<Texture*>* GetDependencies(const beGraphics::TextureView &texture) = 0;
+
+	/// Gets the path resolver.
+	virtual const beCore::PathResolver& GetPathResolver() const = 0;
 };
 
 // Prototypes

@@ -32,6 +32,7 @@ bool AbstractDocument::save()
 void AbstractDocument::close(void)
 {
 	maybeEmitClosingSignal(false);
+	// ORDER: This is incredibly ugly, however, Qt fails to destroy everything in time when not using deferred deletion
 	deleteLater();
 }
 

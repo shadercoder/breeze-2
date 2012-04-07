@@ -99,7 +99,7 @@ float4 PSAO(Pixel p, uniform Texture2D sourceTex, uniform int level = 0, uniform
 	// Sample random 2D matrix
 	float4 noise = NoiseTexture.SampleLevel(NoiseSampler, p.Position.xy / 32.0f, 0) * 2.0f - 1.0f;
 
-	float4 eyeGeometry = BE_SCENE_TEXTURE(SceneGeometryTexture).SampleLevel(DefaultSampler, p.TexCoord, 0);
+	float4 eyeGeometry = SceneGeometryTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
 	float eyeDepth = ExtractDepth(eyeGeometry);
 	float3 eyeNormal = ExtractNormal(eyeGeometry);
 

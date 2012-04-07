@@ -353,6 +353,40 @@ LEAN_INLINE vector<Component, ColumnCount> mulhx(
 	return result;
 }
 
+/// Constructs a rotation matrix from the given angles.
+template <size_t Dimension, class Component>
+LEAN_INLINE matrix<Component, Dimension, Dimension> mat_rot_yxz(const Component &x, const Component &y, const Component &z)
+{
+	return mul( mat_rot_y<Dimension>(y), mul( mat_rot_x<Dimension>(x), mat_rot_z<Dimension>(z) ) );
+}
+
+/// Gets angles from the given rotation matrix.
+template <size_t Dimension, class Component>
+LEAN_INLINE vector<Component, 3> angles_rot_yxz(const matrix<Component, Dimension, Dimension> &rot)
+{
+	vector<Component, 3> angles(uninitialized);
+
+	LEAN_STATIC_ASSERT_MSG_ALT(
+		Dimension >= 3,
+		"Matrix required to be at least 3x3",
+		Matrix_required_to_be_at_least_3x3);
+
+	angles[0] = asin( min(max(rot[1][2], Component(-1)), Component(1))  );
+
+	if (abs(rot[1][2]) < Component(0.999999f))
+	{
+		angles[1] = atan2(-rot[0][2], rot[2][2]);
+		angles[2] = atan2(-rot[1][0], rot[1][1]);
+	}
+	else
+	{
+		angles[1] = atan2(rot[2][0], rot[0][0]);
+		angles[2] = Component(0);
+	}
+
+	return angles;
+}
+
 /// Computes the determinant of the given matrix.
 template <class Component>
 LEAN_INLINE Component determinant(const matrix<Component, 1, 1> &operand)

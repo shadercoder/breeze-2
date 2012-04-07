@@ -58,6 +58,9 @@
     <Filter Include="Source Files\Prototypes">
       <UniqueIdentifier>{fd9d7543-d617-4667-8b26-996c5ca7af79}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\GI">
+      <UniqueIdentifier>{4e6dc0f2-8e1f-4476-918b-5beab7233b9f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Bin\Data\Effects\Source\DepthPrePipeline.fx">
@@ -257,6 +260,12 @@
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\SpecTextured.fx">
       <Filter>Source Files\Materials</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\GI\RayBundles.fx">
+      <Filter>Source Files\GI</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Utility\Bits.fx">
+      <Filter>Header Files\Utility</Filter>
     </None>
   </ItemGroup>
 </Project>

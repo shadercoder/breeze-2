@@ -27,16 +27,13 @@ struct PerspectiveLayout
 };
 
 #ifdef BE_PERSPECTIVE_SETUP
-	cbuffer PerspectiveConstants : bindpoint(b0)
-	{
-		PerspectiveLayout Perspective;
-	}
+	cbuffer PerspectiveConstants : register(b0)
 #else
-	cbuffer prebound(PerspectiveConstants) : bindpoint(b0)
-	{
-		PerspectiveLayout Perspective;
-	}
+	cbuffer prebound(PerspectiveConstants) : register(b0)
 #endif
+{
+	PerspectiveLayout Perspective;
+}
 
 float3 FromSRGB(float3 c)
 {

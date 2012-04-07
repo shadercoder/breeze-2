@@ -16,48 +16,36 @@
 namespace beCore
 {
 
-/// Widget enumeration.
-namespace Widget
-{
-	/// Enumeration.
-	enum T
-	{
-		None,			///< No widget.
-		Raw,			///< Raw value widget.
-		Slider,			///< Slider widget.
-		Color,			///< Color widget.
-		Angle,			///< Angle widget.
-		Orientation		///< Orientation widget.
-	};
-}
-
 /// Reflection property.
-struct ReflectionProperty : public lean::ui_property_desc<ReflectionPropertyProvider, int, ReflectionProperty>
+struct ReflectionProperty : public lean::ui_property_desc<ReflectionPropertyProvider, int2, ReflectionProperty>
 {
-	typedef lean::ui_property_desc<ReflectionPropertyProvider, int, ReflectionProperty> base_type;
+	typedef lean::ui_property_desc<ReflectionPropertyProvider, int2, ReflectionProperty> base_type;
 
-	uint4 typeID;	///< Serialization type.
+	uint2 typeID;		///< Serialization type.
+	bool persistent;	///< Persistent property.
 
 	/// Constructs an empty property description.
 	ReflectionProperty() { }
 	/// Constructs a property description from the given parameters.
-	ReflectionProperty(const utf8_ntri &name, uint4 typeID, const lean::property_type_info &type, size_t count, int widget)
+	ReflectionProperty(const utf8_ntri &name, uint4 typeID, const lean::property_type_info &type, size_t count, int2 widget, bool bPersistent)
 		: base_type(name, type, count, widget),
-		typeID(typeID) { }
+		// MONITOR: Type ID truncated to two bytes.
+		typeID(static_cast<uint2>(typeID)),
+		persistent(bPersistent) { }
 };
 
 /// Constructs a property description from the given parameters.
 template <class Type>
-LEAN_INLINE ReflectionProperty MakeReflectionProperty(const utf8_ntri &name, int widget, size_t count)
+LEAN_INLINE ReflectionProperty MakeReflectionProperty(const utf8_ntri &name, int2 widget, size_t count, bool bPersistent = true)
 {
-	return ReflectionProperty(name, RegisterType<Type>(), lean::get_property_type_info<Type>(), count, widget);
+	return ReflectionProperty(name, RegisterType<Type>(), lean::get_property_type_info<Type>(), count, widget, bPersistent);
 }
 
 /// Constructs a property description from the given parameters.
 template <class Type, size_t Count>
-LEAN_INLINE ReflectionProperty MakeReflectionProperty(const utf8_ntri &name, int widget)
+LEAN_INLINE ReflectionProperty MakeReflectionProperty(const utf8_ntri &name, int2 widget, bool bPersistent = true)
 {
-	return ReflectionProperty(name, RegisterType<Type>(), lean::get_property_type_info<Type>(), Count, widget);
+	return ReflectionProperty(name, RegisterType<Type>(), lean::get_property_type_info<Type>(), Count, widget, bPersistent);
 }
 
 namespace Impl
@@ -78,12 +66,14 @@ namespace Impl
 
 /// Constructs a property description from the given parameters.
 template <class Type>
-LEAN_INLINE ReflectionProperty MakeReflectionProperty(const utf8_ntri &name, int widget)
+LEAN_INLINE ReflectionProperty MakeReflectionProperty(const utf8_ntri &name, int2 widget, bool bPersistent = true)
 {
 	return ReflectionProperty(name,
-		RegisterType< typename Impl::DeducePropertyElements<Type>::type >(),
-		lean::get_property_type_info< typename Impl::DeducePropertyElements<Type>::type >(),
-		typename Impl::DeducePropertyElements<Type>::count, widget);
+			RegisterType< typename Impl::DeducePropertyElements<Type>::type >(),
+			lean::get_property_type_info< typename Impl::DeducePropertyElements<Type>::type >(),
+			typename Impl::DeducePropertyElements<Type>::count, widget,
+			bPersistent
+		);
 }
 
 /// Property collection.

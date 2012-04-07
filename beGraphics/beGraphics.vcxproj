@@ -249,7 +249,9 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClCompile Include="source\beAdapters.cpp" />
     <ClCompile Include="source\beEffectCache.cpp" />
     <ClCompile Include="source\beGraphics.cpp" />
+    <ClCompile Include="source\beSetup.cpp" />
     <ClCompile Include="source\beSetupSerialization.cpp" />
+    <ClCompile Include="source\beTextureProvider.cpp" />
     <ClCompile Include="source\dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>

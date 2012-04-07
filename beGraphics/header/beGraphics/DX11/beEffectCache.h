@@ -45,10 +45,16 @@ public:
 	/// Gets the file (or name) of the given effect.
 	BE_GRAPHICS_DX11_API utf8_ntr GetFile(const beGraphics::Effect &effect, beCore::Exchange::utf8_string *pMacros = nullptr, bool *pIsFile = nullptr) const;
 
+	/// Checks if the given effects are cache-equivalent.
+	BE_GRAPHICS_DX11_API bool Equivalent(const beGraphics::Effect &left, const beGraphics::Effect &right, bool bIgnoreMacros = false) const;
+
 	/// Notifies dependent listeners about dependency changes.
 	BE_GRAPHICS_DX11_API void NotifyDependents();
 	/// Gets the dependencies registered for the given effect.
 	BE_GRAPHICS_DX11_API beCore::Dependency<beGraphics::Effect*>* GetDependency(const beGraphics::Effect &effect);
+
+	/// Gets the path resolver.
+	BE_GRAPHICS_DX11_API const beCore::PathResolver& GetPathResolver() const;
 
 	/// Gets the implementation identifier.
 	LEAN_INLINE ImplementationID GetImplementationID() const { return DX11Implementation; }

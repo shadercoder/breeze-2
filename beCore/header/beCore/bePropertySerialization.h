@@ -13,9 +13,9 @@ namespace beCore
 {
 
 /// Saves the given property provider to the given XML node.
-BE_CORE_API void SaveProperties(const PropertyProvider &properties, rapidxml::xml_node<lean::utf8_t> &node);
+BE_CORE_API void SaveProperties(const PropertyProvider &properties, rapidxml::xml_node<lean::utf8_t> &node, bool bPersistentOnly = true);
 /// Saves the given property provider to the given XML node.
-BE_CORE_API void SaveProperties(const PropertyProvider &properties, uint4 propertyID, rapidxml::xml_node<lean::utf8_t> &node);
+BE_CORE_API void SaveProperties(const PropertyProvider &properties, uint4 propertyID, rapidxml::xml_node<lean::utf8_t> &node, bool bPersistentOnly = true);
 
 /// Load the given property provider from the given XML node.
 BE_CORE_API void LoadProperties(PropertyProvider &properties, const rapidxml::xml_node<lean::utf8_t> &node);

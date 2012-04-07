@@ -563,6 +563,27 @@
     <ClCompile Include="source\Binders\FileTreeBinder.cpp">
       <Filter>Source Files\Binders</Filter>
     </ClCompile>
+    <ClCompile Include="source\Widgets\ColorPicker.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ColorPicker.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ColorPicker.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_CanvasFrame.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_CanvasFrame.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_SlotObject.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_SlotObject.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
@@ -678,6 +699,12 @@
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_EntitySelectionWidget.h">
       <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ColorPicker.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\UI.h">
+      <Filter>Header Files\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -893,6 +920,18 @@
     </CustomBuild>
     <CustomBuild Include="header\Binders\FileTreeBinder.h">
       <Filter>Header Files\Binders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\ColorPicker.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\ColorPicker.h">
+      <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Utility\CanvasFrame.h">
+      <Filter>Header Files\Utility</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Utility\SlotObject.h">
+      <Filter>Header Files\Utility</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

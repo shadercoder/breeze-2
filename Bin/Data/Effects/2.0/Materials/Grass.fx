@@ -10,11 +10,13 @@ cbuffer SetupConstants
 	float4 DiffuseColor
 	<
 		String UIName = "Diffuse";
+		String UIWidget = "Color";
 	> = float4(1.0f, 1.0f, 1.0f, 0.05f);
 
 	float4 SpecularColor
 	<
 		String UIName = "Specular";
+		String UIWidget = "Color";
 	> = float4(1.0f, 1.0f, 1.0f, 0.0f);
 }
 

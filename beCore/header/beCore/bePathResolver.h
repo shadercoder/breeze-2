@@ -22,6 +22,8 @@ protected:
 public:
 	/// Resolves the given file name.
 	virtual Exchange::utf8_string Resolve(const utf8_ntri &file, bool bThrow = false) const = 0;
+	/// Shortens the given path.
+	virtual Exchange::utf8_string Shorten(const utf8_ntri &path) const = 0;
 };
 
 } // namespace

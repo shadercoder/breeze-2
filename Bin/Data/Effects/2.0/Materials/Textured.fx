@@ -10,12 +10,14 @@ cbuffer SetupConstants
 	float4 DiffuseColor
 	<
 		String UIName = "Diffuse";
+		String UIWidget = "Color";
 	> = float4(1.0f, 1.0f, 1.0f, 0.03f);
 
 	float4 SpecularColor
 	<
 		String UIName = "Specular";
-	> = float4(0.05f, 0.05f, 0.05f, 0.9f);
+		String UIWidget = "Color";
+	> = float4(0.0f, 0.0f, 0.0f, 0.1f);
 
 	float2 TextureRepeat
 	<
@@ -23,12 +25,29 @@ cbuffer SetupConstants
 	> = float2(1.0f, 1.0f);
 }
 
-Texture2D DiffuseTexture
-<
-	string UIName = "Diffuse";
->;
+#ifndef NOCOLORMAP
+
+	Texture2D DiffuseTexture
+	<
+		string UIName = "Diffuse";
+	>;
+
+	#define IF_COLORMAP(x) x
+	#define IF_NOCOLORMAP(x)
+
+#else
+
+	#define IF_COLORMAP(x)
+	#define IF_NOCOLORMAP(x) x
+
+#endif
 
 #ifdef NORMALMAP
+
+	float4 NormalBlend
+	<
+		String UIName = "Normal Blend";
+	> = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	Texture2D NormalTexture
 	<
@@ -61,7 +80,7 @@ struct Vertex
 	float2 TexCoord	: TexCoord;
 
 	IF_NORMALMAP(
-		float4 Tangent	: Tangent;
+		float3 Tangent	: Tangent;
 	)
 };
 
@@ -86,8 +105,9 @@ Pixel VSMain(Vertex v)
 	o.TexCoord = v.TexCoord * TextureRepeat;
 
 	IF_NORMALMAP(
-		o.Tangent.xyz = mul(v.Tangent.xyz, (float3x3) World);
-		o.Tangent.w = v.Tangent.w;
+		o.Tangent.xyz = mul(v.Tangent, (float3x3) World);
+		// Extract handedness
+		o.Tangent.w = sign(dot(v.Tangent, v.Tangent) - 0.5f);
 	)
 	
 	return o;
@@ -109,7 +129,10 @@ float3 DecodeNormal(float3 n)
 GeometryOutput PSGeometry(Pixel p) // , uint primID : SV_PrimitiveID
 {
 	float4 diffuse = DiffuseColor;
-	diffuse.xyz *= FromSRGB(DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz);
+	
+	IF_COLORMAP(
+		diffuse.xyz *= FromSRGB(DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz);
+	)
 
 	float4 specular = SpecularColor;
 	IF_SPECULARMAP(
@@ -123,13 +146,22 @@ GeometryOutput PSGeometry(Pixel p) // , uint primID : SV_PrimitiveID
 		float3 tangent = cross(bitangent, normal);
 
 		// Texture might be flipped
-		bitangent *= -sign(p.Tangent.w);
-
-		normal = mul(
-				DecodeNormal( NormalTexture.Sample(LinearSampler, p.TexCoord).xyz ),
+		// ORDER: Don't flip before full frame has been computed!
+		bitangent *= p.Tangent.w;
+		
+		float4 normalSample = NormalTexture.Sample(LinearSampler, p.TexCoord);
+		
+		float3 mapNormal = mul(
+				DecodeNormal( normalSample.xyz ),
 				float3x3(tangent, bitangent, normal)
 			);
-		normal = normalize(normal);
+		normal = normalize( lerp(normal, mapNormal, NormalBlend.w) );
+		
+		IF_NOCOLORMAP(
+			float3 normalBlend = smoothstep(0.1f * NormalBlend.xyz, NormalBlend.xyz, normalSample.w);
+			diffuse.xyz *= normalBlend;
+			specular.xyz *= normalBlend;
+		)
 	)
 
 	return ReturnGeometry(p.NormalDepth.w, normal, diffuse, specular);

@@ -52,10 +52,16 @@ public:
 	/// Gets the file (or name) of the given effect.
 	virtual utf8_ntr GetFile(const Effect &effect, beCore::Exchange::utf8_string *pMacros = nullptr, bool *pIsFile = nullptr) const = 0;
 
+	/// Checks if the given effects are cache-equivalent.
+	virtual bool Equivalent(const Effect &left, const Effect &right, bool bIgnoreMacros = false) const = 0;
+
 	/// Notifies dependent listeners about dependency changes.
 	virtual void NotifyDependents() = 0;
 	/// Gets the dependencies registered for the given effect.
 	virtual beCore::Dependency<Effect*>* GetDependency(const Effect &effect) = 0;
+
+	/// Gets the path resolver.
+	virtual const beCore::PathResolver& GetPathResolver() const = 0;
 };
 
 /// Mangles the given file name & macros.

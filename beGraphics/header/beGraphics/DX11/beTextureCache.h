@@ -50,6 +50,9 @@ public:
 	/// Gets the dependencies registered for the given texture.
 	BE_GRAPHICS_DX11_API beCore::Dependency<beGraphics::Texture*>* GetDependencies(const beGraphics::TextureView &texture);
 
+	/// Gets the path resolver.
+	BE_GRAPHICS_DX11_API const beCore::PathResolver& GetPathResolver() const;
+
 	/// Gets the implementation identifier.
 	LEAN_INLINE ImplementationID GetImplementationID() const { return DX11Implementation; }
 };

@@ -47,6 +47,9 @@ public:
 	virtual const TextureProvider* GetTextureDefaults() const = 0;
 };
 
+/// Transfers all textures from the given source texture provider to the given destination texture provider.
+BE_GRAPHICS_API void TransferTextures(TextureProvider &dest, const TextureProvider &source);
+
 } // namespace
 
 #endif

@@ -8,6 +8,8 @@
 
 #include <QtCore/QTimer>
 
+#include <lean/smart/scoped_ptr.h>
+
 #include "Utility/Strings.h"
 #include "Utility/Checked.h"
 
@@ -15,7 +17,8 @@ namespace
 {
 
 /// Updates the widget from the given selection.
-void updateFromSelection(Ui::EntityPropertyWidget &widget, const EntityPropertyWidget::entity_vector &selection, SceneDocument *pDocument, QTimer &timer)
+void updateFromSelection(Ui::EntityPropertyWidget &widget, const EntityPropertyWidget::entity_vector &selection, SceneDocument *pDocument,
+	EntityPropertyWidget &listener, QTimer &timer)
 {
 	QString selectionText = (selection.empty())
 		? EntityPropertyWidget::tr("<none>")
@@ -26,15 +29,18 @@ void updateFromSelection(Ui::EntityPropertyWidget &widget, const EntityPropertyW
 
 	widget.selectionLabel->setText(selectionText);
 
-	if (QAbstractItemModel *pOldModel = widget.propertyView->model())
-		pOldModel->deleteLater();
+	// Delete old model on exit
+	lean::scoped_ptr<QAbstractItemModel> pOldModel( widget.propertyView->model() );
 
 	if  (!selection.empty())
 	{
 		EntityPropertyBinder *pBinder = new EntityPropertyBinder(selection[0], pDocument, widget.propertyView, nullptr);
 		checkedConnect(&timer, SIGNAL(timeout()), pBinder, SLOT(updateProperties()));
+		checkedConnect(pBinder, SIGNAL(propertiesChanged()), &listener, SLOT(propertiesChanged()));
 		pBinder->setParent(widget.propertyView->model());
 	}
+	else if (pOldModel)
+		widget.propertyView->setModel(nullptr);
 }
 
 } // namespace
@@ -47,16 +53,21 @@ EntityPropertyWidget::EntityPropertyWidget(Editor *pEditor, QWidget *pParent, Qt
 	m_pDocument()
 {
 	ui.setupUi(this);
-
-	m_pTimer->setInterval(300);
-	m_pTimer->start();
-
-	updateFromSelection(ui, m_selection, m_pDocument, *m_pTimer);
+	m_pTimer->setInterval(150);
+	m_pTimer->setSingleShot(true);
+	updateFromSelection(ui, m_selection, m_pDocument, *this, *m_pTimer);
 }
 
 // Destructor.
 EntityPropertyWidget::~EntityPropertyWidget()
 {
+}
+
+// Properties have changed.
+void EntityPropertyWidget::propertiesChanged()
+{
+	if (!m_pTimer->isActive())
+		m_pTimer->start();
 }
 
 // Sets the active selection of the given document.
@@ -69,13 +80,13 @@ void EntityPropertyWidget::setActiveSelection(SceneDocument *pDocument)
 		if (selection != m_selection)
 		{
 			m_selection = pDocument->selection();
-			updateFromSelection(ui, m_selection, pDocument, *m_pTimer);
+			updateFromSelection(ui, m_selection, pDocument, *this, *m_pTimer);
 		}
 	}
 	else if (!m_selection.empty())
 	{
 		m_selection.clear();
-		updateFromSelection(ui, m_selection, nullptr, *m_pTimer);
+		updateFromSelection(ui, m_selection, nullptr, *this, *m_pTimer);
 	}
 }
 

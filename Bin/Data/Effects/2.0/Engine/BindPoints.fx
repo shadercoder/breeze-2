@@ -10,4 +10,7 @@
 /// Excludes the given variable from resource binding.
 #define prebound(name) unmanaged__##name
 
+/// Excludes the given variable from resource binding.
+#define prebound_s(semantic) semantic##__unmanaged
+
 #endif

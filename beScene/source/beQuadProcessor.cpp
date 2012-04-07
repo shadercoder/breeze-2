@@ -168,7 +168,7 @@ void QuadProcessor::SetMaterial(Material *pMaterial)
 						pInputLayout.rebind()),
 					"ID3D11Device::CreateInputLayout()");
 
-				m_layers.push_back( Layer(pInputLayout, pEffectBinder, ToImpl(pMaterial->GetSetup(layerID))) );
+				m_layers.push_back( Layer(pInputLayout, pEffectBinder, ToImpl(pMaterial->GetTechniqueSetup(layerID))) );
 			}
 		}
 

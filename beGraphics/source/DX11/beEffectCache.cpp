@@ -489,6 +489,29 @@ utf8_ntr EffectCache::GetFile(const beGraphics::Effect &effect, beCore::Exchange
 	return file;
 }
 
+// Checks if the given effects are cache-equivalent.
+bool EffectCache::Equivalent(const beGraphics::Effect &left, const beGraphics::Effect &right, bool bIgnoreMacros) const
+{
+	const beGraphics::DX11::Effect &leftImpl = ToImpl(left);
+	const beGraphics::DX11::Effect &rightImpl = ToImpl(right);
+
+	if (leftImpl.Get() == rightImpl.Get())
+		return true;
+
+	M::effect_info_map::const_iterator itLeftInfo = m->effectInfo.find(leftImpl);
+	M::effect_info_map::const_iterator itRightInfo = m->effectInfo.find(rightImpl);
+
+	if (itLeftInfo != m->effectInfo.end() && itRightInfo != m->effectInfo.end())
+	{
+		if (itLeftInfo == itRightInfo)
+			return true;
+		else if (bIgnoreMacros)
+			return (itLeftInfo->second->file == itRightInfo->second->file);
+	}
+
+	return false;
+}
+
 // Gets the dependencies registered for the given effect.
 beCore::Dependency<beGraphics::Effect*>* EffectCache::GetDependency(const beGraphics::Effect &effect)
 {
@@ -519,6 +542,12 @@ void EffectCache::M::ObservedEffect::FileChanged(const lean::utf8_ntri &file, le
 
 	// Notify dependent listeners
 	this->pCache->m->dependencies.DependencyChanged(this->dependency, this->pEffect);
+}
+
+/// Gets the path resolver.
+const beCore::PathResolver& EffectCache::GetPathResolver() const
+{
+	return m->resolver;
 }
 
 } // namespace

@@ -24,6 +24,7 @@ private:
 	Editor *m_pEditor;
 
 	const beCore::ComponentReflector *m_pReflector;
+	lean::cloneable_obj<lean::any, true> m_pCurrent;
 
 	typedef QList<QObject*> object_list;
 	object_list m_focusHandlers;

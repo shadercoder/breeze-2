@@ -42,17 +42,24 @@ private:
 public:
 	/// Constructor.
 	BE_SCENE_API Material(const beGraphics::Effect *pEffect, beGraphics::EffectCache &effectCache, beGraphics::TextureCache &textureCache, MaterialCache *pCache = nullptr);
+	/// Constructor.
+	BE_SCENE_API Material(const Material &right);
 	/// Destructor.
 	BE_SCENE_API virtual ~Material();
 
 	/// Gets the number of techniques.
 	BE_SCENE_API uint4 GetTechniqueCount() const;
 	/// Gets the setup for the given technique.
-	BE_SCENE_API beGraphics::Setup* GetSetup(uint4 techniqueIdx) const;
+	BE_SCENE_API beGraphics::Setup* GetTechniqueSetup(uint4 techniqueIdx) const;
 	/// Gets the technique identified by the given index.
 	BE_SCENE_API const beGraphics::Technique* GetTechnique(uint4 techniqueIdx) const;
 	/// Gets the name of the technique identified by the given index.
 	BE_SCENE_API utf8_ntr GetTechniqueName(uint4 techniqueIdx) const;
+
+	/// Gets the number of setups.
+	BE_SCENE_API uint4 GetSetupCount() const;
+	/// Gets the setup identified by the given index.
+	BE_SCENE_API beGraphics::Setup* GetSetup(uint4 setupIdx) const;
 
 	/// Gets the input signature of this pass.
 	BE_SCENE_API const char* GetInputSignature(uint4 &size, uint4 techniqueIdx, uint4 passID = 0) const;
@@ -69,6 +76,9 @@ public:
 	/// Gets the material cache.
 	LEAN_INLINE MaterialCache* GetCache() const { return m_pCache; }
 };
+
+/// Transfers all data from the given source material to the given destination material.
+BE_SCENE_API void Transfer(Material &dest, const Material &source);
 
 } // namespace
 

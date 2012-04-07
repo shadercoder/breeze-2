@@ -43,7 +43,7 @@ QString outputFromInput(const QString &input, const QString &prevInput, const QS
 
 	QFileInfo outputDirInfo(
 			absolutePathToDir(prevOutput),
-			lean::relative_path<QString>(prevInputDir, inputDir)
+			lean::relative_path<QString>(inputDir, prevInputDir)
 		);
 	QFileInfo outputInfo(
 			outputDirInfo.absoluteFilePath(),

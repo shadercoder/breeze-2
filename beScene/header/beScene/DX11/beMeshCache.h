@@ -49,6 +49,9 @@ public:
 	/// Gets the dependencies registered for the given mesh.
 	BE_SCENE_API beCore::Dependency<beScene::MeshCompound*>* GetDependencies(const beScene::MeshCompound *pMesh);
 
+	/// Gets the path resolver.
+	BE_SCENE_API const beCore::PathResolver& GetPathResolver() const;
+
 	/// Gets the device.
 	ID3D11Device* GetDevice() const;
 

@@ -10,12 +10,14 @@ cbuffer SetupConstants
 	float4 DiffuseColor
 	<
 		String UIName = "Diffuse";
+		String UIWidget = "Color";
 	> = float4(1.0f, 1.0f, 1.0f, 0.053f);
 
 	float4 SpecularColor
 	<
 		String UIName = "Specular";
-	> = float4(1.0f, 1.0f, 1.0f, 0.0f);
+		String UIWidget = "Color";
+	> = float4(0.0f, 0.0f, 0.0f, 0.1f);
 }
 
 struct Vertex
