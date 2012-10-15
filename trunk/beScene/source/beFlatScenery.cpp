@@ -92,16 +92,15 @@ void FlatScenery::CullRenderables(const beMath::fplane3 *planes, AddRenderablePa
 	{
 		const RenderableData &data = itElement->data;
 		
-		uint4 renderableVisible = static_cast<uint4>(-1);
+		bool renderableVisible = true;
 		
 		// Cull bounding sphere against frustum
 		for (int i = 0; i < 6; ++i)
 			renderableVisible &= ( sdist(planes[i], data.Bounds.p()) <= data.Bounds.r() );
 
-		uint4 passCount = renderableVisible & data.PassCount;
-
 		// Insert passes, if visible
-		(*pAddPass)(pCaller, itElement->pRenderable, data);
+		if (renderableVisible)
+			(*pAddPass)(pCaller, itElement->pRenderable, data);
 	}
 }
 

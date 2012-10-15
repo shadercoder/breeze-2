@@ -26,11 +26,13 @@ struct CreationParameter
 {
 	utf8_ntr Name;	///< Parameter name.
 	utf8_ntr Type;	///< Parameter type.
+	bool Optional;	///< True, if optional.
 
 	/// Constructor
-	CreationParameter(const utf8_ntr &name, const utf8_ntr &type)
+	CreationParameter(const utf8_ntr &name, const utf8_ntr &type, bool bOptional = false)
 		: Name(name),
-		Type(type) { }
+		Type(type),
+		Optional(bOptional) { }
 };
 
 // Prototypes

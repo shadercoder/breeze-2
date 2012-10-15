@@ -48,8 +48,12 @@ public:
 	void detach();
 
 public Q_SLOTS:
+	/// Finish editing.
+	void finishEditing();
 	/// Update widgets.
 	void updateWidgets();
+	/// Update widgets.
+	void selectionChanged();
 };
 
 #endif

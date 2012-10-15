@@ -68,14 +68,11 @@ uint4 GetInputElementOffset(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, const
 	return offset;
 }
 
-// Computes a bounding sphere from the given vertices.
-beMath::fsphere3 ComputeVertexBounds(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
+// Computes a bounding box from the given vertices.
+beMath::faab3 ComputeVertexBounds(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 	uint4 vertexSize, const void *pVertices, uint4 vertexCount)
 {
-	beMath::fsphere3 bounds;
-
-	beMath::fvec3 boundsMin(FLT_MAX);
-	beMath::fvec3 boundsMax(-FLT_MAX);
+	beMath::faab3 bounds(beMath::faab3::invalid);
 
 	const D3D11_INPUT_ELEMENT_DESC *pPositionElementDesc = GetInputElementBySemantic(pElementDescs, elementCount, "POSITION");
 
@@ -91,13 +88,10 @@ beMath::fsphere3 ComputeVertexBounds(const D3D11_INPUT_ELEMENT_DESC *pElementDes
 			const float *pVertexPos = reinterpret_cast<const float*>(pVertexBytes + positionOffset);
 			beMath::fvec3 vertexPos = beMath::vec(pVertexPos[0], pVertexPos[1], pVertexPos[2]);
 
-			boundsMin = min_cw(boundsMin, vertexPos);
-			boundsMax = max_cw(boundsMax, vertexPos);
+			bounds.min = min_cw(bounds.min, vertexPos);
+			bounds.max = max_cw(bounds.max, vertexPos);
 		}
 	}
-
-	bounds.p() = (boundsMin + boundsMax) * 0.5f;
-	bounds.r() = length(boundsMax - boundsMin) * 0.5f;
 
 	return bounds;
 }
@@ -106,7 +100,7 @@ beMath::fsphere3 ComputeVertexBounds(const D3D11_INPUT_ELEMENT_DESC *pElementDes
 Mesh::Mesh(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 		uint4 vertexSize, const void *pVertices, uint4 vertexCount,
 		DXGI_FORMAT indexFormat, const void *pIndices, uint4 indexCount,
-		const beMath::fsphere3 &bounds,
+		const beMath::faab3 &bounds,
 		ID3D11Device *pDevice, MeshCompound *pCompound)
 	: beScene::Mesh(bounds, pCompound),
 	m_vertexElements( pElementDescs, pElementDescs + elementCount ),

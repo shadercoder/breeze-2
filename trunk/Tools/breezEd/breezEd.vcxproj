@@ -25,23 +25,28 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\global\Platform.Cpp.$(Platform).user.props" />
     <Import Project="..\..\global\Lean.Cpp.Win32.user.props" />
     <Import Project="..\..\global\beCore.Cpp.Win32.props" />
     <Import Project="..\..\global\beMath.Cpp.Win32.props" />
@@ -50,9 +55,11 @@
     <Import Project="..\..\global\beEntitySystem.Cpp.Win32.props" />
     <Import Project="..\..\global\beScene.Cpp.Win32.props" />
     <Import Project="..\..\global\Qt.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\bePhysics.Cpp.Win32.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\global\Platform.Cpp.$(Platform).user.props" />
     <Import Project="..\..\global\Lean.Cpp.Win32.user.props" />
     <Import Project="..\..\global\beCore.Cpp.Win32.props" />
     <Import Project="..\..\global\beMath.Cpp.Win32.props" />
@@ -61,9 +68,11 @@
     <Import Project="..\..\global\beEntitySystem.Cpp.Win32.props" />
     <Import Project="..\..\global\beScene.Cpp.Win32.props" />
     <Import Project="..\..\global\Qt.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\bePhysics.Cpp.Win32.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\global\Platform.Cpp.$(Platform).user.props" />
     <Import Project="..\..\global\Lean.Cpp.Win32.user.props" />
     <Import Project="..\..\global\beCore.Cpp.Win32.props" />
     <Import Project="..\..\global\beMath.Cpp.Win32.props" />
@@ -72,9 +81,11 @@
     <Import Project="..\..\global\beEntitySystem.Cpp.Win32.props" />
     <Import Project="..\..\global\beScene.Cpp.Win32.props" />
     <Import Project="..\..\global\Qt.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\bePhysics.Cpp.Win32.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\global\Platform.Cpp.$(Platform).user.props" />
     <Import Project="..\..\global\Lean.Cpp.Win32.user.props" />
     <Import Project="..\..\global\beCore.Cpp.Win32.props" />
     <Import Project="..\..\global\beMath.Cpp.Win32.props" />
@@ -83,6 +94,7 @@
     <Import Project="..\..\global\beEntitySystem.Cpp.Win32.props" />
     <Import Project="..\..\global\beScene.Cpp.Win32.props" />
     <Import Project="..\..\global\Qt.Cpp.Win32.user.props" />
+    <Import Project="..\..\global\bePhysics.Cpp.Win32.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -104,7 +116,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>beScene_d.lib;beEntitySystem_d.lib;beLauncher_d.lib;beGraphics_d.lib;beCore_d.lib;qtmaind.lib;QtCored4.lib;QtGuid4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bePhysics_d.lib;beScene_d.lib;beEntitySystem_d.lib;beLauncher_d.lib;beGraphics_d.lib;beCore_d.lib;qtmaind.lib;QtCored4.lib;QtGuid4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"</Command>
@@ -123,7 +135,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>beScene_x64d.lib;beEntitySystem_x64d.lib;beLauncher_x64d.lib;beGraphics_x64d.lib;beCore_x64d.lib;qtmaind_x64.lib;QtCored4_x64.lib;QtGuid4_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bePhysics_x64d.lib;beScene_x64d.lib;beEntitySystem_x64d.lib;beLauncher_x64d.lib;beGraphics_x64d.lib;beCore_x64d.lib;qtmaind_x64.lib;QtCored4_x64.lib;QtGuid4_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"</Command>
@@ -141,7 +153,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>beScene.lib;beEntitySystem.lib;beLauncher.lib;beGraphics.lib;beCore.lib;qtmain.lib;QtCore4.lib;QtGui4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bePhysics.lib;beScene.lib;beEntitySystem.lib;beLauncher.lib;beGraphics.lib;beCore.lib;qtmain.lib;QtCore4.lib;QtGui4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"</Command>
@@ -159,7 +171,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>beScene_x64.lib;beEntitySystem_x64.lib;beLauncher_x64.lib;beGraphics_x64.lib;beCore_x64.lib;qtmain_x64.lib;QtCore4_x64.lib;QtGui4_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bePhysics_x64.lib;beScene_x64.lib;beEntitySystem_x64.lib;beLauncher_x64.lib;beGraphics_x64.lib;beCore_x64.lib;qtmain_x64.lib;QtCore4_x64.lib;QtGui4_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"</Command>
@@ -218,7 +230,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_ComponentSelectorWidget.cpp">
+    <ClCompile Include="GeneratedFiles\Debug\moc_ComponentPicker.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -262,15 +274,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_FileCreationParameterWidget.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_FileTreeBinder.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_FreeCamera.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_GenericComponentPicker.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -295,10 +307,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_MdiDocumentWindow.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_MeshCreationParameterWidget.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -343,10 +351,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_SelectInteraction.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_ShapeCreationParameterWidget.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -426,7 +430,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_ComponentSelectorWidget.cpp">
+    <ClCompile Include="GeneratedFiles\Release\moc_ComponentPicker.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -470,15 +474,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_FileCreationParameterWidget.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_FileTreeBinder.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_FreeCamera.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_GenericComponentPicker.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -503,10 +507,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_MdiDocumentWindow.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_MeshCreationParameterWidget.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -551,10 +551,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_SelectInteraction.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_ShapeCreationParameterWidget.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -643,13 +639,11 @@
     <ClCompile Include="source\Views\SceneView.cpp" />
     <ClCompile Include="source\Widgets\BrowseWidget.cpp" />
     <ClCompile Include="source\Widgets\ColorPicker.cpp" />
-    <ClCompile Include="source\Widgets\ComponentSelectorWidget.cpp" />
+    <ClCompile Include="source\Widgets\ComponentPicker.cpp" />
+    <ClCompile Include="source\Widgets\ComponentPickerFactory.cpp" />
     <ClCompile Include="source\Widgets\ControllerBuilderWidget.cpp" />
-    <ClCompile Include="source\Widgets\CreationParameterWidgetFactory.cpp" />
-    <ClCompile Include="source\Widgets\FileCreationParameterWidget.cpp" />
+    <ClCompile Include="source\Widgets\GenericComponentPicker.cpp" />
     <ClCompile Include="source\Widgets\GraphicsCanvas.cpp" />
-    <ClCompile Include="source\Widgets\MeshCreationParameterWidget.cpp" />
-    <ClCompile Include="source\Widgets\ShapeCreationParameterWidget.cpp" />
     <ClCompile Include="source\Windows\MainWindow.cpp" />
     <ClCompile Include="source\Windows\MdiDocumentWindow.cpp" />
     <ClCompile Include="source\Windows\MeshImportDialog.cpp" />
@@ -662,12 +656,12 @@
     <ClInclude Include="GeneratedFiles\ui_BrowseWidget.h" />
     <ClInclude Include="GeneratedFiles\ui_CodeView.h" />
     <ClInclude Include="GeneratedFiles\ui_ColorPicker.h" />
-    <ClInclude Include="GeneratedFiles\ui_ComponentSelectorWidget.h" />
     <ClInclude Include="GeneratedFiles\ui_ConsoleWidget.h" />
     <ClInclude Include="GeneratedFiles\ui_ControllerBuilderWidget.h" />
     <ClInclude Include="GeneratedFiles\ui_EntityBuilderWidget.h" />
     <ClInclude Include="GeneratedFiles\ui_EntityPropertyWidget.h" />
     <ClInclude Include="GeneratedFiles\ui_EntitySelectionWidget.h" />
+    <ClInclude Include="GeneratedFiles\ui_GenericComponentPicker.h" />
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h" />
     <CustomBuild Include="header\Editor.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalInputs)</AdditionalInputs>
@@ -1239,6 +1233,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Tiles/EntitySelectionWidget.h"  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
     </CustomBuild>
+    <ClInclude Include="header\Plugins\FactoryManager.h" />
     <ClInclude Include="header\Utility\AbstractItemModel.h" />
     <CustomBuild Include="header\Utility\CanvasFrame.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
@@ -1352,24 +1347,6 @@
     </CustomBuild>
     <ClInclude Include="header\Utility\UI.h" />
     <ClInclude Include="header\Utility\Undo.h" />
-    <CustomBuild Include="header\Widgets\ComponentSelectorWidget.h">
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing ComponentSelectorWidget.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ComponentSelectorWidget.h"</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing ComponentSelectorWidget.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ComponentSelectorWidget.h"</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing ComponentSelectorWidget.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ComponentSelectorWidget.h"</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing ComponentSelectorWidget.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ComponentSelectorWidget.h"  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
-    </CustomBuild>
     <CustomBuild Include="header\Widgets\ColorPicker.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing ColorPicker.h...</Message>
@@ -1388,8 +1365,25 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ColorPicker.h"  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
     </CustomBuild>
-    <ClInclude Include="header\Widgets\CreationParameterWidget.h" />
-    <ClInclude Include="header\Widgets\CreationParameterWidgetFactory.h" />
+    <CustomBuild Include="header\Widgets\ComponentPicker.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing ComponentPicker.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ComponentPicker.h"  -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing ComponentPicker.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ComponentPicker.h"  -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing ComponentPicker.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ComponentPicker.h"  -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing ComponentPicker.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ComponentPicker.h"  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
+    </CustomBuild>
+    <ClInclude Include="header\Widgets\ComponentPickerFactory.h" />
     <ClInclude Include="header\Plugins\PluginManager.h" />
     <CustomBuild Include="header\Windows\MainWindow.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
@@ -1655,7 +1649,6 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ControllerBuilderWidget.h"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ControllerBuilderWidget.h"</Command>
     </CustomBuild>
-    <ClInclude Include="header\Plugins\WidgetFactoryManager.h" />
     <CustomBuild Include="header\Widgets\BrowseWidget.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
@@ -1673,42 +1666,6 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/BrowseWidget.h"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/BrowseWidget.h"</Command>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\FileCreationParameterWidget.h">
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing FileCreationParameterWidget.h...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing FileCreationParameterWidget.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/FileCreationParameterWidget.h"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/FileCreationParameterWidget.h"</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing FileCreationParameterWidget.h...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing FileCreationParameterWidget.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/FileCreationParameterWidget.h"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/FileCreationParameterWidget.h"</Command>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\MeshCreationParameterWidget.h">
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing MeshCreationParameterWidget.h...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing MeshCreationParameterWidget.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/MeshCreationParameterWidget.h"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/MeshCreationParameterWidget.h"</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing MeshCreationParameterWidget.h...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing MeshCreationParameterWidget.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/MeshCreationParameterWidget.h"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/MeshCreationParameterWidget.h"</Command>
     </CustomBuild>
     <CustomBuild Include="header\Windows\MeshImportDialog.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
@@ -1764,23 +1721,23 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Windows/ShapeImportDialog.h"</Command>
     </CustomBuild>
-    <CustomBuild Include="header\Widgets\ShapeCreationParameterWidget.h">
+    <CustomBuild Include="header\Widgets\GenericComponentPicker.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing ShapeCreationParameterWidget.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing GenericComponentPicker.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ShapeCreationParameterWidget.h"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/GenericComponentPicker.h"  -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing ShapeCreationParameterWidget.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing GenericComponentPicker.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ShapeCreationParameterWidget.h"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/GenericComponentPicker.h"  -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -D_DEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing ShapeCreationParameterWidget.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing GenericComponentPicker.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ShapeCreationParameterWidget.h"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/GenericComponentPicker.h"  -DUNICODE -DWIN32 -D_WINDOWS -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing ShapeCreationParameterWidget.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing GenericComponentPicker.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"   -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL  "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/ShapeCreationParameterWidget.h"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp" "-fStdAfx.h" "-f../../header/Widgets/GenericComponentPicker.h"  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL "-I." "-I$(ProjectDir)header" "-I$(ProjectDir)GeneratedFiles" "-I$(ProjectDir)GeneratedFiles\$(ConfigurationName)\." "-I.\GeneratedFiles" "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I." "-I."</Command>
     </CustomBuild>
     <ClInclude Include="resource\resource.h" />
     <ClInclude Include="header\stdafx.h" />
@@ -2069,7 +2026,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\ui_%(Filename).h;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\ui_%(Filename).h;%(Outputs)</Outputs>
     </CustomBuild>
-    <CustomBuild Include="ui\ComponentSelectorWidget.ui">
+    <CustomBuild Include="ui\GenericComponentPicker.ui">
       <FileType>Document</FileType>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\uic.exe;%(AdditionalInputs)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Uic%27ing %(Identity)...</Message>

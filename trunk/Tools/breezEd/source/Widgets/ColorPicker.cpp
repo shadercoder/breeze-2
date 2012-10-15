@@ -33,6 +33,52 @@ beMath::fvec4 toRGB(const QColor &color, float valueExp = 1.0f)
 		);
 }
 
+#ifndef PAINTERS_CIRCLE
+
+float toHue(float hue)
+{
+	if (hue <= 240.0f / 480.0f)
+		hue *= 0.5f;
+	else
+		hue -= 120.0f / 480.0f;
+
+	return hue * (480.0f / 360.0f);
+}
+
+float toPHue(float hue)
+{
+	if (hue <= 120.0f / 360.0f)
+		hue *= 2.0f;
+	else
+		hue += 120.0f / 360.0f;
+
+	return hue * (360.0f / 480.0f);
+}
+
+#else
+
+float toHue(float hue)
+{
+	if (hue <= 120.0f / 360.0f)
+		hue *= 0.5f;
+	else if (hue <= 240.0f / 360.0f)
+		hue = (hue - 120.0f / 360.0f) * (180.0f / 120.0f) + 60.0f / 360.0f;
+
+	return hue;
+}
+
+float toPHue(float hue)
+{
+	if (hue <= 60.0f / 360.0f)
+		hue *= 2.0f;
+	else if (hue <= 240.0f / 360.0f)
+		hue = (hue - 60.0f / 360.0f) * (120.0f / 180.0f) + 120.0f / 360.0f;
+
+	return hue;
+}
+
+#endif
+
 QColor blend(const QColor &src, const QColor &dest)
 {
 	return QColor::fromRgbF(
@@ -134,7 +180,7 @@ beMath::fvec4 ColorPicker::color() const
 // Selects a wheel color.
 void ColorPicker::wheelSelect(float x, float y, QEvent::Type type)
 {
-	float hue = min(max(0.0f, x), 1.0f);
+	float hue = toHue( min(max(0.0f, x), 1.0f) );
 	float saturation = min(max(0.0f, 1.0f - y), 1.0f);
 
 	float valueExp;
@@ -194,10 +240,10 @@ void ColorPicker::paintWheel(QPainter &painter)
 
 	QLinearGradient hueGradient(0.0f, 0.5f, 1.0f, 0.5f);
 	
-	for (int i = 0; i <= 360; i += 60)
+	for (int i = 0; i <= 480; i += 60)
 	{
-		float hue = i / 360.0f;
-		hueGradient.setColorAt(hue, QColor::fromHsvF(hue, 1.0f, value));
+		float hue = toHue(i / 480.0f);
+		hueGradient.setColorAt(i / 480.0f, QColor::fromHsvF(hue, 1.0f, value));
 	}
 	hueGradient.setCoordinateMode(QGradient::StretchToDeviceMode);
 
@@ -211,7 +257,7 @@ void ColorPicker::paintWheel(QPainter &painter)
 	painter.fillRect(painter.window(), QBrush(saturationGradient));
 
 	if (!ui.colorFrame->isTouched())
-		drawMarker(painter, baseColor.hueF(), 1.0f - baseColor.saturationF(), baseColor);
+		drawMarker(painter, toPHue(baseColor.hueF()), 1.0f - baseColor.saturationF(), baseColor);
 }
 
 // Paints the saturation slider.

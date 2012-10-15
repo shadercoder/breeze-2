@@ -107,7 +107,7 @@ lean::com_ptr<ID3D11Device, true> CreateD3DDevice(IDXGIAdapter1 *pAdapter, const
 			(desc.Type != DeviceType::Software) ? pAdapter : nullptr,
 			(desc.Type != DeviceType::Software) ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_REFERENCE,
 			NULL,
-			0,
+			(desc.Debug) ? D3D11_CREATE_DEVICE_DEBUG : 0,
 			NULL,
 			0,
 			D3D11_SDK_VERSION,
@@ -310,10 +310,10 @@ DXGI_SWAP_CHAIN_DESC ToAPI(const SwapChainDesc &desc)
 }
 
 /// Constructs a swap chain description from the given DirectX 11 description.
-SwapChainDesc ToBE(const DXGI_SWAP_CHAIN_DESC &descDX)
+SwapChainDesc FromAPI(const DXGI_SWAP_CHAIN_DESC &descDX)
 {
 	return SwapChainDesc(
-		DX11::ToBE(descDX.BufferDesc),
+		DX11::FromAPI(descDX.BufferDesc),
 		descDX.BufferCount,
 		descDX.OutputWindow,
 		descDX.Windowed != FALSE,
@@ -353,7 +353,7 @@ SwapChainDesc GetSwapChainDesc(IDXGISwapChain *pSwapChain)
 	BE_THROW_DX_ERROR_MSG(
 		pSwapChain->GetDesc(&descDX),
 		"IDXGISwapChain::GetDesc()");
-	return ToBE(descDX);
+	return FromAPI(descDX);
 }
 
 /// Prints information on the given swap chain.
@@ -375,7 +375,7 @@ void LogSwapChainInfo(IDXGISwapChain *pSwapChain, const SwapChainDesc &desc)
 	LEAN_LOG("  Windowed: " << desc.Windowed);
 	LEAN_LOG("  Refresh: " << static_cast<float>(actualDesc.BufferDesc.RefreshRate.Numerator) / max(static_cast<float>(actualDesc.BufferDesc.RefreshRate.Denominator), 1.0f)
 		<< " (" << desc.Display.Refresh.ToFloat()  << ")");
-	LEAN_LOG("  Format: " << DX11::ToBE(actualDesc.BufferDesc.Format) << " (" << desc.Display.Format << ")");
+	LEAN_LOG("  Format: " << DX11::FromAPI(actualDesc.BufferDesc.Format) << " (" << desc.Display.Format << ")");
 
 	LEAN_LOG_BREAK();
 }

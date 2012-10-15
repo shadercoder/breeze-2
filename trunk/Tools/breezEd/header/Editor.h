@@ -28,8 +28,10 @@ public:
 	void showMessage(const QString &msg, int timeout = 0);
 	/// Sets the current info text.
 	void setInfo(const QString &msg);
-	/// Writs the given text.
+	/// Writes the given text.
 	void write(const QString &text);
+	/// Begins a new console line.
+	void newLine();
 
 	/// Gets the settings.
 	LEAN_INLINE QSettings* settings() { return m_pSettings; };

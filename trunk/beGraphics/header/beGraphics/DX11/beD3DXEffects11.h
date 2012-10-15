@@ -29,6 +29,11 @@ typedef ID3DX11EffectTechnique EffectTechnique;
 /// D3DX 11 effect pass.
 typedef ID3DX11EffectPass EffectPass;
 
+/// D3DX 11 effect technique desc.
+typedef D3DX11_TECHNIQUE_DESC EffectTechniqueDesc;
+/// D3DX 11 effect pass desc.
+typedef D3DX11_PASS_DESC EffectPassDesc;
+
 /// D3DX 11 effect variable.
 typedef ID3DX11EffectVariable EffectVariable;
 /// D3DX 11 effect variable type.

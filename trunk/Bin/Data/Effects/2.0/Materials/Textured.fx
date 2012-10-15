@@ -11,7 +11,7 @@ cbuffer SetupConstants
 	<
 		String UIName = "Diffuse";
 		String UIWidget = "Color";
-	> = float4(1.0f, 1.0f, 1.0f, 0.03f);
+	> = float4(1.0f, 1.0f, 1.0f, 0.0f);
 
 	float4 SpecularColor
 	<
@@ -52,6 +52,7 @@ cbuffer SetupConstants
 	Texture2D NormalTexture
 	<
 		string UIName = "Normal";
+		bool Raw = true;
 	>;
 
 	#define IF_NORMALMAP(x) x
@@ -60,11 +61,18 @@ cbuffer SetupConstants
 	#define IF_NORMALMAP(x)
 #endif
 
+#ifdef OBJECTNORMAL
+	#define IF_OBJECTNORMAL(x) x
+#else
+	#define IF_OBJECTNORMAL(x)
+#endif
+
 #ifdef SPECULARMAP
 
 	Texture2D SpecularTexture
 	<
 		string UIName = "Specular";
+		bool Raw = true;
 	>;
 
 	#define IF_SPECULARMAP(x) x
@@ -82,17 +90,34 @@ struct Vertex
 	IF_NORMALMAP(
 		float3 Tangent	: Tangent;
 	)
+
+	IF_OBJECTNORMAL(
+		float3 ObjectNormal : Bitangent;
+	)
 };
 
-struct Pixel
+struct TransformedVertexData
 {
-	float4 Position		: SV_Position;
 	float4 NormalDepth	: TexCoord0;
 	float2 TexCoord		: TexCoord1;
 	
 	IF_NORMALMAP(
 		float4 Tangent	: TexCoord2;
 	)
+
+	IF_OBJECTNORMAL(
+		float3 ObjectNormal : Bitangent;
+	)
+};
+
+struct TransformedVertex : TransformedVertexData
+{
+	float4 Position : Position;
+};
+
+struct Pixel : TransformedVertexData
+{
+	float4 Position : SV_Position;
 };
 
 Pixel VSMain(Vertex v)
@@ -100,7 +125,7 @@ Pixel VSMain(Vertex v)
 	Pixel o;
 	
 	o.Position = mul(v.Position, WorldViewProj);
-	o.NormalDepth.xyz = mul((float3x3) WorldInverse, v.Normal);
+	o.NormalDepth.xyz = normalize( mul((float3x3) WorldInverse, v.Normal) );
 	o.NormalDepth.w = o.Position.w;
 	o.TexCoord = v.TexCoord * TextureRepeat;
 
@@ -108,6 +133,10 @@ Pixel VSMain(Vertex v)
 		o.Tangent.xyz = mul(v.Tangent, (float3x3) World);
 		// Extract handedness
 		o.Tangent.w = sign(dot(v.Tangent, v.Tangent) - 0.5f);
+	)
+
+	IF_OBJECTNORMAL(
+		o.ObjectNormal = normalize( mul((float3x3) WorldInverse, v.ObjectNormal) );
 	)
 	
 	return o;
@@ -126,21 +155,35 @@ float3 DecodeNormal(float3 n)
 	return n;
 }
 
-GeometryOutput PSGeometry(Pixel p) // , uint primID : SV_PrimitiveID
+GeometryOutput PSGeometry(Pixel p, uint primID : SV_PrimitiveID)
 {
 	float4 diffuse = DiffuseColor;
 	
 	IF_COLORMAP(
-		diffuse.xyz *= FromSRGB(DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz);
+		diffuse.xyz *= DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz;
 	)
+
+#ifdef TRI_COLOR
+//	float4 triColor = frac(primID / float4(256.0f, 10000.0f, 50000.0f, 1.0f));
+	float4 triColor = frac(float4(0.53f, 0.73f, 0.91f, 0.107f) * (primID + 1));
+	diffuse.xyz = triColor.xyz;
+#endif
 
 	float4 specular = SpecularColor;
+	
 	IF_SPECULARMAP(
 		specular.xyz *= SpecularTexture.Sample(LinearSampler, p.TexCoord).xyz;
+
+		// HACK?: Reflection
+		diffuse.w *= dot(specular.xyz, 1.0f / 3.0f);
 	)
 
+//	IF_OBJECTNORMAL(
+//		diffuse.xyz = 0.5f * p.ObjectNormal + 0.5f;
+//	)
+
 	float3 normal = normalize(p.NormalDepth.xyz);
-	
+
 	IF_NORMALMAP(
 		float3 bitangent = normalize( cross(normal, p.Tangent.xyz) );
 		float3 tangent = cross(bitangent, normal);
@@ -155,14 +198,22 @@ GeometryOutput PSGeometry(Pixel p) // , uint primID : SV_PrimitiveID
 				DecodeNormal( normalSample.xyz ),
 				float3x3(tangent, bitangent, normal)
 			);
-		normal = normalize( lerp(normal, mapNormal, NormalBlend.w) );
 		
+		float3 bentNormal = normalize( lerp(normal, mapNormal, NormalBlend.w) );
+
+#ifndef STRAIGHT_NORMALS
+		if (dot(bentNormal, normal) > 0.0f)
+			normal = bentNormal;
+#endif
+
 		IF_NOCOLORMAP(
-			float3 normalBlend = smoothstep(0.1f * NormalBlend.xyz, NormalBlend.xyz, normalSample.w);
-			diffuse.xyz *= normalBlend;
-			specular.xyz *= normalBlend;
+			diffuse.xyz = lerp(NormalBlend.xyz, diffuse.xyz, normalSample.w);
+			specular.xyz *= normalSample.w;
 		)
 	)
+
+	if (isnan(normal.x))
+		normal = float3(0.0f, 1.0f, 0.0f);
 
 	return ReturnGeometry(p.NormalDepth.w, normal, diffuse, specular);
 }

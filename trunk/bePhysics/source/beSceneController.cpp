@@ -5,23 +5,23 @@
 #include "bePhysicsInternal/stdafx.h"
 #include "bePhysics/beSceneController.h"
 #include <beEntitySystem/beSimulation.h>
-#include "bePhysics/PX/beDevice.h"
-#include "bePhysics/PX/beScene.h"
+#include "bePhysics/PX3/beDevice.h"
+#include "bePhysics/PX3/beScene.h"
 
 namespace bePhysics
 {
 
 // Constructor.
-SceneController::SceneController(beEntitySystem::Simulation * pSimulation, Scene *pScene)
+SceneController::SceneController(beEntitySystem::Simulation * pSimulation, Scene *scene)
 	: SimulationController( pSimulation ),
-	m_pScene( LEAN_ASSERT_NOT_NULL(pScene) ),
+	m_pScene( LEAN_ASSERT_NOT_NULL(scene) ),
 	m_bActive(false),
 	m_timeStep(0.0f)
 {
 }
 
 // Constructor.
-SceneController::SceneController(beEntitySystem::Simulation * pSimulation, Device &device)
+SceneController::SceneController(beEntitySystem::Simulation * pSimulation, Device *device)
 	: SimulationController( pSimulation ),
 	m_pScene( CreateScene(device, SceneDesc()) ),
 	m_bActive(false),
@@ -41,7 +41,7 @@ void SceneController::Flush()
 	SynchronizedHost::Flush();
 
 	// NOTE: Checked runtime requires postive time step
-	if (m_timeStep > 0.0f)
+	if (!m_pSimulation->IsPaused() && m_timeStep > 0.0f)
 	{
 		ToImpl(*m_pScene)->simulate(m_timeStep);
 		m_timeStep = 0.0f;
@@ -98,15 +98,15 @@ void SceneController::Detach()
 }
 
 // Gets the physics scene.
-Scene& SceneController::GetScene()
+Scene* SceneController::GetScene()
 {
-	return *m_pScene;
+	return m_pScene;
 }
 
 // Gets the physics scene.
-const Scene& SceneController::GetScene() const
+const Scene* SceneController::GetScene() const
 {
-	return *m_pScene;
+	return m_pScene;
 }
 
 // Gets the controller type.

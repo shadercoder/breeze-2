@@ -26,6 +26,11 @@ SceneModeState::SceneModeState(SceneDocument* pDocument, Editor *pEditor, QObjec
 	addConnection(m_pDocument->undoStack(), SIGNAL(canRedoChanged(bool)), mainWindow.actionRedo, SLOT(setEnabled(bool)));
 	addConnection(m_pDocument->undoStack(), SIGNAL(undoTextChanged(const QString&)), this, SLOT(undoTextChanged(const QString&)));
 	addConnection(m_pDocument->undoStack(), SIGNAL(redoTextChanged(const QString&)), this, SLOT(redoTextChanged(const QString&)));
+
+	assignProperty(mainWindow.actionDeselect, "enabled", true);
+	addConnection(mainWindow.actionDeselect, SIGNAL(triggered()), pDocument, SLOT(clearSelection()));
+	assignProperty(mainWindow.actionSelect_All, "enabled", true);
+	addConnection(mainWindow.actionSelect_All, SIGNAL(triggered()), pDocument, SLOT(selectAll()));
 }
 
 // Destructor.

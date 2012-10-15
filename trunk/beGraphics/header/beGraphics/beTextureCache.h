@@ -27,14 +27,14 @@ public:
 	virtual ~TextureCache() throw() { }
 
 	/// Gets a texture from the given file.
-	virtual Texture* GetTexture(const lean::utf8_ntri &file) = 0;
+	virtual Texture* GetTexture(const lean::utf8_ntri &file, bool bSRGB = false) = 0;
 	/// Gets a texture view for the given texture.
 	virtual TextureView* GetTextureView(const Texture &texture) = 0;
 
 	/// Gets a texture view from the given file.
-	LEAN_INLINE TextureView* GetTextureView(const lean::utf8_ntri &file)
+	LEAN_INLINE TextureView* GetTextureView(const lean::utf8_ntri &file, bool bSRGB = false)
 	{
-		return GetTextureView( *GetTexture(file) ); 
+		return GetTextureView( *GetTexture(file, bSRGB) ); 
 	}
 
 	/// Gets the file (or name) of the given texture.

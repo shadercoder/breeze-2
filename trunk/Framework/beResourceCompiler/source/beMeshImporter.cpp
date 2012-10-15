@@ -8,10 +8,11 @@
 #include "beResourceCompiler/beSceneImpl.h"
 
 #include <lean/logging/errors.h>
+#include <lean/logging/log.h>
 
-#include <assimp.hpp>
-#include <aiPostProcess.h>
-#include <aiMesh.h>
+#include <assimp/postprocess.h>
+#include <assimp/mesh.h>
+#include <assimp/Importer.hpp>
 
 namespace beResourceCompiler
 {
@@ -52,6 +53,9 @@ uint4 SetUpImporter(Assimp::Importer &importer, const uint4 flags, float smoothi
 	if (~flags & MeshLoadFlags::NonIndexed)
 		assimpFlags |= aiProcess_JoinIdenticalVertices;
 
+	// UVs only
+	assimpFlags |= aiProcess_GenUVCoords | aiProcess_TransformUVCoords;
+
 	// Reduce mesh & material count
 	assimpFlags |= aiProcess_OptimizeMeshes | aiProcess_RemoveRedundantMaterials;
 
@@ -66,6 +70,21 @@ uint4 SetUpImporter(Assimp::Importer &importer, const uint4 flags, float smoothi
 	if (flags & MeshLoadFlags::Tangents)
 	{
 		assimpFlags |= aiProcess_CalcTangentSpace;
+	}
+
+	// Complete with object normals
+	if (flags & MeshLoadFlags::ObjectNormals)
+	{
+		assimpFlags |= aiProcess_GenObjectNormals;
+		LEAN_LOG("Object normals enabled, this might take a while.");
+	}
+
+	// Optimize mesh
+	if (flags & MeshLoadFlags::Optimize)
+	{
+		assimpFlags |= aiProcess_ImproveCacheLocality;
+		importer.SetPropertyInteger(AI_CONFIG_PP_ICL_PTCACHE_SIZE, 64);
+		LEAN_LOG("Mesh optimization enabled, this might take a while.");
 	}
 
 	uint4 assimpRemoveFlags = 0;
@@ -89,7 +108,7 @@ uint4 SetUpImporter(Assimp::Importer &importer, const uint4 flags, float smoothi
 }
 
 /// Reads the given scene file, applies the given scaling & post-processing steps.
-const aiScene* LoadScaleAndProcess(Assimp::Importer &importer, const utf8_ntri &file, uint4 assimpFlags, float scaleFactor)
+const aiScene* LoadScaleAndProcess(Assimp::Importer &importer, const utf8_ntri &file, uint4 assimpFlags, const uint4 loadFlags, float scaleFactor)
 {
 	const aiScene *pScene = importer.ReadFile(file.c_str(), 0);
 
@@ -101,6 +120,26 @@ const aiScene* LoadScaleAndProcess(Assimp::Importer &importer, const utf8_ntri &
 		aiMatrix4x4 scaling;
 		aiMatrix4x4::Scaling( aiVector3D(scaleFactor), scaling );
 		const_cast<aiMatrix4x4&>(pScene->mRootNode->mTransformation) = scaling * pScene->mRootNode->mTransformation;
+	}
+
+	if (loadFlags & MeshLoadFlags::RemoveMaterials)
+	{
+		const uint4 meshCount = pScene->mNumMeshes;
+
+		for (uint4 i = 0; i < meshCount; ++i)
+			pScene->mMeshes[i]->mMaterialIndex = 0;
+	}
+
+	if (loadFlags & MeshLoadFlags::ForceUV)
+	{
+		const uint4 materialCount = pScene->mNumMaterials;
+
+		for (uint4 i = 0; i < materialCount; ++i)
+		{
+			int mapping = aiTextureMapping_BOX;
+			pScene->mMaterials[i]->Get(AI_MATKEY_MAPPING_DIFFUSE(0), mapping);
+			pScene->mMaterials[i]->AddProperty(&mapping, 1, AI_MATKEY_MAPPING_DIFFUSE(0));
+		}
 	}
 
 	pScene = importer.ApplyPostProcessing(assimpFlags);
@@ -122,7 +161,7 @@ lean::resource_ptr<Mesh, true> MeshImporter::LoadMesh(const utf8_ntri &file, con
 	assimpFlags |= aiProcess_PreTransformVertices;
 
 	return lean::bind_resource<Mesh>(
-			new MeshImpl( LoadScaleAndProcess(m_data->importer, file.c_str(), assimpFlags, scaleFactor) )
+			new MeshImpl( LoadScaleAndProcess(m_data->importer, file.c_str(), assimpFlags, flags, scaleFactor) )
 		);
 }
 
@@ -132,7 +171,7 @@ lean::resource_ptr<Scene, true> MeshImporter::LoadScene(const utf8_ntri &file, c
 	uint4 assimpFlags = SetUpImporter(m_data->importer, flags, smoothingAngle);
 
 	return lean::bind_resource<Scene>(
-			new SceneImpl( LoadScaleAndProcess(m_data->importer, file.c_str(), assimpFlags, scaleFactor) )
+			new SceneImpl( LoadScaleAndProcess(m_data->importer, file.c_str(), assimpFlags, flags, scaleFactor) )
 		);
 }
 

@@ -7,7 +7,7 @@
 
 #include "beResourceCompiler.h"
 #include "bePhysicsCooker.h"
-#include <bePhysics/PX/beAPI.h>
+#include <bePhysics/PX3/beAPI.h>
 
 namespace beResourceCompiler
 {
@@ -15,8 +15,8 @@ namespace beResourceCompiler
 /// Physics cooker data.
 struct PhysicsCooker::Data
 {
-	bePhysics::scoped_pxptr_t<physx::PxPhysics>::t Physics;
-	bePhysics::scoped_pxptr_t<physx::PxCooking>::t Cooking;
+	bePhysics::PX3::scoped_pxptr_t<physx::PxPhysics>::t Physics;
+	bePhysics::PX3::scoped_pxptr_t<physx::PxCooking>::t Cooking;
 
 	/// Constructor.
 	Data(physx::PxPhysics *pPhysics,

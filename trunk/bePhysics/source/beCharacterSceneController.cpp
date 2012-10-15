@@ -6,8 +6,8 @@
 #include "bePhysics/beCharacterSceneController.h"
 #include "bePhysics/beSceneController.h"
 #include <beEntitySystem/beSimulation.h>
-#include "bePhysics/PX/beCharacterScene.h"
-#include "bePhysics/PX/beScene.h"
+#include "bePhysics/PX3/beCharacterScene.h"
+#include "bePhysics/PX3/beScene.h"
 
 namespace bePhysics
 {
@@ -27,8 +27,8 @@ CharacterSceneController::CharacterSceneController(beEntitySystem::Simulation *p
 	m_pScene(pScene),
 	m_pCharacterScene(
 			lean::bind_resource(
-				new CharacterScenePX(
-					CreateCharacterScene(&ToImpl(pScene->GetScene())->getPhysics())
+				new PX3::CharacterScene(
+					PX3::CreateCharacterScene(&ToImpl(*pScene->GetScene())->getPhysics())
 				)
 			)
 		),
@@ -91,15 +91,15 @@ void CharacterSceneController::Detach()
 }
 
 // Gets the physics scene.
-CharacterScene& CharacterSceneController::GetScene()
+CharacterScene* CharacterSceneController::GetScene()
 {
-	return *m_pCharacterScene;
+	return m_pCharacterScene;
 }
 
 // Gets the physics scene.
-const CharacterScene& CharacterSceneController::GetScene() const
+const CharacterScene* CharacterSceneController::GetScene() const
 {
-	return *m_pCharacterScene;
+	return m_pCharacterScene;
 }
 
 // Gets the controller type.

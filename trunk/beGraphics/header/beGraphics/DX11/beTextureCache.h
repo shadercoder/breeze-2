@@ -24,7 +24,6 @@ public:
 	struct M;
 
 private:
-	friend struct M;
 	lean::pimpl_ptr<M> m;
 
 public:
@@ -34,7 +33,7 @@ public:
 	BE_GRAPHICS_DX11_API ~TextureCache();
 
 	/// Gets a texture from the given file.
-	BE_GRAPHICS_DX11_API beGraphics::Texture* GetTexture(const lean::utf8_ntri &file);
+	BE_GRAPHICS_DX11_API beGraphics::Texture* GetTexture(const lean::utf8_ntri &file, bool bSRGB = false);
 	/// Gets a texture view for the given texture.
 	BE_GRAPHICS_DX11_API beGraphics::TextureView* GetTextureView(const beGraphics::Texture &texture);
 

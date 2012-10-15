@@ -7,8 +7,7 @@
 
 #include "beResourceCompiler.h"
 #include "beScene.h"
-#include <assimp.hpp>
-#include <aiScene.h>
+#include <assimp/scene.h>
 
 namespace beResourceCompiler
 {

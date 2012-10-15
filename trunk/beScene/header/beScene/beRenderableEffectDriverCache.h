@@ -18,23 +18,27 @@ class AbstractRenderableEffectDriver;
 class RenderingPipeline;
 class PerspectiveEffectBinderPool;
 
+typedef EffectBinderCache<AbstractRenderableEffectDriver> AbstractRenderableEffectDriverCache;
+
 /// Effect binder cache implementation.
 class RenderableEffectDriverCache : public EffectBinderCache<AbstractRenderableEffectDriver>
 {
+public:
+	class M;
+
 private:
-	class Impl;
-	lean::pimpl_ptr<Impl> m_impl;
+	lean::pimpl_ptr<M> m;
 
 protected:
-	const lean::resource_ptr<RenderingPipeline> m_pPipeline;	///< Rendering pipeline.
-	PerspectiveEffectBinderPool *const m_pPool;					///< Effect binder pool.
+	const lean::resource_ptr<RenderingPipeline> m_pipeline;	///< Rendering pipeline.
+	PerspectiveEffectBinderPool *const m_pool;				///< Effect binder pool.
 
 	/// Creates an effect binder from the given effect.
 	BE_SCENE_API virtual lean::resource_ptr<AbstractRenderableEffectDriver, true> CreateEffectBinder(const beGraphics::Technique &technique, uint4 flags) const;
 
 public:
 	/// Constructor.
-	BE_SCENE_API RenderableEffectDriverCache(RenderingPipeline *pPipeline, PerspectiveEffectBinderPool *pPool);
+	BE_SCENE_API RenderableEffectDriverCache(RenderingPipeline *pipeline, PerspectiveEffectBinderPool *pool);
 	/// Destructor.
 	BE_SCENE_API ~RenderableEffectDriverCache();
 

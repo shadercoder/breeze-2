@@ -150,6 +150,8 @@ void ShapeImportDialog::accept()
 	rcCommand << inputFile;
 	rcCommand << outputFile;
 
+	m_pEditor->write( "berc\n\t" + rcCommand.join("\n\t") );
+
 	// Run resource compiler
 	QProcess rc;
 	checkedConnect(&rc, SIGNAL(readyReadStandardOutput()), this, SLOT(forwardConsoleOutput()));
@@ -167,6 +169,8 @@ void ShapeImportDialog::accept()
 		if (result != QMessageBox::Yes)
 			break;
 	}
+
+	m_pEditor->newLine();
 
 	// Close dialog
 	if (rc.exitCode() == 0)
@@ -219,3 +223,139 @@ void ShapeImportDialog::forwardConsoleOutput()
 	if (pProcess)
 		m_pEditor->write( QString::fromUtf8(pProcess->readAllStandardOutput()) );
 }
+
+
+// Browses for a file.
+QString browseForShape(const QString &currentPath, Editor &editor, QWidget *pParent)
+{
+	QSettings &settings = *editor.settings();
+
+	QString location = (!currentPath.isEmpty())
+		? currentPath
+		// Default location
+		: settings.value("shapeImportDialog/outputPath", QDir::currentPath()).toString();
+
+	QString selectedFilter;
+
+	// Open either breeze shape or importable 3rd-party shape format
+	QString file = QFileDialog::getOpenFileName( pParent,
+		ShapeImportDialog::tr("Select a shape resource for"),
+		location,
+		QString("%1 (*.shape);;%2 (*.dae *.obj *.3ds *.dxf *.x *.mdl *.*);;%3 (*.*)")
+			.arg( ShapeImportDialog::tr("breeze Shapes") )
+			.arg( ShapeImportDialog::tr("Importable Shapes") )
+			.arg( ShapeImportDialog::tr("All Files") ),
+		&selectedFilter );
+
+	if (!file.isEmpty())
+	{
+		// Launch import dialog for 3rd-party shape formats
+		if (!file.endsWith(".shape", Qt::CaseInsensitive) && selectedFilter.contains("*.dae"))
+		{
+			ShapeImportDialog shapeImportDialog(&editor, pParent);
+			shapeImportDialog.setInput(file);
+		
+			file = (ShapeImportDialog::Accepted == shapeImportDialog.exec())
+				? shapeImportDialog.output()
+				: "";
+		}
+		else
+			// Update default location
+			settings.setValue("shapeImportDialog/outputPath", QFileInfo(file).absolutePath());
+	}
+
+	return file;
+}
+
+#include "Widgets/GenericComponentPicker.h"
+#include "Widgets/ComponentPickerFactory.h"
+#include "Plugins/FactoryManager.h"
+
+namespace
+{
+
+/// Plugin class.
+struct ShapeComponentPickerPlugin : public ComponentPickerFactory
+{
+	/// Constructor.
+	ShapeComponentPickerPlugin()
+	{
+		getComponentPickerFactories().addFactory("Shape", this);
+	}
+
+	/// Destructor.
+	~ShapeComponentPickerPlugin()
+	{
+		getComponentPickerFactories().removeFactory("Shape");
+	}
+
+	/// Creates a component picker.
+	ComponentPicker* createComponentPicker(const beCore::ComponentReflector *reflector, const lean::any *pCurrent, Editor *editor, QWidget *pParent) const
+	{
+		return new GenericComponentPicker(reflector, pCurrent, editor, pParent);
+	}
+
+	/// Browses for a component resource.
+	virtual QString browseForComponent(const beCore::ComponentReflector &reflector, const QString &currentPath, Editor &editor, QWidget *pParent) const
+	{
+		return browseForShape(currentPath, editor, pParent);
+	}
+};
+
+const ShapeComponentPickerPlugin ShapeComponentPickerPlugin;
+
+} // namespace
+
+#include "Plugins/AbstractPlugin.h"
+#include "Plugins/PluginManager.h"
+#include "Windows/MainWindow.h"
+#include "Utility/SlotObject.h"
+
+namespace
+{
+
+class ShapeImportTool : public SlotObject
+{
+	Editor *editor;
+
+public:
+	ShapeImportTool(Editor *editor, QWidget *parent)
+		: SlotObject(parent),
+		editor(editor) { }
+
+	void slot()
+	{
+		ShapeImportDialog dlg( editor, qobject_cast<QWidget*>(this->parent()) );
+		dlg.exec();
+	}
+};
+
+/// Plugin class.
+struct ShapeImportToolPlugin : public AbstractPlugin<MainWindow*>
+{
+	/// Constructor.
+	ShapeImportToolPlugin()
+	{
+		mainWindowPlugins().addPlugin(this);
+	}
+
+	/// Destructor.
+	~ShapeImportToolPlugin()
+	{
+		mainWindowPlugins().removePlugin(this);
+	}
+
+	/// Initializes the plugin.
+	void initialize(MainWindow *mainWindow) const
+	{
+		ShapeImportTool *tool = new ShapeImportTool(mainWindow->editor(), mainWindow);
+
+		checkedConnect(mainWindow->widgets().actionShape_Import, SIGNAL(triggered()), tool, SLOT(slot()));
+	}
+	/// Finalizes the plugin.
+	void finalize(MainWindow *pWindow) const { }
+};
+
+const ShapeImportToolPlugin ShapeImportToolPlugin;
+
+} // namespace

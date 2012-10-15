@@ -57,6 +57,22 @@ public:
 	/// Detaches this controller from the scene.
 	BE_PHYSICS_API void Detach();
 
+	/// Gets the number of child components.
+	BE_PHYSICS_API uint4 GetComponentCount() const;
+	/// Gets the name of the n-th child component.
+	BE_PHYSICS_API beCore::Exchange::utf8_string GetComponentName(uint4 idx) const;
+	/// Gets the n-th reflected child component, nullptr if not reflected.
+	BE_PHYSICS_API const ReflectedComponent* GetReflectedComponent(uint4 idx) const;
+
+	/// Gets the type of the n-th child component.
+	BE_PHYSICS_API beCore::Exchange::utf8_string GetComponentType(uint4 idx) const;
+	/// Gets the n-th component.
+	BE_PHYSICS_API lean::cloneable_obj<lean::any, true> GetComponent(uint4 idx) const;
+	/// Returns true, if the n-th component can be replaced.
+	BE_PHYSICS_API bool IsComponentReplaceable(uint4 idx) const;
+	/// Sets the n-th component.
+	BE_PHYSICS_API void SetComponent(uint4 idx, const lean::any &pComponent);
+
 	/// Gets the shape.
 	LEAN_INLINE const ShapeCompound* GetShape() const { return m_pShape; }
 	/// Gets the actor.
@@ -67,6 +83,11 @@ public:
 	/// Gets the controller type.
 	utf8_ntr GetType() const { return GetControllerType(); }
 };
+
+class ResourceManager;
+
+/// Gets the default material for static rigid actors.
+BE_PHYSICS_API Material* GetRigidStaticDefaultMaterial(ResourceManager &resources);
 
 } // namespace
 

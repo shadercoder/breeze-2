@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <IncludePath>C:\SDKs\PhysX\3.2.b2\Include;C:\SDKs\PhysX\3.2.b2\Include\extensions;C:\SDKs\PhysX\3.2.b2\Include\characterkinematic;C:\SDKs\PhysX\3.2.b2\Include\foundation;C:\SDKs\PhysX\3.2.b2\Include\pxtask;C:\SDKs\PhysX\3.2.b2\Include\cooking;$(IncludePath)</IncludePath>
+    <IncludePath>C:\SDKs\PhysX\3.2\Include;C:\SDKs\PhysX\3.2\Include\extensions;C:\SDKs\PhysX\3.2\Include\characterkinematic;C:\SDKs\PhysX\3.2\Include\foundation;C:\SDKs\PhysX\3.2\Include\pxtask;C:\SDKs\PhysX\3.2\Include\cooking;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup>
-    <LibraryPath>C:\SDKs\PhysX\3.2.b2\Lib\win64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\SDKs\PhysX\3.2\Lib\win64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile />

@@ -56,7 +56,13 @@ void Editor::setInfo(const QString &msg)
 // Writs the given text.
 void Editor::write(const QString &text)
 {
-	m_pMainWindow.get()->console()->write(text);
+	m_pMainWindow.get()->console()->writeLine(text);
+}
+
+// Begins a new console line.
+void Editor::newLine()
+{
+	write(QString());
 }
 
 // Gets the editor plugin manager.

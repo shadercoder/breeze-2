@@ -117,7 +117,7 @@ void Pipe::SetDesc(const beGraphics::TextureTargetDesc &desc)
 // Gets the description.
 beGraphics::TextureTargetDesc Pipe::GetDesc() const
 {
-	return ToBE( ToImpl(this)->GetDesc() );
+	return FromAPI( ToImpl(this)->GetDesc() );
 }
 
 /// Sets a viewport.

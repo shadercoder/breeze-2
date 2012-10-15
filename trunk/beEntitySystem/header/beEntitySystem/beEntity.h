@@ -32,6 +32,8 @@ private:
 	fmat3 m_orientation;
 	fvec3 m_scaling;
 
+	bool m_bVisible;
+
 protected:
 	Entity& operator =(const Entity&) { return *this; }
 
@@ -66,6 +68,11 @@ public:
 	BE_ENTITYSYSTEM_API void SetAngles(const fvec3 &angles);
 	/// Gets the orientation.
 	BE_ENTITYSYSTEM_API fvec3 GetAngles() const;
+
+	/// Shows or hides the entity.
+	LEAN_INLINE void SetVisible(bool bVisible) { m_bVisible = bVisible; }
+	/// Shows or hides the entity.
+	LEAN_INLINE bool IsVisible() const { return m_bVisible; }
 
 	/// Sets the name.
 	BE_ENTITYSYSTEM_API void SetName(const utf8_ntri &name);

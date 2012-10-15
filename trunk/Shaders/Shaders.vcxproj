@@ -22,18 +22,14 @@
     <None Include="..\Bin\Data\Effects\2.0\Engine\Renderable.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Engine\Shadow.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Engine\SpotLight.fx" />
-    <None Include="..\Bin\Data\Effects\2.0\GI\RayBundles.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Fur.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Utility\Hilbert.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\DirectionalLight.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\PointLight.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\SpotLight.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\BumpTextured.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Grass.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Marker.fx" />
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Grass.fx" />
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Marker.fx" />
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Simple.fx" />
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\StretchTextured.fx" />
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Textured.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Simple.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\SpecTextured.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\StretchTextured.fx" />
@@ -43,9 +39,6 @@
     <None Include="..\Bin\Data\Effects\2.0\Pipelines\LPR\Geometry.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Pipelines\LPR\Pipeline.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Pipelines\LPR\Scene.fx" />
-    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Geometry.fx" />
-    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Pipeline.fx" />
-    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Scene.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Pipelines\Scene.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Processing\MRGB.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Processing\MRGeometry.fx" />
@@ -59,26 +52,6 @@
     <None Include="..\Bin\Data\Effects\2.0\Prototypes\Shadow.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Utility\Bits.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Utility\Math.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Blur.fx" />
-    <None Include="..\Bin\Data\Effects\Source\DepthPrePipeline.fx" />
-    <None Include="..\Bin\Data\Effects\Source\DPRScene.fx" />
-    <None Include="..\Bin\Data\Effects\Source\LPPRPipeline.fx" />
-    <None Include="..\Bin\Data\Effects\Source\LPPRScene.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Perspective.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Pipe.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Pipeline.fx" />
-    <None Include="..\Bin\Data\Effects\Source\PointLight.fx" />
-    <None Include="..\Bin\Data\Effects\Source\PointLightSS.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Renderable.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Scene.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Shadow.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Simple.fx" />
-    <None Include="..\Bin\Data\Effects\Source\SimpleTonemap.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Sky.fx" />
-    <None Include="..\Bin\Data\Effects\Source\SkyColor.fx" />
-    <None Include="..\Bin\Data\Effects\Source\SpotLight.fx" />
-    <None Include="..\Bin\Data\Effects\Source\SpotLightSS.fx" />
-    <None Include="..\Bin\Data\Effects\Source\Test.fx" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{953F5404-B0BB-471C-BC6E-92CB0A93DA24}</ProjectGuid>
@@ -89,21 +62,25 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\global\Platform.Cpp.$(Platform).user.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\global\Platform.Cpp.$(Platform).user.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />

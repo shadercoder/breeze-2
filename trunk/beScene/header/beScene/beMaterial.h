@@ -55,6 +55,8 @@ public:
 	BE_SCENE_API const beGraphics::Technique* GetTechnique(uint4 techniqueIdx) const;
 	/// Gets the name of the technique identified by the given index.
 	BE_SCENE_API utf8_ntr GetTechniqueName(uint4 techniqueIdx) const;
+	/// Gets the index of the technique identified by the given name.
+	BE_SCENE_API uint4 GetTechniqueByName(const utf8_ntri &name) const;
 
 	/// Gets the number of setups.
 	BE_SCENE_API uint4 GetSetupCount() const;

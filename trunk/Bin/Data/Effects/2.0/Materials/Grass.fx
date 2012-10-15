@@ -17,7 +17,7 @@ cbuffer SetupConstants
 	<
 		String UIName = "Specular";
 		String UIWidget = "Color";
-	> = float4(1.0f, 1.0f, 1.0f, 0.0f);
+	> = float4(0.0f, 0.0f, 0.0f, 0.1f);
 }
 
 Texture2D DiffuseTexture
@@ -46,9 +46,9 @@ Pixel VSMain(Vertex v)
 	
 	o.Position = mul(v.Position, WorldViewProj);
 	o.World = mul(v.Position, World);
-	o.NormalDepth.xyz = mul((float3x3) WorldInverse, v.Normal);
+	o.NormalDepth.xyz = normalize( mul((float3x3) WorldInverse, v.Normal) );
 	o.NormalDepth.w = o.Position.w;
-	o.TexCoord = v.TexCoord; // o.World.xz / 4; // v.TexCoord;
+	o.TexCoord = o.World.xz / 4; // v.TexCoord;
 	
 	return o;
 }
@@ -70,7 +70,7 @@ GeometryOutput PSGeometry(Pixel p)
 	float3 normal = normalize(p.NormalDepth.xyz);
 	float4 diffuse = DiffuseColor;
 
-	float3 diffuseTex = FromSRGB(DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz);
+	float3 diffuseTex = DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz;
 
 	// Grass is darker when looked at top-down
 	float3 angleDiffuseTex = pow(diffuseTex, 2) * 0.9f;
@@ -209,7 +209,7 @@ GeometryOutput PSGrassGeometry(Pixel p)
 	float3 normal = normalize(p.NormalDepth.xyz);
 	float4 diffuse = DiffuseColor;
 
-	float3 diffuseTex = FromSRGB(DiffuseTexture.Sample(LinearSampler, p.World.xz).xyz).rgb;
+	float3 diffuseTex = DiffuseTexture.Sample(LinearSampler, p.World.xz).rgb;
 	diffuse.xyz *= diffuseTex;
 
 	return ReturnGeometry(p.NormalDepth.w, normal, diffuse, SpecularColor);
@@ -232,7 +232,13 @@ technique11 Grass <
 	string RenderQueue = "DefaultRenderQueue";
 >
 {
-	pass < int HSControlPoints = 3; >
+	pass
+	{
+		SetVertexShader( CompileShader(vs_4_0, VSMain()) );
+		SetPixelShader( CompileShader(ps_4_0, PSGeometry()) );
+	}
+
+/*	pass < int HSControlPoints = 3; >
 	{
 		SetVertexShader( CompileShader(vs_4_0, VSGrass()) );
 		SetHullShader( CompileShader(hs_5_0, HSGrass()) );
@@ -240,6 +246,7 @@ technique11 Grass <
 		SetGeometryShader( CompileShader(gs_5_0, GSGrass()) );
 		SetPixelShader( CompileShader(ps_4_0, PSGrassGeometry()) );
 	}
+*/
 }
 
 technique11 <

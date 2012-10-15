@@ -39,6 +39,16 @@ void ControllerDriven::RemoveController(Controller *pController)
 	lean::remove_ordered(m_controllers, pController);
 }
 
+// Gets the first controller of the given type.
+Controller* ControllerDriven::GetController(const utf8_ntri &type)
+{
+	for (controller_vector::const_iterator it = m_controllers.begin(); it != m_controllers.end(); ++it)
+		if ((*it)->GetType() == type)
+			return *it;
+
+	return nullptr;
+}
+
 // Clears all controllers.
 void ControllerDriven::ClearControllers()
 {

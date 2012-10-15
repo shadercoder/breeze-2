@@ -11,12 +11,12 @@ namespace beLauncher
 {
 
 /// Default-initializes the engine.
-BE_LAUNCHER_API void InitializeEngine();
+BE_LAUNCHER_API void InitializeEngine(const lean::utf8_t *pLog = nullptr, const lean::utf8_t *pFilesystem = nullptr);
 
 /// Default-initializes the log file.
-BE_LAUNCHER_API void InitializeLog(const lean::utf8_t *path = nullptr);
+BE_LAUNCHER_API void InitializeLog(const lean::utf8_t *pPath = nullptr);
 /// Default-initializes the path environment
-BE_LAUNCHER_API void InitializeFilesystem(const lean::utf8_t *path = nullptr);
+BE_LAUNCHER_API void InitializeFilesystem(const lean::utf8_t *pPath = nullptr);
 
 }
 

@@ -32,14 +32,14 @@ PipelineStage LightingPipelineStage
 /// Default pipeline stage.
 PipelineStage DefaultPipelineStage
 <
-	int Layer = 50;
+	int Layer = 100;
 	string Setup = "PipelineSetup";
 >;
 
 /// ID pipeline stage.
 PipelineStage ObjectIDPipelineStage
 <
-	int Layer = 50;
+	int Layer = 100;
 	bool Normal = false;
 	string Setup = "PipelineSetup";
 >;
@@ -47,19 +47,19 @@ PipelineStage ObjectIDPipelineStage
 /// Background render queue.
 RenderQueue BackRenderQueue
 <
-	int Layer = 5;
+	int Layer = 10;
 >;
 
 /// Default render queue.
 RenderQueue DefaultRenderQueue
 <
-	int Layer = 10;
+	int Layer = 30;
 >;
 
 /// Alpha render queue.
 RenderQueue AlphaRenderQueue
 <
-	int Layer = 25;
+	int Layer = 50;
 	bool DepthSort = true;
 >;
 
@@ -68,6 +68,14 @@ RasterizerState DefaultRasterizerState
 {
 	MultisampleEnable = true;
 	AntiAliasedLineEnable = true;
+};
+
+/// Double=sided rasterizer state enabling multi-sampling.
+RasterizerState DoublesidedRasterizerState
+{
+	MultisampleEnable = true;
+	AntiAliasedLineEnable = true;
+	CullMode = None;
 };
 
 /// Default depth-stencil state allowing for additive rendering.
@@ -203,6 +211,7 @@ technique11 PipelineSetup <
 		bool bKeepColor0 = true;
 
 		string DepthStencil = "SceneDepthBuffer";
+//		bool bClearDepth = true; // TODO: Remove
 		bool bKeepDepthStencil = true;
 
 		string VSBindResources[] = VSDefaultResources;

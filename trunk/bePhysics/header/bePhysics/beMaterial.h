@@ -9,11 +9,15 @@
 #include <beCore/beShared.h>
 #include <lean/smart/resource_ptr.h>
 
+#include <beCore/beReflectionPropertyProvider.h>
+
 namespace bePhysics
 {
 
+class MaterialCache;
+
 /// Material interface.
-class Material : public beCore::Resource, public Implementation
+class Material : public beCore::Resource, public Implementation, public beCore::ReflectionPropertyProvider
 {
 protected:
 	LEAN_INLINE Material& operator =(const Material&) { return *this; }
@@ -35,13 +39,17 @@ public:
 	virtual void SetRestitution(float restitution) = 0;
 	/// Gets the restitution.
 	virtual float GetRestitution() const = 0;
+
+	/// Gets the material cache.
+	virtual MaterialCache* GetCache() const = 0;
 };
 
 // Prototypes
 class Device;
 
 /// Creates a physics material.
-BE_PHYSICS_API lean::resource_ptr<Material, true> CreateMaterial(Device &device, float staticFriction, float dynamicFriction, float restitution);
+BE_PHYSICS_API lean::resource_ptr<Material, true> CreateMaterial(Device &device, float staticFriction, float dynamicFriction, float restitution,
+	MaterialCache *pMaterialCache = nullptr);
 
 } // namespace
 

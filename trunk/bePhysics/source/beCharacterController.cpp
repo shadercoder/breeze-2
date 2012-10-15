@@ -6,12 +6,12 @@
 #include "bePhysics/beCharacterController.h"
 #include <beEntitySystem/beEntity.h>
 #include "bePhysics/beCharacterSceneController.h"
-#include "bePhysics/PX/beCharacter.h"
-#include "bePhysics/PX/beScene.h"
-#include "bePhysics/PX/beRigidActors.h"
-#include "bePhysics/PX/beShapes.h"
-#include "bePhysics/PX/beMaterial.h"
-#include "bePhysics/PX/beMath.h"
+#include "bePhysics/PX3/beCharacter.h"
+#include "bePhysics/PX3/beScene.h"
+#include "bePhysics/PX3/beRigidActors.h"
+#include "bePhysics/PX3/beShapes.h"
+#include "bePhysics/PX3/beMaterial.h"
+#include "bePhysics/PX3/beMath.h"
 #include <PxExtensionsAPI.h>
 
 namespace bePhysics
@@ -83,7 +83,7 @@ float CharacterController::GetMass() const
 // Forces this controller into synchronization with the simulation.
 void CharacterController::Synchronize()
 {
-	ToImpl(*m_pActor)->setPosition( ToExPX(ToImpl(m_pEntity->GetPosition())) );
+	ToImpl(*m_pActor)->setPosition( PX3::ToXAPI(PX3::ToAPI(m_pEntity->GetPosition())) );
 
 	if (m_lastScaling != m_pEntity->GetScaling())
 	{
@@ -93,7 +93,7 @@ void CharacterController::Synchronize()
 		physx::PxCapsuleGeometry geom;
 		pShape->getCapsuleGeometry(geom);
 
-		Scale( geom, pShape->getLocalPose(), ToImpl(m_pEntity->GetScaling() / m_lastScaling) );
+		PX3::Scale( geom, pShape->getLocalPose(), PX3::ToAPI(m_pEntity->GetScaling() / m_lastScaling) );
 		
 		ToImpl(*m_pActor)->setRadius(geom.radius);
 		ToImpl(*m_pActor)->setHeight(2.0f * geom.halfHeight);
@@ -113,7 +113,7 @@ void CharacterController::Flush()
 void CharacterController::Fetch()
 {
 	physx::PxExtendedVec3 pos = ToImpl(*m_pActor)->getPosition();
-	m_pEntity->SetPosition( ToBE( ToPX(pos) ) );
+	m_pEntity->SetPosition( PX3::FromAPI( PX3::FromXAPI(pos) ) );
 }
 
 // Converts the controlled actor between non-kinematic and kinematic.

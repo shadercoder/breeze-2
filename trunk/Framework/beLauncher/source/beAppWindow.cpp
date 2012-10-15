@@ -76,6 +76,14 @@ DLG_PROC_RESULT CALLBACK AppWindowDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 		return TRUE;
 	}
 
+	LRESULT result = 0;
+
+	if (pAppWindow && pAppWindow->HandleMessage(hWnd, uMsg, wParam, lParam, result))
+	{
+		SetWindowLongPtr(hWnd, DWLP_MSGRESULT, result);
+		return TRUE;
+	}
+
 	return FALSE;
 }
 

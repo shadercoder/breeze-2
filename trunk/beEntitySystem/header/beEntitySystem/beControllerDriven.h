@@ -44,6 +44,14 @@ public:
 	BE_ENTITYSYSTEM_API void RemoveController(Controller *pController);
 	/// Gets a vector of all controllers.
 	LEAN_INLINE Controllers GetControllers() const { return Controllers(&m_controllers.front().get(), &m_controllers.back().get() + 1); }
+	/// Gets the first controller of the given type.
+	BE_ENTITYSYSTEM_API Controller* GetController(const utf8_ntri &type);
+	/// Gets the first controller of the given type.
+	template <class ControllerType>
+	LEAN_INLINE ControllerType* GetController()
+	{
+		return dynamic_cast<ControllerType*>( GetController(ControllerType::GetControllerType()) );
+	}
 	/// Clears all controllers.
 	BE_ENTITYSYSTEM_API void ClearControllers();
 

@@ -231,9 +231,22 @@ Setup::texture_vector GetTextures(ID3DX11Effect *pEffect, beGraphics::TextureCac
 		D3DX11_EFFECT_VARIABLE_DESC variableDesc;
 		BE_THROW_DX_ERROR_MSG(pVariable->GetDesc(&variableDesc), "ID3DX11EffectVariable::GetDesc()");
 		
-		// Not bound by semantic
-		if (variableDesc.Semantic)
+		// Not bound by semantic or unmanaged
+		if (variableDesc.Semantic || (variableDesc.Flags & D3DX11_EFFECT_VARIABLE_UNMANAGED))
 			continue;
+
+		ID3DX11EffectType *pType = pVariable->GetType();
+		// Of valid type
+		D3DX11_EFFECT_TYPE_DESC typeDesc = GetDesc(pType);
+
+		// Some kind of texture
+		if (typeDesc.Type != D3D_SVT_TEXTURE &&
+			typeDesc.Type != D3D_SVT_TEXTURE1D && typeDesc.Type != D3D_SVT_TEXTURE2D &&
+			typeDesc.Type != D3D_SVT_TEXTURE3D  && typeDesc.Type != D3D_SVT_TEXTURECUBE)
+			continue;
+
+		BOOL isRaw = FALSE;
+		pVariable->GetAnnotationByName("Raw")->AsScalar()->GetBool(&isRaw);
 
 		const char *textureName = variableDesc.Name;
 		SUCCEEDED(pVariable->GetAnnotationByName("UIName")->AsString()->GetString(&textureName))
@@ -244,14 +257,15 @@ Setup::texture_vector GetTextures(ID3DX11Effect *pEffect, beGraphics::TextureCac
 			|| SUCCEEDED(pVariable->GetAnnotationByName("File")->AsString()->GetString(&textureFile));
 
 		const beGraphics::TextureView *pView = (pTextures && textureFile)
-			? pTextures->GetTextureView(textureFile)
+			? pTextures->GetTextureView(textureFile, !isRaw)
 			: nullptr;
 
 		textures.push_back(
 			Setup::Texture(
 					textureName,
 					pVariable,
-					ToImpl(pView)
+					ToImpl(pView),
+					!isRaw
 				)
 			);
 	}
@@ -486,6 +500,14 @@ utf8_ntr Setup::GetTextureName(uint4 id) const
 	return (id < m_textures.size())
 		? utf8_ntr(m_textures[id].name)
 		: utf8_ntr("");
+}
+
+// Gets whether the texture is a color texture.
+bool Setup::IsColorTexture(uint4 id) const
+{
+	return (id < m_textures.size())
+		? m_textures[id].bColorTexture
+		: true;
 }
 
 // Sets the given texture.

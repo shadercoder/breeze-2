@@ -28,58 +28,70 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\global\Platform.Cpp.$(Platform).user.props" />
     <Import Project="..\global\Lean.Cpp.Win32.user.props" />
     <Import Project="..\global\beCore.Cpp.Win32.props" />
     <Import Project="..\global\DirectX.Cpp.Win32.user.props" />
     <Import Project="..\global\DirectX.Effects11.Cpp.Win32.user.props" />
     <Import Project="..\global\Boost.Cpp.Win32.user.props" />
+    <Import Project="..\global\DirectX.Tex.Cpp.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\global\Platform.Cpp.$(Platform).user.props" />
     <Import Project="..\global\Lean.Cpp.Win32.user.props" />
     <Import Project="..\global\beCore.Cpp.Win32.props" />
     <Import Project="..\global\DirectX.Cpp.x64.user.props" />
     <Import Project="..\global\DirectX.Effects11.Cpp.Win32.user.props" />
     <Import Project="..\global\Boost.Cpp.Win32.user.props" />
+    <Import Project="..\global\DirectX.Tex.Cpp.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\global\Platform.Cpp.$(Platform).user.props" />
     <Import Project="..\global\Lean.Cpp.Win32.user.props" />
     <Import Project="..\global\beCore.Cpp.Win32.props" />
     <Import Project="..\global\DirectX.Cpp.Win32.user.props" />
     <Import Project="..\global\DirectX.Effects11.Cpp.Win32.user.props" />
     <Import Project="..\global\Boost.Cpp.Win32.user.props" />
+    <Import Project="..\global\DirectX.Tex.Cpp.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\global\Platform.Cpp.$(Platform).user.props" />
     <Import Project="..\global\Lean.Cpp.Win32.user.props" />
     <Import Project="..\global\beCore.Cpp.Win32.props" />
     <Import Project="..\global\DirectX.Cpp.x64.user.props" />
     <Import Project="..\global\DirectX.Effects11.Cpp.Win32.user.props" />
     <Import Project="..\global\Boost.Cpp.Win32.user.props" />
+    <Import Project="..\global\DirectX.Tex.Cpp.Win32.user.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -109,7 +121,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Effects11_d.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;d3dx11d.lib;DxErr.lib;beCore_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Effects11_d.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex_d.lib;beCore_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
@@ -128,7 +140,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Effects11_x64.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;d3dx11d.lib;DxErr.lib;beCore_x64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Effects11_x64.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex_x64d.lib;beCore_x64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
@@ -151,7 +163,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Effects11.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;d3dx11.lib;DxErr.lib;beCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Effects11.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex.lib;beCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
@@ -174,7 +186,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Effects11_x64.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;d3dx11.lib;DxErr.lib;beCore_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Effects11_x64.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex_x64.lib;beCore_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
@@ -195,6 +207,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beGraphics\Any\beEffectsAPI.h" />
     <ClInclude Include="header\beGraphics\Any\beFormat.h" />
     <ClInclude Include="header\beGraphics\Any\beGraphics.h" />
+    <ClInclude Include="header\beGraphics\Any\beQuery.h" />
     <ClInclude Include="header\beGraphics\Any\beResourceViews.h" />
     <ClInclude Include="header\beGraphics\Any\beSetup.h" />
     <ClInclude Include="header\beGraphics\Any\beState.h" />
@@ -209,7 +222,6 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beGraphics\beAdapters.h" />
     <ClInclude Include="header\beGraphics\beFormat.h" />
     <ClInclude Include="header\beGraphics\beGraphics.h" />
-    <ClInclude Include="header\beGraphics\beImplementations.h" />
     <ClInclude Include="header\beGraphics\beMemory.h" />
     <ClInclude Include="header\beGraphicsInternal\stdafx.h" />
     <ClInclude Include="header\beGraphicsInternal\targetver.h" />
@@ -230,6 +242,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beGraphics\DX11\beEffect.h" />
     <ClInclude Include="header\beGraphics\DX11\beFormat.h" />
     <ClInclude Include="header\beGraphics\DX11\beGraphics.h" />
+    <ClInclude Include="header\beGraphics\DX11\beQuery.h" />
     <ClInclude Include="header\beGraphics\DX11\beResourceViews.h" />
     <ClInclude Include="header\beGraphics\DX11\beSetup.h" />
     <ClInclude Include="header\beGraphics\DX11\beState.h" />
@@ -244,6 +257,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beGraphics\DX\beGraphics.h" />
     <ClInclude Include="header\beGraphics\DX\beIncludeManager.h" />
     <ClInclude Include="header\beGraphics\DX\beMemory.h" />
+    <ClInclude Include="source\DX\dxerr.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\beAdapters.cpp" />
@@ -269,8 +283,10 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClCompile Include="source\DX11\beAdapters.cpp" />
     <ClCompile Include="source\DX11\beBuffer.cpp" />
     <ClCompile Include="source\DX11\beDevice.cpp" />
+    <ClCompile Include="source\DX11\beDeviceContext.cpp" />
     <ClCompile Include="source\DX11\beEffectCache.cpp" />
     <ClCompile Include="source\DX11\beEffect.cpp" />
+    <ClCompile Include="source\DX11\beQuery.cpp" />
     <ClCompile Include="source\DX11\beResourceViews.cpp" />
     <ClCompile Include="source\DX11\beSetup.cpp" />
     <ClCompile Include="source\DX11\beState.cpp" />
@@ -279,6 +295,12 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClCompile Include="source\DX11\beTexture.cpp" />
     <ClCompile Include="source\DX11\beTextureTargetPool.cpp" />
     <ClCompile Include="source\DX\beError.cpp" />
+    <ClCompile Include="source\DX\dxerr.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

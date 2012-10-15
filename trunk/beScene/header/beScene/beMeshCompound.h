@@ -10,6 +10,8 @@
 #include <vector>
 #include <lean/smart/resource_ptr.h>
 
+#include <beMath/beAABDef.h>
+
 namespace beScene
 {
 
@@ -44,10 +46,20 @@ public:
 	LEAN_INLINE uint4 GetSubsetCount() const { return static_cast<uint4>(m_subsets.size()); }
 	/// Gets a subset.
 	LEAN_INLINE const Mesh* GetSubset(uint4 index) const { return (index < m_subsets.size()) ? m_subsets[index].get() : nullptr; }
+	/// Gets a subset.
+	LEAN_INLINE const Mesh *const * GetSubsets() const { return &m_subsets[0].get(); }
 
 	/// Gets the mesh cache.
 	LEAN_INLINE MeshCache* GetCache() const { return m_pCache; }
 };
+
+/// Computes the combined bounds of the given mesh compound.
+BE_SCENE_API beMath::faab3 ComputeBounds(const Mesh *const *meshes, uint4 meshCount);
+/// Computes the combined bounds of the given mesh compound.
+LEAN_INLINE beMath::faab3 ComputeBounds(const MeshCompound &meshes)
+{
+	return ComputeBounds(meshes.GetSubsets(), meshes.GetSubsetCount());
+}
 
 } // namespace
 

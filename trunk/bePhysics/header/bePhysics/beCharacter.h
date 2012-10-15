@@ -98,7 +98,8 @@ class CharacterScene;
 class Material;
 
 /// Creates a character from the given capsule.
-BE_PHYSICS_API lean::resource_ptr<Character, true> CreateCharacter(CharacterScene &charScene, Scene &scene, const CharacterDesc &desc, const Material &material, CharacterCallback *pCallback = nullptr);
+BE_PHYSICS_API lean::resource_ptr<Character, true> CreateCharacter(CharacterScene *charScene, Scene *scene,
+	const CharacterDesc &desc, const Material *material, CharacterCallback *pCallback = nullptr);
 
 /// Sets filter data for the given character.
 BE_PHYSICS_API void SetSimulationFilterData(Character &character, uint4 groupFlags, uint4 typeFlags, uint4 ID);

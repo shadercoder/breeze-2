@@ -163,26 +163,26 @@ public:
 };
 
 /// Sets the default material for point lights.
-void SetPointLightDefaultMaterial(RenderableMaterial *pMaterial);
+BE_SCENE_API void SetPointLightDefaultMaterial(RenderableMaterial *pMaterial);
 /// Gets the default material for point lights.
-lean::resource_ptr<RenderableMaterial, true> GetPointLightDefaultMaterial();
+BE_SCENE_API lean::resource_ptr<RenderableMaterial, true> GetPointLightDefaultMaterial();
 
 class ResourceManager;
 class EffectDrivenRenderer;
 
 /// Creates a point light.
-lean::resource_ptr<PointLightController, true> CreatePointLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
+BE_SCENE_API lean::resource_ptr<PointLightController, true> CreatePointLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
 	ResourceManager &resources, EffectDrivenRenderer &renderer);
 
 /// Sets the default point light effect file.
-void SetPointLightDefaultEffect(const utf8_ntri &file);
+BE_SCENE_API void SetPointLightDefaultEffect(const utf8_ntri &file);
 /// Gets the default point light effect file.
-beCore::Exchange::utf8_string GetPointLightDefaultEffect();
+BE_SCENE_API beCore::Exchange::utf8_string GetPointLightDefaultEffect();
 
 /// Gets the default material for point lights.
-RenderableMaterial* GetPointLightDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer);
+BE_SCENE_API RenderableMaterial* GetPointLightDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer);
 /// Creates a point light using the default effect.
-lean::resource_ptr<PointLightController, true> CreateDefaultPointLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
+BE_SCENE_API lean::resource_ptr<PointLightController, true> CreateDefaultPointLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
 	ResourceManager &resources, EffectDrivenRenderer &renderer);
 
 } // namespace

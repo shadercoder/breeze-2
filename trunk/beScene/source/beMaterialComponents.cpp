@@ -36,7 +36,7 @@ class RenderableMaterialReflector : public beCore::ComponentReflector
 	beCore::ComponentParameters GetCreationParameters() const
 	{
 		static const beCore::ComponentParameter parameters[] = {
-				beCore::ComponentParameter(utf8_ntr("Effect"), utf8_ntr("Effect")),
+				beCore::ComponentParameter(utf8_ntr("Effect"), utf8_ntr("Effect"), true),
 				beCore::ComponentParameter(utf8_ntr("Name"), utf8_ntr("String"))
 			};
 
@@ -47,17 +47,22 @@ class RenderableMaterialReflector : public beCore::ComponentReflector
 	{
 		SceneParameters sceneParameters = GetSceneParameters(parameters);
 
+		RenderableMaterial *pPrototypeRenderableMaterial = lean::any_cast_default<RenderableMaterial*>(pPrototype);
+		Material *pPrototypeMaterial = (pPrototypeRenderableMaterial) ? pPrototypeRenderableMaterial->GetMaterial() : nullptr;
+
+		const beGraphics::Effect *effect = (pPrototypeMaterial)
+			? creationParameters.GetValueDefault<beGraphics::Effect*>( "Effect", const_cast<beGraphics::Effect*>(pPrototypeMaterial->GetEffect()) )
+			: creationParameters.GetValueChecked<beGraphics::Effect*>( "Effect" );
+
 		lean::resource_ptr<Material> material = lean::new_resource<Material>(
-				creationParameters.GetValueChecked<beGraphics::Effect*>("Effect"),
+				effect,
 				*sceneParameters.ResourceManager->EffectCache(),
 				*sceneParameters.ResourceManager->TextureCache(),
 				sceneParameters.ResourceManager->MaterialCache()
 			);
 
-		RenderableMaterial *pPrototypeMaterial = lean::any_cast_default<RenderableMaterial*>(pPrototype);
-
 		if (pPrototypeMaterial)
-			Transfer(*material, *pPrototypeMaterial->GetMaterial());
+			Transfer(*material, *pPrototypeMaterial);
 
 		sceneParameters.ResourceManager->MaterialCache()->SetMaterialName(
 				creationParameters.GetValueChecked<beCore::Exchange::utf8_string>("Name"),

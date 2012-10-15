@@ -35,6 +35,7 @@ struct DeviceDesc
 	uint4 FeatureLevel;		///< Minimum shader version.
 	DeviceType::T Type;		///< Device type.
 	bool MultiHead;			///< Specifies whether to acquire all outputs connected to the adapter.
+	bool Debug;
 
 	/// Constructor.
 	explicit DeviceDesc(
@@ -42,12 +43,14 @@ struct DeviceDesc
 		bool windowed = true,
 		uint4 featureLevel = 0,
 		DeviceType::T type = DeviceType::Hardware,
-		bool multiHead = false)
+		bool multiHead = false,
+		bool debug = false)
 			: Window(window),
 			Windowed(windowed),
 			FeatureLevel(featureLevel),
 			Type(type),
-			MultiHead(multiHead) { }
+			MultiHead(multiHead),
+			Debug(debug) { }
 };
 
 /// Swap chain description.

@@ -30,6 +30,9 @@ public:
 	virtual bool WindowClosed(HWND hWnd) { return true; }
 	/// Called when the window has been destroyed.
 	virtual void WindowDestroyed(HWND hWnd) { }
+
+	/// Called for every other message in the queue.
+	virtual bool HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT &result) { return false; }
 };
 
 /// Creates a default application window.

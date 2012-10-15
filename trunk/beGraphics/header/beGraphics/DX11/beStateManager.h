@@ -391,7 +391,15 @@ public:
 			m_pStateManager->Invalidate(ShaderStageTraits::StateMask);
 	}
 	/// Overrides the given states.
-	LEAN_INLINE void OverrideShader(bool bOverride) { m_shaderOverride |= bOverride; InvalidateShader(bOverride); }
+	LEAN_INLINE void OverrideShader(bool bOverride)
+	{
+		m_shaderOverride |= bOverride;
+
+		if (m_shaderOverride)
+			m_pStateManager->Override(ShaderStageTraits::StateMask);
+		
+		InvalidateShader(bOverride);
+	}
 	/// Gets overridden states.
 	LEAN_INLINE bool ShaderOverridden() const { return m_shaderOverride; }
 	/// Revers the given overridden states.
@@ -406,9 +414,17 @@ public:
 			m_pStateManager->Invalidate(ShaderStageTraits::StateMask);
 	}
 	/// Overrides the given states.
-	LEAN_INLINE void OverrideConstantBuffers(uint4 bufferMask) { m_constantBufferOverrideMask |= bufferMask; InvalidateConstantBuffers(bufferMask); }
+	LEAN_INLINE void OverrideConstantBuffers(uint4 bufferMask)
+	{
+		m_constantBufferOverrideMask |= bufferMask;
+		
+		if (m_constantBufferOverrideMask)
+			m_pStateManager->Override(ShaderStageTraits::StateMask);
+
+		InvalidateConstantBuffers(bufferMask);
+	}
 	/// Gets overridden states.
-	LEAN_INLINE uint4 OverriddenConstantBuffers() const {return m_constantBufferOverrideMask; }
+	LEAN_INLINE uint4 OverriddenConstantBuffers() const { return m_constantBufferOverrideMask; }
 	/// Revers the given overridden states.
 	LEAN_INLINE void RevertConstantBuffers(uint4 bufferMask) { m_constantBufferOverrideMask &= ~bufferMask; }
 
@@ -421,7 +437,15 @@ public:
 			m_pStateManager->Invalidate(ShaderStageTraits::StateMask);
 	}
 	/// Overrides the given states.
-	LEAN_INLINE void OverrideResources(uint4 resourceMask) { m_shaderResourceOverrideMask |= resourceMask; InvalidateResources(resourceMask); }
+	LEAN_INLINE void OverrideResources(uint4 resourceMask)
+	{
+		m_shaderResourceOverrideMask |= resourceMask;
+		
+		if (m_shaderResourceOverrideMask)
+			m_pStateManager->Override(ShaderStageTraits::StateMask);
+
+		InvalidateResources(resourceMask);
+	}
 	/// Gets overridden states.
 	LEAN_INLINE uint4 OverriddenResources() const {return m_shaderResourceOverrideMask; }
 	/// Reverts the given overridden states.
@@ -534,8 +558,10 @@ private:
 	/// Applies the stored render target state.
 	LEAN_INLINE void ApplyRenderTargets() const
 	{
-		m_pContext->OMSetRenderTargets(m_setup.RenderTargetCount, &m_setup.RenderTargets[0].get(),
-			m_setup.DepthStencilTarget);
+		m_pContext->OMSetRenderTargetsAndUnorderedAccessViews(m_setup.RenderTargetCount, &m_setup.RenderTargets[0].get(),
+				m_setup.DepthStencilTarget,
+				m_setup.RenderTargetCount, D3D11_KEEP_UNORDERED_ACCESS_VIEWS, nullptr, nullptr
+			);
 	}
 
 public:

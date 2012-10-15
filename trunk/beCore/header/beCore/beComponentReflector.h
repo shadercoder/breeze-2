@@ -24,11 +24,15 @@ struct ComponentParameter
 {
 	utf8_ntr Name;	///< Parameter name.
 	utf8_ntr Type;	///< Parameter type.
+	bool Deducible;	///< True, if deducible from prototype.
+	bool Optional;	///< True, if optional.
 
 	/// Constructor
-	ComponentParameter(const utf8_ntr &name, const utf8_ntr &type)
+	ComponentParameter(const utf8_ntr &name, const utf8_ntr &type, bool bDeducible = false, bool bOptional = false)
 		: Name(name),
-		Type(type) { }
+		Type(type),
+		Deducible(bDeducible),
+		Optional(bOptional) { }
 };
 
 /// Component parameter range.

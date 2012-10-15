@@ -6,7 +6,6 @@
 #define BE_GRAPHICS_ERROR_DX
 
 #include "beGraphics.h"
-#include <DXErr.h>
 #include <lean/strings/conversions.h>
 #include <lean/logging/errors.h>
 

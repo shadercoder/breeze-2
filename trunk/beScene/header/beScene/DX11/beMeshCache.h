@@ -20,7 +20,6 @@ class MeshCache : public beScene::MeshCache
 {
 public:
 	struct M;
-	friend struct M;
 
 private:
 	lean::pimpl_ptr<M> m;

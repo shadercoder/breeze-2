@@ -10,6 +10,7 @@
 
 #include <beEntitySystem/beSerializationParameters.h>
 #include <beScene/beSerializationParameters.h>
+#include <bePhysics/beSerializationParameters.h>
 
 #include <beScene/beShaderDrivenPipeline.h>
 
@@ -28,6 +29,7 @@ SceneDocument::SceneDocument(const QString &type, const QString &name, const QSt
 	m_pRenderer( beScene::CreateEffectDrivenRenderer(editor()->deviceManager()->graphicsDevice()) ),
 	m_pRenderContext( beScene::CreateRenderContext(m_pRenderer->ImmediateContext()) ),
 	m_pScene( lean::new_resource<beScene::SceneController>(m_pSimulation, m_pRenderer->Pipeline(), m_pRenderContext) ),
+	m_pPhysics( lean::new_resource<bePhysics::SceneController>(m_pSimulation, editor()->deviceManager()->physicsDevice()) ),
 	m_pPrimaryView(),
 	m_pDropInteraction()
 {
@@ -40,7 +42,10 @@ SceneDocument::SceneDocument(const QString &type, const QString &name, const QSt
 		*editor()->deviceManager()->graphicsResources()->EffectCache()->GetEffect("Pipelines/LPR/Pipeline.fx", nullptr, 0),
 		*m_pRenderer->RenderableDrivers());
 
+	m_pSimulation->Pause(true);
+
 	m_pSimulation->AddController(m_pScene);
+	m_pSimulation->AddController(m_pPhysics);
 	m_pSimulation->Attach();
 
 	if (bLoadFromFile)
@@ -103,6 +108,15 @@ void SceneDocument::clearSelection()
 	setSelection( EntityVector() );
 }
 
+// Select everything.
+void SceneDocument::selectAll()
+{
+	beEntitySystem::World::Entities entities = m_pWorld->GetEntities();
+	EntityVector selection(entities.size());
+	std::copy(entities.begin(), entities.end(), selection.begin());
+	setSelection(selection);
+}
+
 // Sets the selection.
 void SceneDocument::setSelection(beEntitySystem::Entity *pEntity)
 {
@@ -135,9 +149,17 @@ void SceneDocument::setSerializationParameters(beCore::ParameterSet &serializati
 
 	beScene::SceneParameters sceneParameters(
 			editor()->deviceManager()->graphicsResources(),
-			m_pRenderer, m_pScene, m_pScene->GetScenery()
+			m_pRenderer,
+			m_pScene, m_pScene->GetScenery()
 		);
 	SetSceneParameters(serializationParams, sceneParameters);
+
+	bePhysics::PhysicsParameters physicsParameters(
+			editor()->deviceManager()->physicsDevice(),
+			editor()->deviceManager()->physicsResources(),
+			m_pPhysics, m_pPhysics->GetScene()
+		);
+	SetPhysicsParameters(serializationParams, physicsParameters);
 }
 
 // Saves the document using the given filename.

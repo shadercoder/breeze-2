@@ -1,6 +1,6 @@
-/****************************************************/
-/* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
-/****************************************************/
+/******************************************************/
+/* breeze Engine Physics Module  (c) Tobias Zirr 2011 */
+/******************************************************/
 
 #ifndef BE_PHYSICS_SCENECONTROLLER
 #define BE_PHYSICS_SCENECONTROLLER
@@ -30,9 +30,9 @@ private:
 
 public:
 	/// Constructor.
-	BE_PHYSICS_API SceneController(beEntitySystem::Simulation *pSimulation, Scene *pScene);
+	BE_PHYSICS_API SceneController(beEntitySystem::Simulation *pSimulation, Scene *scene);
 	/// Constructor.
-	BE_PHYSICS_API SceneController(beEntitySystem::Simulation *pSimulation, Device &device);
+	BE_PHYSICS_API SceneController(beEntitySystem::Simulation *pSimulation, Device *device);
 	/// Destructor.
 	BE_PHYSICS_API ~SceneController();
 
@@ -50,9 +50,9 @@ public:
 	BE_PHYSICS_API void Detach();
 
 	/// Gets the physics scene.
-	BE_PHYSICS_API Scene& GetScene();
+	BE_PHYSICS_API Scene* GetScene();
 	/// Gets the physics scene.
-	BE_PHYSICS_API const Scene& GetScene() const;
+	BE_PHYSICS_API const Scene* GetScene() const;
 
 	/// Gets the controller type.
 	BE_PHYSICS_API static utf8_ntr GetControllerType();

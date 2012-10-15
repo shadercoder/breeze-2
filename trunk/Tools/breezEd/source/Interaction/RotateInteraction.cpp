@@ -50,6 +50,9 @@ void RotateInteraction::step(float timeStep, InputProvider &input, const beScene
 {
 	using namespace beMath;
 
+	// TODO: Change-based update?
+	updateWidgets();
+
 	uint4 axisID = InvalidAxisID;
 
 	// Keep / stop moving
@@ -72,13 +75,14 @@ void RotateInteraction::step(float timeStep, InputProvider &input, const beScene
 			input.setButtonHandled(Qt::LeftButton);
 	}
 	else
-	{
-		m_pCommand = nullptr;
-		m_axisID = InvalidAxisID;
-	}
+		finishEditing();
 
 	if (axisID < 3)
 	{
+		// NOTE: Make sure widgets are up to date *before* editing has started
+		if (m_axisID == InvalidAxisID)
+			updateWidgets();
+
 		fvec3 axisOrig = m_axes[axisID]->GetPosition();
 		fvec3 axisDir = m_axes[axisID]->GetOrientation()[2];
 
@@ -112,6 +116,7 @@ void RotateInteraction::step(float timeStep, InputProvider &input, const beScene
 				
 				(*itEntity)->SetPosition(position);
 				(*itEntity)->SetOrientation(orientation);
+				(*itEntity)->Synchronize();
 			}
 			
 			m_axisStop = nextAxisStop;
@@ -136,7 +141,7 @@ void RotateInteraction::attach()
 	for (int i = 0; i < 3; ++i)
 		m_axes[i]->Attach();
 
-	checkedConnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(updateWidgets()));
+	checkedConnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(selectionChanged()));
 }
 
 // Detaches this interaction.
@@ -145,24 +150,40 @@ void RotateInteraction::detach()
 	for (int i = 0; i < 3; ++i)
 		m_axes[i]->Detach();
 
-	disconnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(updateWidgets()));
+	disconnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(selectionChanged()));
+}
+
+// Finish editing.
+void RotateInteraction::finishEditing()
+{
+	m_pCommand = nullptr;
+	m_axisID = InvalidAxisID;
+}
+
+// Update widgets.
+void RotateInteraction::selectionChanged()
+{
+	finishEditing();
+	m_selection = m_pDocument->selection();
+	updateWidgets();
 }
 
 // Update widgets.
 void RotateInteraction::updateWidgets()
 {
-	m_selection = m_pDocument->selection();
-
 	beMath::fmat3 orientation = (m_selection.size() == 1)
 		? m_selection.front()->GetOrientation()
 		: beMath::mat_diag<3, 3>(1.0f);
 	
 	m_centroid = 0.0f;
 
-	for (entity_vector::const_iterator itEntity = m_selection.begin(); itEntity != m_selection.end(); ++itEntity)
-		m_centroid += (*itEntity)->GetPosition();
+	if (!m_selection.empty())
+	{
+		for (entity_vector::const_iterator itEntity = m_selection.begin(); itEntity != m_selection.end(); ++itEntity)
+			m_centroid += (*itEntity)->GetPosition();
 
-	m_centroid /= m_selection.size();
+		m_centroid /= m_selection.size();
+	}
 
 	for (int i = 0; i < 3; ++i)
 	{
@@ -174,7 +195,7 @@ void RotateInteraction::updateWidgets()
 					orientation[ (i + 0) % 3 ]
 				)
 			);
-	}
 
-	// TODO: show / hide?
+		m_axes[i]->SetVisible(!m_selection.empty());
+	}
 }

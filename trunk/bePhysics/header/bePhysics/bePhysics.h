@@ -51,30 +51,41 @@
 /// @}
 
 #include <beCore/beCore.h>
-#include "beImplementations.h"
 
 /// @addtogroup PhysicsLibray bePhysics library
 /// For a better overview, see <a href="namespaces.html">Namespaces</a>.
 /// @see <a href="namespaces.html">Namespaces</a>
 /// @{
 
-#ifndef BE_PHYSICS_IMPLEMENTATION
-	/// Define this to select a physics implementation.
-	#define BE_PHYSICS_IMPLEMENTATION BE_PHYSICS_PX_IMPLEMENTATION
+#ifdef DOXYGEN_READ_THIS
+	/// Define this to select the PhysX implementation.
+	#define BE_PHYSICS_PHYSX_3
+	#undef BE_PHYSICS_PHYSX_3
 #endif
 
-// Define implementation switches
-#include "beImplementations.h"
+// Default to PhysX if nothing else specified
+#if !defined(BE_PHYSICS_PHYSX_3) && 1 // ... // TODO: Update for every new alternative
+	#define BE_PHYSICS_PHYSX_3
+#endif
 
 /// Main namespace of the bePhysics library.
 namespace bePhysics
 {
 	// Import important types
 	using namespace lean::types;
+	LEAN_REIMPORT_NUMERIC_TYPES;
 	using namespace lean::strings::types;
 
-	/// Active implementation ID.
-	static const ImplementationID ActiveImplementation = BE_PHYSICS_IMPLEMENTATION;
+	/// Implementation ID enumeration.
+	enum ImplementationID
+	{
+		PX3Implementation = LEAN_MAKE_WORD_4('P', 'X', '3', '+')	///< PhysX 3+ implementation ID.
+	};
+
+	#ifdef BE_PHYSICS_PHYSX_3
+		/// Active implementation ID.
+		static const ImplementationID ActiveImplementation = PX3Implementation;
+	#endif
 
 	/// Physics implementation interface.
 	class Implementation

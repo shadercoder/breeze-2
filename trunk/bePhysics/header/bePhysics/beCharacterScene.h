@@ -28,7 +28,7 @@ public:
 class Device;
 
 /// Creates a character scene.
-BE_PHYSICS_API lean::resource_ptr<CharacterScene, true> CreateCharacterScene(Device &device);
+BE_PHYSICS_API lean::resource_ptr<CharacterScene, true> CreateCharacterScene(Device *device);
 
 } // namespace
 

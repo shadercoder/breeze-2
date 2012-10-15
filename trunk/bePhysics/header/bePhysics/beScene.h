@@ -43,7 +43,7 @@ public:
 class Device;
 
 /// Creates a physics scene.
-BE_PHYSICS_API lean::resource_ptr<Scene, true> CreateScene(Device &device, const SceneDesc &desc);
+BE_PHYSICS_API lean::resource_ptr<Scene, true> CreateScene(Device *device, const SceneDesc &desc);
 
 } // namespace
 

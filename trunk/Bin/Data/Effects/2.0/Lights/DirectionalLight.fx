@@ -202,15 +202,16 @@ float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 
 	// Angle fallof
 	float cosAngle = dot(worldNormal, -DirectionalLight.Dir);
-	float negIntensity = saturate(0.5f - 0.25f * cosAngle); // * AmbientTexture.SampleLevel(DefaultSampler, p.TexCoord, 0).a;
+	float negIntensity = saturate(0.5f - 0.35f * cosAngle); // * AmbientTexture.SampleLevel(DefaultSampler, p.TexCoord, 0).a;
 	float rimIntensity = (1 - abs(cosAngle)) * pow(1 - dot(-camDir, worldNormal), 8) * saturate( dot(camDir, -DirectionalLight.Dir) );
 	float4 posIntensity = saturate(cosAngle) * intensity;
 
-	float3 diffuse = diffuseColor.xyz * lerp(posIntensity, negIntensity, DirectionalLight.Color.w);
+	float3 diffuse = diffuseColor.xyz * lerp(posIntensity, DirectionalLight.SkyColor.xyz * negIntensity, DirectionalLight.Color.w);
 
 	// Specular
 	float3 halfway = -normalize(camDir + DirectionalLight.Dir);
-	float3 specular = specularColor.xyz * intensity * pow( saturate( dot(worldNormal, halfway) ) , 1024.0f * specularColor.a );
+	float specExp = 1024.0f * specularColor.a + 0.00001f;
+	float3 specular = specularColor.xyz * intensity * pow( saturate( dot(worldNormal, halfway) ) , specExp ); // * (specExp + 1.0f) * 0.5f;
 	
 	return float4( (diffuse + specular) * DirectionalLight.Color.xyz, 0.0f );
 }
@@ -268,9 +269,8 @@ technique11 Shadowed <
 	}
 	
 	pass <
-		string Color0 = "SceneTarget";
-		bool bKeepColor0 = true;
-
+		bool RevertTargets = true;
+		
 		string LightType = "DirectionalLight";
 		bool Shadowed = true;
 

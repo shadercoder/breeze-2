@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "Widgets/CreationParameterWidgetFactory.h"
 
-#include "Plugins/WidgetFactoryManager.h"
+#include "Plugins/FactoryManager.h"
 
 /// Gets the creation widget factory manager.
-WidgetFactoryManager<CreationParameterWidgetFactory>& getCreationParameterWidgetFactory()
+FactoryManager<CreationParameterWidgetFactory>& getCreationParameterWidgetFactory()
 {
-	static WidgetFactoryManager<CreationParameterWidgetFactory> manager;
+	static FactoryManager<CreationParameterWidgetFactory> manager;
 	return manager;
 }

@@ -94,7 +94,7 @@ RenderingPipeline::~RenderingPipeline()
 
 // Adds a perspective.
 PipelinePerspective* RenderingPipeline::AddPerspective(const PerspectiveDesc &desc, Pipe *pPipe,
-	PipelineProcessor *pProcessor, PipelineStageMask stageMask)
+	PipelineProcessor *pProcessor, PipelineStageMask stageMask, bool bNormalOnly)
 {
 	if (m_impl->activePerspectiveCount >= m_impl->maxPerspectiveCount)
 		LEAN_THROW_ERROR_MSG("Pipeline max perspective count exceeded!");
@@ -107,6 +107,8 @@ PipelinePerspective* RenderingPipeline::AddPerspective(const PerspectiveDesc &de
 
 	if (stageMask == 0)
 		stageMask = m_impl->normalStageMask;
+	else if (bNormalOnly)
+		stageMask &= m_impl->normalStageMask;
 
 	PipelinePerspective *pPerspective;
 

@@ -20,6 +20,18 @@ namespace beScene
 // Prototypes
 class Pipe;
 
+/// Perspective flags.
+namespace PerspectiveFlags
+{
+	// Enum.
+	enum T
+	{
+		None = 0,
+
+		Omnidirectional		/// Treats the perspective as omnidirectional, don't forget to provide custum frustum planes!
+	};
+}
+
 /// Perspective description.
 struct PerspectiveDesc
 {
@@ -37,6 +49,7 @@ struct PerspectiveDesc
 	float Time;					///< Time.
 	float TimeStep;				///< Time Step.
 	uint4 OutputIndex;			///< Output index.
+	uint4 Flags;				///< Perspective flags.
 
 	/// Default constructor.
 	LEAN_INLINE PerspectiveDesc() { }
@@ -55,7 +68,8 @@ struct PerspectiveDesc
 		bool flipped,
 		float time,
 		float timeStep,
-		uint4 out = 0)
+		uint4 out = 0,
+		uint4 flags = PerspectiveFlags::None)
 			: CamPos(camPos),
 			CamRight(camRight),
 			CamUp(camUp),
@@ -68,7 +82,8 @@ struct PerspectiveDesc
 			Flipped(flipped),
 			Time(time),
 			TimeStep(timeStep),
-			OutputIndex(out)
+			OutputIndex(out),
+			Flags(flags)
 	{
 		if (frustum)
 			memcpy(Frustum, frustum, sizeof(Frustum));
@@ -86,7 +101,8 @@ struct PerspectiveDesc
 		bool flipped,
 		float time,
 		float timeStep,
-		uint4 out = 0)
+		uint4 out = 0,
+		uint4 flags = PerspectiveFlags::None)
 			: CamPos(camPos),
 			CamRight(camRight),
 			CamUp(camUp),
@@ -99,7 +115,8 @@ struct PerspectiveDesc
 			Flipped(flipped),
 			Time(time),
 			TimeStep(timeStep),
-			OutputIndex(out)
+			OutputIndex(out),
+			Flags(flags)
 	{
 		ExtractFrustum(Frustum, ViewProjMat);
 	}

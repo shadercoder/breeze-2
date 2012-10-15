@@ -50,7 +50,7 @@ MeshControllerSerializer::SerializationParameters MeshControllerSerializer::GetC
 {
 	static const beEntitySystem::CreationParameter parameters[] = {
 			beEntitySystem::CreationParameter( utf8_ntr("Mesh"), utf8_ntr("Mesh") ),
-			beEntitySystem::CreationParameter( utf8_ntr("Material"), utf8_ntr("Material") )
+			beEntitySystem::CreationParameter( utf8_ntr("Material"), utf8_ntr("RenderableMaterial"), true )
 		};
 
 	return SerializationParameters(parameters, parameters + lean::arraylen(parameters));
@@ -62,41 +62,20 @@ lean::resource_ptr<beEntitySystem::Controller, true> MeshControllerSerializer::C
 	beEntitySystem::EntitySystemParameters entityParameters = beEntitySystem::GetEntitySystemParameters(parameters);
 	SceneParameters sceneParameters = GetSceneParameters(parameters);
 
-	const MeshCompound *pMesh = nullptr;
-	
-	// Get or load mesh
-	const MeshCompound *const *ppMesh = creationParameters.GetValue<const MeshCompound*>("Mesh");
+	// Get mesh
+	const MeshCompound &mesh = *creationParameters.GetValueChecked<const MeshCompound*>("Mesh");
 
-	if (ppMesh)
-		pMesh = *ppMesh;
-	else
-		pMesh = sceneParameters.ResourceManager->MeshCache()->GetMesh( 
-				creationParameters.GetValueChecked<const beCore::Exchange::utf8_string&>("Mesh")
-			);
+	// (Optionally) get material
+	const RenderableMaterial *pMaterial = creationParameters.GetValueDefault<const RenderableMaterial*>("Material");
 
-	const RenderableMaterial *pMaterial = nullptr;
-
-	// Get or load material
-	const RenderableMaterial *const *ppMaterial = creationParameters.GetValue<const RenderableMaterial*>("Material");
-
-	if (ppMaterial)
-		pMaterial = *ppMaterial;
-	else
-	{
-		const beCore::Exchange::utf8_string *pMaterialFile = creationParameters.GetValue<const beCore::Exchange::utf8_string>("Material");
-
-		if (pMaterialFile && !pMaterialFile->empty())
-			pMaterial = sceneParameters.Renderer->RenderableMaterials()->GetMaterial(
-					sceneParameters.ResourceManager->MaterialCache()->GetMaterial( *pMaterialFile)
-				);
-		else
-			pMaterial = GetMeshDefaultMaterial(*sceneParameters.ResourceManager, *sceneParameters.Renderer);
-	}
+	// Default material, if none specified
+	if (!pMaterial)
+		pMaterial = GetMeshDefaultMaterial(*sceneParameters.ResourceManager, *sceneParameters.Renderer);
 	
 	lean::resource_ptr<MeshController> pController = lean::new_resource<MeshController>(
 			entityParameters.Entity, sceneParameters.SceneController, sceneParameters.Scenery
 		);
-	AddMeshes(*pController, *pMesh, pMaterial);
+	AddMeshes(*pController, mesh, pMaterial);
 
 	return pController.transfer();
 }

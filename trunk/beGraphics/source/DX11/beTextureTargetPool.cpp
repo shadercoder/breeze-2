@@ -78,10 +78,11 @@ D3D11_TEXTURE2D_DESC ToAPI(const TextureTargetDesc &desc, UINT bindFlags, DXGI_F
 } // namespace
 
 // Constructor. Texture ist OPTIONAL.
-TextureTarget::TextureTarget(const DX11::TextureTargetDesc &desc, ID3D11Resource *pResource, ID3D11ShaderResourceView *pTexture)
+TextureTarget::TextureTarget(const DX11::TextureTargetDesc &desc, ID3D11Resource *pResource, ID3D11ShaderResourceView *pTexture, texture_ptr *pTextures)
 	: m_desc(desc),
 	m_pResource(pResource),
 	m_pTexture(pTexture),
+	m_pTextures(pTextures),
 	m_references(0)
 {
 }
@@ -93,8 +94,8 @@ TextureTarget::~TextureTarget()
 
 // Constructor. Texture ist OPTIONAL.
 ColorTextureTarget::ColorTextureTarget(const DX11::TextureTargetDesc &desc, ID3D11Resource *pResource,
-	ID3D11ShaderResourceView *pTexture, ID3D11RenderTargetView *pTarget, target_ptr *pTargets)
-	: TextureTarget(desc, pResource, pTexture),
+	ID3D11ShaderResourceView *pTexture, ID3D11RenderTargetView *pTarget, target_ptr *pTargets, texture_ptr *pTextures)
+	: TextureTarget(desc, pResource, pTexture, pTextures),
 	m_pTarget( LEAN_ASSERT_NOT_NULL(pTarget) ),
 	// TODO: Public, might transfer cross-module memory!
 	// MAY be nullptr
@@ -266,48 +267,74 @@ lean::com_ptr<const ColorTextureTarget, true> TextureTargetPool::AcquireColorTex
 
 		lean::com_ptr<ID3D11RenderTargetView> pTargetView;
 		ColorTextureTarget::scoped_target_array_ptr pTargetViews;
+		ColorTextureTarget::scoped_texture_array_ptr pTextureViews;
 
-		if (descDX.ArraySize > 1)
+		// Create element views
+		if (descDX.ArraySize > 1 || descDX.MipLevels != 1)
 		{
-			pTargetViews = new ColorTextureTarget::target_ptr[descDX.ArraySize];
+			// NOTE: Get actual number of mip levels
+			pTexture->GetDesc(&descDX);
+
+			uint4 trueMipLevels = !(descDX.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS) ? descDX.MipLevels : 1;
+
+			pTargetViews = new ColorTextureTarget::target_ptr[descDX.ArraySize * trueMipLevels];
+			if (pTextureView)
+				pTextureViews = new ColorTextureTarget::texture_ptr[descDX.ArraySize * trueMipLevels];
 
 			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
 			rtvDesc.Format = descDX.Format;
 
-			for (uint4 i = 0; i < descDX.ArraySize; ++i)
-			{
-				if (descDX.SampleDesc.Count > 1)
-				{
-					rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
-					rtvDesc.Texture2DMSArray.FirstArraySlice = i;
-					rtvDesc.Texture2DMSArray.ArraySize = 1;
-				}
-				else
-				{
-					rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-					rtvDesc.Texture2DArray.MipSlice = 0;
-					rtvDesc.Texture2DArray.FirstArraySlice = i;
-					rtvDesc.Texture2DArray.ArraySize = 1;
-				}
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+			srvDesc.Format = descDX.Format;
 
-				BE_THROW_DX_ERROR_MSG(
-					m->pDevice->CreateRenderTargetView(pTexture, &rtvDesc, pTargetViews[i].rebind()),
-					"ID3D11Device::CreateRenderTargetView()");
+			for (uint4 j = 0; j < trueMipLevels; ++j)
+				for (uint4 i = 0; i < descDX.ArraySize; ++i)
+				{
+					if (descDX.SampleDesc.Count > 1)
+					{
+						rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
+						rtvDesc.Texture2DMSArray.FirstArraySlice = i;
+						rtvDesc.Texture2DMSArray.ArraySize = 1;
+
+						srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY;
+						srvDesc.Texture2DMSArray.FirstArraySlice = i;
+						srvDesc.Texture2DMSArray.ArraySize = 1;
+					}
+					else
+					{
+						rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+						rtvDesc.Texture2DArray.MipSlice = j;
+						rtvDesc.Texture2DArray.FirstArraySlice = i;
+						rtvDesc.Texture2DArray.ArraySize = 1;
+
+						srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+						srvDesc.Texture2DArray.MostDetailedMip = j;
+						srvDesc.Texture2DArray.MipLevels = 1;
+						srvDesc.Texture2DArray.FirstArraySlice = i;
+						srvDesc.Texture2DArray.ArraySize = 1;
+					}
+
+					BE_THROW_DX_ERROR_MSG(
+						m->pDevice->CreateRenderTargetView(pTexture, &rtvDesc, pTargetViews[j * descDX.ArraySize + i].rebind()),
+						"ID3D11Device::CreateRenderTargetView()");
+
+					if (pTextureViews)
+						BE_THROW_DX_ERROR_MSG(
+							m->pDevice->CreateShaderResourceView(pTexture, &srvDesc, pTextureViews[j * descDX.ArraySize + i].rebind()),
+							"ID3D11Device::CreateShaderResourceView()");
+				}
 			}
 
-			pTargetView = pTargetViews[0];
-		}
-		else
-		{
-			BE_THROW_DX_ERROR_MSG(
-				m->pDevice->CreateRenderTargetView(pTexture, nullptr, pTargetView.rebind()),
-				"ID3D11Device::CreateRenderTargetView()");
-		}
+		// Create array view
+		BE_THROW_DX_ERROR_MSG(
+			m->pDevice->CreateRenderTargetView(pTexture, nullptr, pTargetView.rebind()),
+			"ID3D11Device::CreateRenderTargetView()");
 
 		pTarget = new ColorTextureTarget(
 				desc, pTexture,
 				pTextureView, pTargetView,
-				pTargetViews.detach()
+				pTargetViews.detach(),
+				pTextureViews.detach()
 			);
 		lean::push_sorted(m->colorTargets, pTarget, TargetPointerDescCompare());
 	}
@@ -411,6 +438,7 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 
 		if (descDX.ArraySize > 1)
 		{
+			// Create element views
 			pTargetViews = new DepthStencilTextureTarget::target_ptr[descDX.ArraySize];
 
 			for (uint4 i = 0; i < descDX.ArraySize; ++i)
@@ -434,7 +462,24 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 					"ID3D11Device::CreateDepthStencilView()");
 			}
 
-			pTargetView = pTargetViews[0];
+			// Create array view
+			if (descDX.SampleDesc.Count > 1)
+			{
+				dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMSARRAY;
+				dsvDesc.Texture2DMSArray.FirstArraySlice = 0;
+				dsvDesc.Texture2DMSArray.ArraySize = descDX.ArraySize;
+			}
+			else
+			{
+				dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+				dsvDesc.Texture2DArray.MipSlice = 0;
+				dsvDesc.Texture2DArray.FirstArraySlice = 0;
+				dsvDesc.Texture2DArray.ArraySize = descDX.ArraySize;
+			}
+
+			BE_THROW_DX_ERROR_MSG(
+				m->pDevice->CreateDepthStencilView(pTexture, &dsvDesc, pTargetView.rebind()),
+				"ID3D11Device::CreateDepthStencilView()");
 		}
 		else
 		{

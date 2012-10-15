@@ -30,7 +30,8 @@ void EffectQueueSetup::SetupRendering(uint4 stageID, uint4 queueID, const Perspe
 
 	stateManager.Revert();
 
-	m_pEffectDriver->Apply(nullptr, perspective, stateManager, context.Context());
+	AbstractRenderableDriverState driverState;
+	m_pEffectDriver->Apply(nullptr, perspective, driverState, stateManager, context.Context());
 
 	const uint4 passCount = m_pEffectDriver->GetPassCount();
 
@@ -44,13 +45,9 @@ void EffectQueueSetup::SetupRendering(uint4 stageID, uint4 queueID, const Perspe
 		bool bQueueMatch = passQueueID == queueID || passQueueID == InvalidRenderQueue;
 
 		if (bStageMatch && bQueueMatch)
-		{
-			RenderableDriverState driverState;
-
 			for (uint4 i = 0;
 				m_pEffectDriver->ApplyPass(pPass, i, nullptr, perspective, nullptr, nullptr, driverState, stateManager, context.Context());
 				);
-		}
 	}
 
 	stateManager.RecordOverridden();

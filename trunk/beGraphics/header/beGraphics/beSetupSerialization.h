@@ -31,14 +31,14 @@ BE_GRAPHICS_API void LoadTextures(TextureProvider &textures, const rapidxml::xml
 
 /// Saves the given setup to the given XML node.
 BE_GRAPHICS_API void SaveSetup(const Setup &setup, rapidxml::xml_node<lean::utf8_t> &node);
-/// Saves the given setup to the given XML node.
+/// Saves the given setup to the given XML file.
 BE_GRAPHICS_API void SaveSetup(const Setup &setup, const utf8_ntri &file);
 
 /// Load the given setup from the given XML node.
 BE_GRAPHICS_API void LoadSetup(Setup &setup, const rapidxml::xml_node<lean::utf8_t> &node, TextureCache &textureCache);
-/// Load the given setup from the given XML node.
+/// Load the given setup from the given XML document.
 BE_GRAPHICS_API void LoadSetup(Setup &setup, const rapidxml::xml_document<lean::utf8_t> &document, TextureCache &textureCache);
-/// Load the given setup from the given XML node.
+/// Load the given setup from the given XML file.
 BE_GRAPHICS_API void LoadSetup(Setup &setup, const utf8_ntri &file, TextureCache &textureCache);
 
 } // namespace

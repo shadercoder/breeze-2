@@ -27,6 +27,7 @@ struct DirectionalLightConstantBuffer
 	float4 Pos[4];				///< Light position.
 
 	float4 Color[4];			///< Light color.
+	float4 Sky[4];				///< Ambient color.
 
 	float4 Attenuation;			///< Light attenuation.
 	float4 AttenuationOffset;	///< Light attenuation offset.
@@ -71,6 +72,7 @@ protected:
 
 	/// Color.
 	beMath::fvec4 m_color;
+	beMath::fvec4 m_sky;
 
 	/// Attenuation.
 	float m_attenuation;
@@ -119,6 +121,11 @@ public:
 	LEAN_INLINE void SetColor(const beMath::fvec4 &color) { m_color = color; m_bConstantsChanged = true; EmitPropertyChanged(); }
 	/// Gets the color.
 	LEAN_INLINE const beMath::fvec4& GetColor() const { return m_color; }
+
+	/// Sets the sky light color.
+	LEAN_INLINE void SetSkyColor(const beMath::fvec4 &color) { m_sky = color; m_bConstantsChanged = true; EmitPropertyChanged(); }
+	/// Gets the sky light color.
+	LEAN_INLINE const beMath::fvec4& GetSkyColor() const { return m_sky; }
 
 	/// Sets the attenuation.
 	LEAN_INLINE void SetAttenuation(float attenuation) { m_attenuation = attenuation; m_bConstantsChanged = true; EmitPropertyChanged(); }
@@ -169,26 +176,26 @@ public:
 };
 
 /// Sets the default material for directional lights.
-void SetDirectionalLightDefaultMaterial(RenderableMaterial *pMaterial);
+BE_SCENE_API void SetDirectionalLightDefaultMaterial(RenderableMaterial *pMaterial);
 /// Gets the default material for directional lights.
-lean::resource_ptr<RenderableMaterial, true> GetDirectionalLightDefaultMaterial();
+BE_SCENE_API lean::resource_ptr<RenderableMaterial, true> GetDirectionalLightDefaultMaterial();
 
 class ResourceManager;
 class EffectDrivenRenderer;
 
 /// Creates a directional light.
-lean::resource_ptr<DirectionalLightController, true> CreateDirectionalLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
+BE_SCENE_API lean::resource_ptr<DirectionalLightController, true> CreateDirectionalLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
 	ResourceManager &resources, EffectDrivenRenderer &renderer);
 
 /// Sets the default directional light effect file.
-void SetDirectionalLightDefaultEffect(const utf8_ntri &file);
+BE_SCENE_API void SetDirectionalLightDefaultEffect(const utf8_ntri &file);
 /// Gets the default directional light effect file.
-beCore::Exchange::utf8_string GetDirectionalLightDefaultEffect();
+BE_SCENE_API beCore::Exchange::utf8_string GetDirectionalLightDefaultEffect();
 
 /// Gets the default material for directional lights.
-RenderableMaterial* GetDirectionalLightDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer);
+BE_SCENE_API RenderableMaterial* GetDirectionalLightDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer);
 /// Creates a directional light using the default effect.
-lean::resource_ptr<DirectionalLightController, true> CreateDefaultDirectionalLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
+BE_SCENE_API lean::resource_ptr<DirectionalLightController, true> CreateDefaultDirectionalLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
 	ResourceManager &resources, EffectDrivenRenderer &renderer);
 
 } // namespace

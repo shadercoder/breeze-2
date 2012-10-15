@@ -142,30 +142,28 @@ MeshController::pass_vector CollectPasses(const MeshController::Subset *subsets,
 }
 
 /// Computes the bounds of the given list of subsets.
-beMath::fsphere3 ComputeBounds(const MeshController::Subset *subsets, uint4 subsetCount)
+beMath::faab3 ComputeBounds(const MeshController::Subset *subsets, uint4 subsetCount)
 {
-	beMath::fsphere3 bounds;
+	beMath::faab3 bounds(beMath::faab3::invalid);
 
-	if (subsetCount > 1)
+	for (uint4 subsetIdx = 0; subsetIdx < subsetCount; ++subsetIdx)
 	{
-		beMath::fvec3 boundsMin(FLT_MAX);
-		beMath::fvec3 boundsMax(-FLT_MAX);
+		const beMath::faab3 &subsetBounds = subsets[subsetIdx].mesh->GetBounds();
 
-		for (uint4 subsetIdx = 0; subsetIdx < subsetCount; ++subsetIdx)
-		{
-			const beMath::fsphere3 &subsetBounds = subsets[subsetIdx].mesh->GetBounds();
-
-			boundsMin = min_cw(boundsMin, subsetBounds.p() - subsetBounds.r());
-			boundsMin = max_cw(boundsMax, subsetBounds.p() + subsetBounds.r());
-		}
-
-		bounds.p() = (boundsMin + boundsMax) * 0.5f;
-		bounds.r() = length(boundsMax - boundsMin) * 0.5f;
+		bounds.min = min_cw(bounds.min, subsetBounds.min);
+		bounds.max = max_cw(bounds.max, subsetBounds.max);
 	}
-	else if (subsetCount == 1)
-		bounds = subsets->mesh->GetBounds();
 
 	return bounds;
+}
+
+/// Computes a sphere containing the given box.
+beMath::fsphere3 ComputeSphere(const beMath::faab3 &box)
+{
+	return beMath::fsphere3(
+			(box.min + box.max) * 0.5f,
+			length(box.max - box.min) * 0.5f
+		);
 }
 
 } // namespace
@@ -212,11 +210,17 @@ const Mesh* MeshController::GetMesh(uint4 subsetIdx) const
 namespace
 {
 
+/// Updates the controller.
+void UpdateLocally(MeshController::M &m)
+{
+	// Rebuild enclosing sphere
+	m.localBounds = ComputeSphere( ComputeBounds(&m.subsets.front(), m.subsets.size()) );
+}
+
 /// Updates the mesh controller when attached to a scenery.
 void UpdateInScenery(MeshController::M &m)
 {
-	// Rebuild enclosing sphere
-	m.localBounds = ComputeBounds(&m.subsets.front(), m.subsets.size());
+	UpdateLocally(m);
 
 	// Rebuild list of passes
 	// WARNING: Some external pass data pointers might dangle, ...
@@ -312,6 +316,12 @@ void MeshController::RemoveSubset(uint4 subsetIdx)
 
 		EmitPropertyChanged();
 	}
+}
+
+// Updates the controller from all subsets (e.g. when controller is not attached and thus not updated automatically).
+void MeshController::UpdateFromSubsets()
+{
+	UpdateLocally(m);
 }
 
 // Sets the material.
@@ -427,38 +437,39 @@ void MeshController::Detached(DynamicScenery *pScenery)
 
 // Renders the mesh
 void MeshController::Render(const RenderJob &job, const Perspective &perspective, 
-	const LightJob *lights, const LightJob *lightsEnd, const RenderContext &context)
+	const LightJob *lights, const LightJob *lightsEnd, const RenderContext &renderContext)
 {
 	const SharedData &renderableData = *static_cast<const SharedData*>(job.SharedData);
 	const PassData &passData = *static_cast<const PassData*>(job.PassData);
 
-	ID3D11DeviceContext *pContext = ToImpl(context.Context());
-	beGraphics::Any::StateManager &stateManager = ToImpl(context.StateManager());
+	const beGraphics::Any::DeviceContext &context = ToImpl(renderContext.Context());
+	beGraphics::Any::StateManager &stateManager = ToImpl(renderContext.StateManager());
+
+	beg::api::DeviceContext *contextDX = context;
 	const DX11::Mesh &mesh = *passData.pMesh;
 
-	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pContext->IASetInputLayout(passData.pInputLayout);
+	contextDX->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	contextDX->IASetInputLayout(passData.pInputLayout);
 
-	ID3D11Buffer *pVertexBuffer = mesh.GetVertexBuffer().GetBuffer();
 	UINT vertexStride =  mesh.GetVertexSize();
 	UINT vertexOffset = 0;
-	pContext->IASetVertexBuffers(0, 1, &mesh.GetVertexBuffer().GetBuffer(), &vertexStride, &vertexOffset);
-	pContext->IASetIndexBuffer(mesh.GetIndexBuffer(), mesh.GetIndexFormat(), 0);
+	contextDX->IASetVertexBuffers(0, 1, &mesh.GetVertexBuffer().GetBuffer(), &vertexStride, &vertexOffset);
+	contextDX->IASetIndexBuffer(mesh.GetIndexBuffer(), mesh.GetIndexFormat(), 0);
 
 	stateManager.Revert();
 
-	passData.pSetup->Apply(context.Context());
-	passData.pEffectDriver->Apply(&renderableData, perspective, context.StateManager(), context.Context());
+	passData.pSetup->Apply(context);
 
-	RenderableDriverState driverState;
+	AbstractRenderableDriverState driverState;
+	passData.pEffectDriver->Apply(&renderableData, perspective, driverState, stateManager, context);
 
 	for (uint4 i = 0;
-		passData.pEffectDriver->ApplyPass(passData.pPass, i, &renderableData, perspective, lights, lightsEnd, driverState, context.StateManager(), context.Context());
+		passData.pEffectDriver->ApplyPass(passData.pPass, i, &renderableData, perspective, lights, lightsEnd, driverState, stateManager, context);
 		)
 	{
 		stateManager.Reset();
 
-		pContext->DrawIndexed(mesh.GetIndexCount(), 0, 0);
+		passData.pEffectDriver->DrawIndexed(mesh.GetIndexCount(), 0, 0, driverState, stateManager, context);
 	}
 }
 
@@ -482,10 +493,12 @@ void MeshController::Flush()
 	m.pSharedData->Transform = mat_transform(pos, orientation[2] * scaling[2], orientation[1] * scaling[1], orientation[0] * scaling[0]);
 	m.pSharedData->TransformInv = mat_transform_inverse(pos, orientation[2] / scaling[2], orientation[1] / scaling[1], orientation[0] / scaling[0]);
 
-	m.pBounds->p() = m.localBounds.p() + pos;
+	float maxScaling = max( max(abs(scaling[0]), abs(scaling[1])), abs(scaling[2]) );
+
+	m.pBounds->p() = m.localBounds.p() * maxScaling + pos;
 	// MONITOR: Hide by ensuring that mesh is always culled
-	m.pBounds->r() = (m.bVisible)
-		? m.localBounds.r() * max( max(scaling[0], scaling[1]), scaling[2] )
+	m.pBounds->r() = (m.bVisible && m_pEntity->IsVisible())
+		? m.localBounds.r() * maxScaling
 		: -FLT_MAX * 0.5f;
 }
 

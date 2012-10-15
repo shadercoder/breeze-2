@@ -126,9 +126,6 @@
     <ClInclude Include="header\beGraphics\Any\beTextureTargetPool.h">
       <Filter>Header Files\Any</Filter>
     </ClInclude>
-    <ClInclude Include="header\beGraphics\beImplementations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="header\beGraphics\beStateManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -213,6 +210,15 @@
     <ClInclude Include="header\beGraphics\beSetupSerialization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\beGraphics\DX11\beQuery.h">
+      <Filter>Header Files\DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beGraphics\Any\beQuery.h">
+      <Filter>Header Files\Any</Filter>
+    </ClInclude>
+    <ClInclude Include="source\DX\dxerr.h">
+      <Filter>Source Files\DX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\dllmain.cpp">
@@ -277,6 +283,15 @@
     </ClCompile>
     <ClCompile Include="source\beSetup.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\DX11\beQuery.cpp">
+      <Filter>Source Files\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="source\DX11\beDeviceContext.cpp">
+      <Filter>Source Files\DX11</Filter>
+    </ClCompile>
+    <ClCompile Include="source\DX\dxerr.cpp">
+      <Filter>Source Files\DX</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

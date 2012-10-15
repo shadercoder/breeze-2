@@ -7,7 +7,6 @@
 
 #include "beScene.h"
 #include "beEffectBinder.h"
-#include "beAbstractRenderableEffectDriver.h"
 #include <beGraphics/Any/beEffect.h>
 #include <beGraphics/Any/beEffectsAPI.h>
 #include <lean/smart/resource_ptr.h>
@@ -19,6 +18,16 @@ namespace beScene
 // Prototypes
 struct LightJob;
 class RenderingPipeline;
+
+/// Light effect binder state.
+struct LightBinderState
+{
+	uint4 LightOffset;	///< Current light offset in additive lighting.
+
+	/// Constructor.
+	LightBinderState()
+		: LightOffset(0) { }
+};
 
 /// Light effect binder.
 class LightEffectBinder : public EffectBinder

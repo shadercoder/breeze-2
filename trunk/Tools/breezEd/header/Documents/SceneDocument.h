@@ -13,6 +13,9 @@
 #include <beScene/beRenderContext.h>
 #include <beScene/beSceneController.h>
 
+#include <bePhysics/beScene.h>
+#include <bePhysics/beSceneController.h>
+
 #include <lean/smart/resource_ptr.h>
 
 #include <QtCore/QVector>
@@ -43,6 +46,8 @@ private:
 	lean::resource_ptr<beScene::EffectDrivenRenderer> m_pRenderer;
 	lean::resource_ptr<beScene::RenderContext> m_pRenderContext;
 	lean::resource_ptr<beScene::SceneController> m_pScene;
+
+	lean::resource_ptr<bePhysics::SceneController> m_pPhysics;
 
 	QObject *m_pPrimaryView;
 
@@ -122,6 +127,8 @@ public Q_SLOTS:
 
 	/// Clears the selection.
 	void clearSelection();
+	/// Select everything.
+	void selectAll();
 	/// Sets the selection.
 	void setSelection(beEntitySystem::Entity *pEntity);
 	/// Sets the selection.

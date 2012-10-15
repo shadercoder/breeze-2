@@ -13,6 +13,7 @@
 #include <beGraphics/Any/beSetup.h>
 #include <beGraphics/Any/beDevice.h>
 #include <beGraphics/Any/beDeviceContext.h>
+#include <beGraphics/Any/beStateManager.h>
 #include <beGraphics/DX/beError.h>
 
 namespace beScene
@@ -42,8 +43,8 @@ QuadProcessor::QuadProcessor(const beGraphics::Device *pDevice, EffectBinderCach
 	m_pQuad(
 		GenerateGridMesh(
 			beMath::vec(-1.0f, -1.0f, 0.0f),
-			beMath::vec(2.0f, 0.0f, 0.0f),
-			beMath::vec(0.0f, 2.0f, 0.0f),
+			beMath::vec(4.0f, 0.0f, 0.0f),
+			beMath::vec(0.0f, 4.0f, 0.0f),
 			0.0f, 0.0f, 0.0f, 0.0f,
 			1, 1,
 			0, *pDevice) )
@@ -74,6 +75,9 @@ void QuadProcessor::Render(uint4 layerIdx, uint4 stageID, uint4 queueID, const P
 		{
 			if (!bProcessorReady)
 			{
+				ToImpl(context.StateManager()).Revert();
+				ToImpl(context.StateManager()).Reset();
+
 				pContextDX->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 				UINT vertexStride = mesh.GetVertexSize();
@@ -159,16 +163,20 @@ void QuadProcessor::SetMaterial(Material *pMaterial)
 				uint4 passSignatureSize = 0;
 				const char *pPassSignature = pMaterial->GetInputSignature(passSignatureSize, layerID);
 
-				lean::com_ptr<ID3D11InputLayout> pInputLayout;
-				BE_THROW_DX_ERROR_MSG(
-					pDevice->CreateInputLayout(
-						mesh.GetVertexElementDescs(),
-						mesh.GetVertexElementDescCount(),
-						pPassSignature, passSignatureSize,
-						pInputLayout.rebind()),
-					"ID3D11Device::CreateInputLayout()");
+				// Ignore compute-only techniques
+				if (pPassSignature)
+				{
+					lean::com_ptr<ID3D11InputLayout> pInputLayout;
+					BE_THROW_DX_ERROR_MSG(
+						pDevice->CreateInputLayout(
+							mesh.GetVertexElementDescs(),
+							mesh.GetVertexElementDescCount(),
+							pPassSignature, passSignatureSize,
+							pInputLayout.rebind()),
+						"ID3D11Device::CreateInputLayout()");
 
-				m_layers.push_back( Layer(pInputLayout, pEffectBinder, ToImpl(pMaterial->GetTechniqueSetup(layerID))) );
+					m_layers.push_back( Layer(pInputLayout, pEffectBinder, ToImpl(pMaterial->GetTechniqueSetup(layerID))) );
+				}
 			}
 		}
 

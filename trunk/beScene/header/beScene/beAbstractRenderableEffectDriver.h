@@ -21,22 +21,11 @@ class Perspective;
 class Renderable;
 struct LightJob;
 
-/// Light effect binder state.
-struct LightBinderState
-{
-	uint4 LightOffset;	///< Current light offset in additive lighting.
-
-	/// Constructor.
-	LightBinderState()
-		: LightOffset(0) { }
-};
-
 /// Renderable effect driver state.
-struct RenderableDriverState
+struct AbstractRenderableDriverState
 {
-	LightBinderState Light;	///< Light binder state.
+	char Data[4 * sizeof(uint4)];
 };
-
 
 /// Renderable effect driver flags enumeration.
 namespace RenderableEffectDriverFlags
@@ -57,13 +46,20 @@ protected:
 public:
 	/// Applies the given renderable & perspective data to the effect bound by this effect driver.
 	virtual bool Apply(const RenderableEffectData *pRenderableData, const Perspective &perspective,
-		beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
 
 	/// Applies the given pass to the effect bound by this effect driver.
 	virtual bool ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
 		const RenderableEffectData *pRenderableData, const Perspective &perspective,
 		const LightJob *lights, const LightJob *lightsEnd,
-		RenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
+
+	/// Draws the given number of primitives.
+	virtual void DrawIndexed(uint4 indexCount, uint4 startIndex, int4 baseVertex,
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
+	/// Draws the given number of primitives and instances.
+	virtual void DrawIndexedInstanced(uint4 indexCount, uint4 instanceCount, uint4 startIndex, uint4 startInstance, int4 baseVertex,
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
 };
 
 } // namespace

@@ -13,6 +13,8 @@
 #include <lean/smart/resource_ptr.h>
 #include <lean/containers/dynamic_array.h>
 
+#include "beMath/beSphereDef.h"
+
 namespace beScene
 {
 
@@ -92,6 +94,8 @@ public:
 	BE_SCENE_API void RemoveMeshWithMaterial(const Mesh *pMesh, const RenderableMaterial *pMaterial = nullptr);
 	/// Removes the n-th subset.
 	BE_SCENE_API void RemoveSubset(uint4 subsetIdx);
+	/// Updates the controller from all subsets (e.g. when controller is not attached and thus not updated automatically).
+	BE_SCENE_API void UpdateFromSubsets();
 
 	/// Sets the material.
 	BE_SCENE_API void SetMaterial(const RenderableMaterial *pMaterial);
@@ -154,11 +158,11 @@ class ResourceManager;
 class EffectDrivenRenderer;
 
 /// Sets the default mesh effect file.
-void SetMeshDefaultEffect(const utf8_ntri &file);
+BE_SCENE_API void SetMeshDefaultEffect(const utf8_ntri &file);
 /// Gets the default mesh effect file.
-beCore::Exchange::utf8_string GetMeshDefaultEffect();
+BE_SCENE_API beCore::Exchange::utf8_string GetMeshDefaultEffect();
 /// Gets the default material for meshes.
-RenderableMaterial* GetMeshDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer);
+BE_SCENE_API RenderableMaterial* GetMeshDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer);
 
 
 } // namespace
