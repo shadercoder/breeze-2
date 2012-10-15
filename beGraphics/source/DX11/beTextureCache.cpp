@@ -40,14 +40,16 @@ struct TextureCache::M
 
 		TextureCache *pCache;
 		const utf8_string *file;
+		bool bSRGB;
 
 		beCore::Dependency<beGraphics::Texture*> *dependency;
 
 		/// Constructor.
-		ObservedTexture(lean::resource_ptr<Texture> pTexture, TextureCache *pCache)
+		ObservedTexture(lean::resource_ptr<Texture> pTexture, bool bSRGB, TextureCache *pCache)
 			: pTexture(pTexture.transfer()),
 			pCache(pCache),
 			file(),
+			bSRGB(bSRGB),
 			dependency() { }
 
 		/// Method called whenever an observed texture has changed.
@@ -75,10 +77,10 @@ struct TextureCache::M
 };
 
 // Loads a texture from the given file.
-lean::com_ptr<ID3D11Resource, true> LoadTexture(TextureCache::M &m, const lean::utf8_ntri &file)
+lean::com_ptr<ID3D11Resource, true> LoadTexture(TextureCache::M &m, const lean::utf8_ntri &file, bool bSRGB)
 {
 	lean::com_ptr<beCore::Content> content = m.provider->GetContent(file);
-	return DX11::LoadTexture(content->Bytes(), static_cast<uint4>(content->Size()), nullptr, m.pDevice);
+	return DX11::LoadTexture(m.pDevice, content->Bytes(), static_cast<uint4>(content->Size()), nullptr, bSRGB);
 }
 
 // Constructor.
@@ -93,7 +95,7 @@ TextureCache::~TextureCache()
 }
 
 // Gets a texture from the given file.
-beGraphics::Texture* TextureCache::GetTexture(const lean::utf8_ntri &unresolvedFile)
+beGraphics::Texture* TextureCache::GetTexture(const lean::utf8_ntri &unresolvedFile, bool bSRGB)
 {
 	// Get absolute path
 	beCore::Exchange::utf8_string excPath = m->resolver->Resolve(unresolvedFile, true);
@@ -108,7 +110,7 @@ beGraphics::Texture* TextureCache::GetTexture(const lean::utf8_ntri &unresolvedF
 		{
 			LEAN_LOG("Attempting to load texture \"" << path << "\"");
 
-			lean::resource_ptr<Texture> pTexture = ToImpl( CreateTexture( LoadTexture(*m, path).get(), this ).get() );
+			lean::resource_ptr<Texture> pTexture = ToImpl( CreateTexture( LoadTexture(*m, path, bSRGB).get(), this ).get() );
 
 			LEAN_LOG("Texture \"" << unresolvedFile.c_str() << "\" created successfully");
 
@@ -118,6 +120,7 @@ beGraphics::Texture* TextureCache::GetTexture(const lean::utf8_ntri &unresolvedF
 						path,
 						M::ObservedTexture(
 							pTexture.transfer(),
+							bSRGB,
 							this
 						)
 					)
@@ -230,7 +233,7 @@ beCore::Dependency<beGraphics::Texture*>* TextureCache::GetDependencies(const be
 void TextureCache::M::ObservedTexture::FileChanged(const lean::utf8_ntri &file, lean::uint8 revision)
 {
 	// MONITOR: Non-atomic asynchronous assignment!
-	this->pTexture = ToImpl( CreateTexture( LoadTexture(*this->pCache->m, *this->file).get(), this->pCache ).get() );
+	this->pTexture = ToImpl( CreateTexture( LoadTexture(*this->pCache->m, *this->file, this->bSRGB).get(), this->pCache ).get() );
 	this->pTextureView = nullptr;
 	
 	// Notify dependent listeners

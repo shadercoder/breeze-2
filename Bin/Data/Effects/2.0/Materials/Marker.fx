@@ -38,7 +38,7 @@ Pixel VSMain(Vertex v)
 	
 	o.Position = mul(v.Position, WorldViewProj);
 	o.Position.z = 0.0f;
-	o.NormalDepth.xyz = mul((float3x3) WorldInverse, v.Normal);
+	o.NormalDepth.xyz = normalize( mul((float3x3) WorldInverse, v.Normal) );
 	o.NormalDepth.w = o.Position.w;
 	
 	return o;

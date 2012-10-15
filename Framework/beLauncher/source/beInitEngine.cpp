@@ -11,16 +11,16 @@
 #include <beCore/beFileSystem.h>
 
 // Default-initializes the engine.
-void beLauncher::InitializeEngine()
+void beLauncher::InitializeEngine(const lean::utf8_t *pLog, const lean::utf8_t *pFilesystem)
 {
-	InitializeLog();
-	InitializeFilesystem();
+	InitializeLog(pLog);
+	InitializeFilesystem(pFilesystem);
 
 	LEAN_LOG_BREAK();
 }
 
 // Default-initializes the path environment
-void beLauncher::InitializeLog(const lean::utf8_t *path)
+void beLauncher::InitializeLog(const lean::utf8_t *pPath)
 {
 	static const char *LogFileName = "Logs/breeze.log";
 
@@ -46,11 +46,11 @@ void beLauncher::InitializeLog(const lean::utf8_t *path)
 			lean::info_log().remove_target(&logFile);
 			lean::error_log().remove_target(&logFile);
 		}
-	} breezeLog( (path) ? path : LogFileName );
+	} breezeLog( (pPath) ? pPath : LogFileName );
 }
 
 // Default-initializes the path environment
-void beLauncher::InitializeFilesystem(const lean::utf8_t *path)
+void beLauncher::InitializeFilesystem(const lean::utf8_t *pPath)
 {
 	static const char *ConfigFileName = "filesystem.xml";
 
@@ -83,5 +83,5 @@ void beLauncher::InitializeFilesystem(const lean::utf8_t *path)
 				LEAN_LOG("Filesystem configuration could not be written to disk: " << path);
 			}
 		}
-	} breezeFS( (path) ? path : ConfigFileName );
+	} breezeFS( (pPath) ? pPath : ConfigFileName );
 }

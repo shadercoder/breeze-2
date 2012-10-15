@@ -4,6 +4,7 @@
 
 #include "beGraphicsInternal/stdafx.h"
 #include "beGraphics/DX/beError.h"
+#include "DXErr.h"
 
 namespace beGraphics
 {
@@ -14,7 +15,7 @@ namespace DX
 // Gets an error message describing the given DirectX error.
 const utf16_t* GetDXError(HRESULT error)
 {
-	return ::DXGetErrorDescriptionW(error);
+	return ::DXGetErrorStringW(error);
 }
 
 } // namespace

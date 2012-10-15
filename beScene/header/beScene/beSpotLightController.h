@@ -175,26 +175,26 @@ public:
 };
 
 /// Sets the default material for spot lights.
-void SetSpotLightDefaultMaterial(RenderableMaterial *pMaterial);
+BE_SCENE_API void SetSpotLightDefaultMaterial(RenderableMaterial *pMaterial);
 /// Gets the default material for spot lights.
-lean::resource_ptr<RenderableMaterial, true> GetSpotLightDefaultMaterial();
+BE_SCENE_API lean::resource_ptr<RenderableMaterial, true> GetSpotLightDefaultMaterial();
 
 class ResourceManager;
 class EffectDrivenRenderer;
 
 /// Creates a spot light.
-lean::resource_ptr<SpotLightController, true> CreateSpotLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
+BE_SCENE_API lean::resource_ptr<SpotLightController, true> CreateSpotLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
 	ResourceManager &resources, EffectDrivenRenderer &renderer);
 
 /// Sets the default spot light effect file.
-void SetSpotLightDefaultEffect(const utf8_ntri &file);
+BE_SCENE_API void SetSpotLightDefaultEffect(const utf8_ntri &file);
 /// Gets the default spot light effect file.
-beCore::Exchange::utf8_string GetSpotLightDefaultEffect();
+BE_SCENE_API beCore::Exchange::utf8_string GetSpotLightDefaultEffect();
 
 /// Gets the default material for spot lights.
-RenderableMaterial* GetSpotLightDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer);
+BE_SCENE_API RenderableMaterial* GetSpotLightDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer);
 /// Creates a spot light using the default effect.
-lean::resource_ptr<SpotLightController, true> CreateDefaultSpotLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
+BE_SCENE_API lean::resource_ptr<SpotLightController, true> CreateDefaultSpotLightController(beEntitySystem::Entity *pEntity, SceneController *pScene, DynamicScenery *pScenery,
 	ResourceManager &resources, EffectDrivenRenderer &renderer);
 
 } // namespace

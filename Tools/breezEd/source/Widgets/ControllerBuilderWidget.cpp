@@ -4,9 +4,14 @@
 #include <beEntitySystem/beControllerSerializer.h>
 #include <beEntitySystem/beControllerSerialization.h>
 
-#include "Plugins/WidgetFactoryManager.h"
-#include "Widgets/CreationParameterWidgetFactory.h"
+#include <beCore/beComponentTypes.h>
+#include <beCore/beComponentReflector.h>
 
+#include "Plugins/FactoryManager.h"
+#include "Widgets/ComponentPickerFactory.h"
+#include "Widgets/ComponentPicker.h"
+
+#include "Utility/Strings.h"
 #include "Utility/Checked.h"
 
 namespace
@@ -33,38 +38,50 @@ void randomizeBackground(QWidget &widget)
 }
 
 /// Adds creation parameters to the given controller builder widget.
-void addCreationParameters(Ui::ControllerBuilderWidget &widget, const beEntitySystem::ControllerSerializer *pSerializer, Editor *pEditor, QList<CreationParameterWidget*> &parameters)
+void addCreationParameters(Ui::ControllerBuilderWidget &widget, const beEntitySystem::ControllerSerializer *serializer, Editor *editor)
 {
-	const beEntitySystem::ControllerSerializer::SerializationParameters &creationParameters = pSerializer->GetCreationParameters();
+	const beEntitySystem::ControllerSerializer::SerializationParameters &creationParameters = serializer->GetCreationParameters();
 
-	if (!creationParameters.empty())
+	for (const beEntitySystem::CreationParameter *it = creationParameters.begin(); it != creationParameters.end(); ++it)
 	{
-		const WidgetFactoryManager<CreationParameterWidgetFactory> &factories = getCreationParameterWidgetFactory();
+		QString parameterName = toQt(it->Name);
+		QString parameterType = toQt(it->Type);
 
-		for (const beEntitySystem::CreationParameter *it = creationParameters.begin(); it != creationParameters.end(); ++it)
+		QGroupBox *parameterGroup = new QGroupBox(parameterName, widget.centerWidget);
+		QVBoxLayout *layout = new QVBoxLayout(parameterGroup);
+		layout->setMargin(6);
+
+		if (it->Optional)
 		{
-			QString parameterName = QString::fromUtf8(it->Name.c_str());
-			QString parameterType = QString::fromUtf8(it->Type.c_str());
-
-			const CreationParameterWidgetFactory *pFactory = factories.getFactory(parameterType);
-			CreationParameterWidget *pParameter = (pFactory) ? pFactory->createWidget(parameterName, pEditor, widget.centerWidget) : nullptr;
-
-			QWidget *pParameterWidget;
-
-			if (pParameter)
-			{
-				parameters.push_back(pParameter);
-				pParameterWidget = pParameter->widget();
-			}
-			else
-				pParameterWidget = new QLabel(
-					ControllerBuilderWidget::tr("Unknown type '%1'").arg(parameterType),
-					widget.centerWidget );
-
-			widget.centerLayout->addRow(parameterName + ":", pParameterWidget);
+			parameterGroup->setCheckable(true);
+			parameterGroup->setChecked(true);
 		}
+
+		const beCore::ComponentReflector *pReflector = beCore::GetComponentTypes().GetReflector(it->Type);
+
+		QWidget *parameterWidget;
+
+		if (pReflector)
+		{
+			const ComponentPickerFactory &componentPickerFactory = *LEAN_ASSERT_NOT_NULL(
+					getComponentPickerFactories().getFactory(parameterType)
+				);
+
+			parameterWidget = componentPickerFactory.createComponentPicker(pReflector, nullptr, editor, parameterGroup);
+		}
+		else
+			parameterWidget = new QLabel(
+					ControllerBuilderWidget::tr("Unknown type '%1'").arg(parameterType),
+					parameterGroup
+				);
+
+		layout->addWidget(parameterWidget);
+
+		parameterGroup->setLayout(layout);
+		widget.centerLayout->addWidget(parameterGroup);
 	}
-	else
+
+	if (creationParameters.empty())
 		widget.centerWidget->hide();
 }
 
@@ -82,7 +99,7 @@ ControllerBuilderWidget::ControllerBuilderWidget(const beEntitySystem::Controlle
 
 	randomizeBackground(*this);
 
-	addCreationParameters(ui, m_pSerializer, pEditor, m_parameters);
+	addCreationParameters(ui, m_pSerializer, pEditor);
 
 	checkedConnect(ui.upButton, SIGNAL(clicked()), this, SIGNAL(moveUp()));
 	checkedConnect(ui.downButton, SIGNAL(clicked()), this, SIGNAL(moveDown()));
@@ -96,6 +113,21 @@ ControllerBuilderWidget::~ControllerBuilderWidget()
 // Sets the creation parameter in the given set.
 void ControllerBuilderWidget::setParameters(beCore::Parameters &parameters, SceneDocument &document) const
 {
-	Q_FOREACH (CreationParameterWidget *pParameter, m_parameters)
-		pParameter->setParameters(parameters, document);
+	int parameterCount = ui.centerLayout->count();
+	
+	for (int idx = 0; idx < parameterCount; ++idx)
+	{
+		QGroupBox *pParameterGroup = qobject_cast<QGroupBox*>( ui.centerLayout->itemAt(idx)->widget() );
+		
+		if (pParameterGroup && (!pParameterGroup->isCheckable() || pParameterGroup->isChecked()))
+		{
+			lean::utf8_string parameterName = toUtf8(pParameterGroup->title());
+			QWidget &parameterWidget = *LEAN_ASSERT_NOT_NULL( pParameterGroup->layout()->itemAt(0)->widget() );
+
+			ComponentPicker *pComponentPicker = qobject_cast<ComponentPicker*>(&parameterWidget);
+
+			if (pComponentPicker)
+				parameters.SetAnyValue( parameters.Add(parameterName), &*pComponentPicker->acquireComponent(document) );
+		}
+	}
 }

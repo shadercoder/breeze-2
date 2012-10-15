@@ -11,8 +11,11 @@
 #include "Documents/SceneDocument.h"
 
 #include <beCore/beComponentTypes.h>
-#include "Widgets/ComponentSelectorWidget.h"
 #include "Commands/SetComponent.h"
+
+#include "Widgets/ComponentPicker.h"
+#include "Widgets/ComponentPickerFactory.h"
+#include "Plugins/FactoryManager.h"
 
 #include "Widgets/ColorPicker.h"
 
@@ -669,10 +672,18 @@ void GenericPropertyBinder::startEditing(QWidget *parent, const QStyleOptionView
 
 			if (pReflector)
 			{
+				const ComponentPickerFactory &componentPickerFactory = *LEAN_ASSERT_NOT_NULL(
+						getComponentPickerFactories().getFactory( toQt(pReflector->GetType()) )
+					);
+
 				// Create component editor
 				QFrame *editor = createOverlayEditor(parent);
-				ComponentSelectorWidget *componentSelector = new ComponentSelectorWidget(pReflector, m_pComponent->GetComponent(componentIdx), m_pDocument->editor(), editor);
-				setEditorWidget(editor, componentSelector);
+				ComponentPicker *componentPicker = componentPickerFactory.createComponentPicker(
+						pReflector, m_pComponent->GetComponent(componentIdx),
+						m_pDocument->editor(),
+						editor
+					);
+				setEditorWidget(editor, componentPicker);
 
 				pEditor = editor;
 			}
@@ -720,9 +731,9 @@ void GenericPropertyBinder::updateData(QWidget *editor, QAbstractItemModel *mode
 		{
 			uint4 componentIdx = static_cast<uint4>(row - m_componentStartIdx);
 
-			ComponentSelectorWidget *pComponentSelector = editor->findChild<ComponentSelectorWidget*>();
+			ComponentPicker *pComponentPicker = editor->findChild<ComponentPicker*>();
 
-			if (pComponentSelector)
+			if (pComponentPicker)
 			{
 				try
 				{
@@ -730,7 +741,7 @@ void GenericPropertyBinder::updateData(QWidget *editor, QAbstractItemModel *mode
 					lean::scoped_ptr<SetComponentCommand> command(
 							new SetComponentCommand(
 								m_pComponent, componentIdx,
-								pComponentSelector->acquireComponent(*m_pDocument)
+								pComponentPicker->acquireComponent(*m_pDocument)
 							)
 						);
 

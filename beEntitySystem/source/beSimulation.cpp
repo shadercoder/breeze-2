@@ -10,7 +10,8 @@ namespace beEntitySystem
 
 // Constructor.
 Simulation::Simulation(const utf8_ntri &name)
-	: m_name(name.to<utf8_string>())
+	: m_name(name.to<utf8_string>()),
+	m_bPaused(false)
 {
 }
 

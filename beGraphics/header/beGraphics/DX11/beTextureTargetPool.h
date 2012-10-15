@@ -58,14 +58,14 @@ LEAN_INLINE TextureTargetDesc ToAPI(const beGraphics::TextureTargetDesc& desc)
 }
 
 /// Converts the description into a breeze description.
-LEAN_INLINE beGraphics::TextureTargetDesc ToBE(const TextureTargetDesc& desc)
+LEAN_INLINE beGraphics::TextureTargetDesc FromAPI(const TextureTargetDesc& desc)
 {
 	return beGraphics::TextureTargetDesc(
 		desc.Width,
 		desc.Height,
 		desc.MipLevels,
-		ToBE(desc.Format),
-		ToBE(desc.Samples),
+		FromAPI(desc.Format),
+		FromAPI(desc.Samples),
 		desc.Count);
 }
 
@@ -76,6 +76,10 @@ using DX11::ToAPI;
 /// Texture target.
 class TextureTarget
 {
+public:
+	typedef lean::com_ptr<ID3D11ShaderResourceView> texture_ptr;
+	typedef lean::scoped_ptr<texture_ptr[]> scoped_texture_array_ptr;
+
 protected:
 	DX11::TextureTargetDesc m_desc;
 
@@ -83,12 +87,14 @@ protected:
 
 	lean::com_ptr<ID3D11ShaderResourceView> m_pTexture;
 
+	scoped_texture_array_ptr m_pTextures;
+
 	mutable int m_references;
 	mutable int m_uses;
 
 public:
 	/// Constructor. Texture is OPTIONAL.
-	BE_GRAPHICS_API TextureTarget(const DX11::TextureTargetDesc &desc, ID3D11Resource *pResource, ID3D11ShaderResourceView *pTexture);
+	BE_GRAPHICS_API TextureTarget(const DX11::TextureTargetDesc &desc, ID3D11Resource *pResource, ID3D11ShaderResourceView *pTexture, texture_ptr *pTextures = nullptr);
 	/// Destructor.
 	BE_GRAPHICS_API ~TextureTarget();
 
@@ -98,6 +104,9 @@ public:
 	LEAN_INLINE ID3D11ShaderResourceView* GetTexture() const { return m_pTexture; }
 	/// Gets the description.
 	LEAN_INLINE const DX11::TextureTargetDesc& GetDesc() const { return m_desc; }
+
+	/// Gets the n-th texture.
+	LEAN_INLINE ID3D11ShaderResourceView* GetTexture(uint4 n) const { return (m_pTextures) ? m_pTextures[n] : m_pTexture; }
 
 	/// Resets the texture's use count.
 	LEAN_INLINE void ResetUses() { m_uses = 0; }
@@ -122,13 +131,13 @@ public:
 private:
 	lean::com_ptr<ID3D11RenderTargetView> m_pTarget;
 
-	typedef lean::com_ptr<ID3D11RenderTargetView> target_ptr;
 	scoped_target_array_ptr m_pTargets;
 
 public:
 	/// Constructor. Texture is OPTIONAL.
 	BE_GRAPHICS_API ColorTextureTarget(const DX11::TextureTargetDesc &desc, ID3D11Resource *pResource, 
-		ID3D11ShaderResourceView *pTexture, ID3D11RenderTargetView *pTarget, target_ptr *pTargets = nullptr);
+		ID3D11ShaderResourceView *pTexture, ID3D11RenderTargetView *pTarget,
+		target_ptr *pTargets = nullptr, texture_ptr *pTextures = nullptr);
 	/// Destructor.
 	BE_GRAPHICS_API ~ColorTextureTarget();
 

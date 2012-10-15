@@ -29,16 +29,22 @@ const beCore::ReflectionProperties EntityProperties = beCore::ReflectionProperti
 	<< beCore::MakeReflectionProperty<float[3]>("scaling", beCore::Widget::Raw)
 		.set_setter( BE_CORE_PROPERTY_SETTER_UNION(&Entity::SetScaling, float) )
 		.set_getter( BE_CORE_PROPERTY_GETTER_UNION(&Entity::GetScaling, float) )
+	<< beCore::MakeReflectionProperty<bool>("visible", beCore::Widget::Raw)
+		.set_setter( BE_CORE_PROPERTY_SETTER(&Entity::SetVisible) )
+		.set_getter( BE_CORE_PROPERTY_GETTER(&Entity::IsVisible) )
 	<< beCore::MakeReflectionProperty<uint8>("id", beCore::Widget::Raw, false)
 		.set_getter( BE_CORE_PROPERTY_GETTER(&Entity::GetPersistentID) );
 
 // Constructor.
 Entity::Entity(const utf8_ntri &name)
 	: m_name(name.to<utf8_string>()),
+	m_id(InvalidID),
+	m_persistentID(beCore::PersistentIDs::InvalidID),
+
 	m_orientation(beMath::fmat3::identity),
 	m_scaling(1.0f),
-	m_id(InvalidID),
-	m_persistentID(beCore::PersistentIDs::InvalidID)
+	
+	m_bVisible(true)
 {
 }
 

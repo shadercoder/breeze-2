@@ -99,9 +99,9 @@ using beCore::ToImpl;
 class SwapChain;
 
 /// Loads a texture from the given file.
-BE_GRAPHICS_API lean::resource_ptr<Texture, true> LoadTexture(const lean::utf8_ntri &fileName, const TextureDesc *pDesc, const Device &device, TextureCache *pCache = nullptr);
+BE_GRAPHICS_API lean::resource_ptr<Texture, true> LoadTexture(const Device &device, const lean::utf8_ntri &fileName, const TextureDesc *pDesc = nullptr, bool bSRGB = false, TextureCache *pCache = nullptr);
 /// Loads a texture from the given memory.
-BE_GRAPHICS_API lean::resource_ptr<Texture, true> LoadTexture(const char *data, uint4 dataLength, const TextureDesc *pDesc, const Device &device, TextureCache *pCache = nullptr);
+BE_GRAPHICS_API lean::resource_ptr<Texture, true> LoadTexture(const Device &device, const char *data, uint4 dataLength, const TextureDesc *pDesc = nullptr, bool bSRGB = false, TextureCache *pCache = nullptr);
 /// Creates a texture view from the given texture.
 BE_GRAPHICS_API lean::resource_ptr<TextureView, true> ViewTexture(const Texture &texture, const Device &device);
 

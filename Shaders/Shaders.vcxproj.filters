@@ -1,41 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
+    <Filter Include="2.0">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="2.0\Processing">
+      <UniqueIdentifier>{921745ec-86b7-47fe-a752-07ec0e7aebfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="2.0\Lights">
+      <UniqueIdentifier>{b230fe7f-00ed-40f4-a03e-9a2dd43de028}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="2.0\Materials">
+      <UniqueIdentifier>{f07401e8-91d5-471d-aeb3-178cf66dbda3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="2.0\Atmospherics">
+      <UniqueIdentifier>{46030e21-04c7-49e7-9698-ba3bc09f6dbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="2.0\Prototypes">
+      <UniqueIdentifier>{fd9d7543-d617-4667-8b26-996c5ca7af79}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Sample1 Archive">
-      <UniqueIdentifier>{7f941c08-5e48-4c3e-84da-17b2bfdd0660}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Sample1 Archive\Material">
-      <UniqueIdentifier>{7bc0ce83-1ed8-44ea-a2d3-deacb1cfbbf9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Sample1 Archive\Processing">
-      <UniqueIdentifier>{972e6b4d-6a3e-4a5b-afa2-ff05db4ef9b8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Sample1 Archive\Pipeline">
-      <UniqueIdentifier>{955ec281-4c31-4af1-a600-ec1d2ed858c5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Engine">
       <UniqueIdentifier>{b6031ad2-3572-4f47-b940-71df2d52ffa7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Processing">
-      <UniqueIdentifier>{921745ec-86b7-47fe-a752-07ec0e7aebfa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Lights">
-      <UniqueIdentifier>{b230fe7f-00ed-40f4-a03e-9a2dd43de028}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Materials">
-      <UniqueIdentifier>{f07401e8-91d5-471d-aeb3-178cf66dbda3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Pipelines">
       <UniqueIdentifier>{b8f53428-79d9-475b-a094-8c38cfa5628e}</UniqueIdentifier>
@@ -43,86 +33,11 @@
     <Filter Include="Header Files\Pipelines\LPR">
       <UniqueIdentifier>{4a1cf189-88e5-4d74-8749-e4594619e677}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Atmospherics">
-      <UniqueIdentifier>{46030e21-04c7-49e7-9698-ba3bc09f6dbe}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Utility">
       <UniqueIdentifier>{c5cdf7cc-6012-40b3-bc28-6212a8244f2a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Materials\Path">
-      <UniqueIdentifier>{412ae474-6358-473f-a0bc-69e6ec85f9e3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Pipelines\Path">
-      <UniqueIdentifier>{99e2e279-7d92-4f87-af22-9db8a9e57139}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Prototypes">
-      <UniqueIdentifier>{fd9d7543-d617-4667-8b26-996c5ca7af79}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\GI">
-      <UniqueIdentifier>{4e6dc0f2-8e1f-4476-918b-5beab7233b9f}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Bin\Data\Effects\Source\DepthPrePipeline.fx">
-      <Filter>Sample1 Archive\Pipeline</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Blur.fx">
-      <Filter>Sample1 Archive\Processing</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Test.fx">
-      <Filter>Sample1 Archive\Material</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Simple.fx">
-      <Filter>Sample1 Archive\Material</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\SimpleTonemap.fx">
-      <Filter>Sample1 Archive\Processing</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Sky.fx">
-      <Filter>Sample1 Archive\Material</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\SkyColor.fx">
-      <Filter>Sample1 Archive\Material</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\SpotLightSS.fx">
-      <Filter>Sample1 Archive\Material</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\LPPRPipeline.fx">
-      <Filter>Sample1 Archive\Pipeline</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\PointLightSS.fx">
-      <Filter>Sample1 Archive\Material</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\DPRScene.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\SpotLight.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\LPPRScene.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Perspective.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Pipe.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Pipeline.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\PointLight.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Renderable.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Scene.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\Source\Shadow.fx">
-      <Filter>Sample1 Archive</Filter>
-    </None>
     <None Include="..\Bin\Data\Effects\2.0\Engine\Pipeline.fx">
       <Filter>Header Files\Engine</Filter>
     </None>
@@ -157,115 +72,94 @@
       <Filter>Header Files\Pipelines</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Lights\SpotLight.fx">
-      <Filter>Source Files\Lights</Filter>
+      <Filter>2.0\Lights</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Lights\PointLight.fx">
-      <Filter>Source Files\Lights</Filter>
+      <Filter>2.0\Lights</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Processing\SimpleTonemap.fx">
-      <Filter>Source Files\Processing</Filter>
+      <Filter>2.0\Processing</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\Simple.fx">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>2.0\Materials</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Atmospherics\Sky.fx">
-      <Filter>Source Files\Atmospherics</Filter>
+      <Filter>2.0\Atmospherics</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Atmospherics\SkyColor.fx">
-      <Filter>Source Files\Atmospherics</Filter>
+      <Filter>2.0\Atmospherics</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Lights\DirectionalLight.fx">
-      <Filter>Source Files\Lights</Filter>
+      <Filter>2.0\Lights</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Pipelines\LPR\Geometry.fx">
       <Filter>Header Files\Pipelines\LPR</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\Textured.fx">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>2.0\Materials</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\Grass.fx">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>2.0\Materials</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\StretchTextured.fx">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>2.0\Materials</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\Marker.fx">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>2.0\Materials</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Processing\SSAO.fx">
-      <Filter>Source Files\Processing</Filter>
+      <Filter>2.0\Processing</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Processing\SSGI.fx">
-      <Filter>Source Files\Processing</Filter>
+      <Filter>2.0\Processing</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Processing\MRGeometry.fx">
-      <Filter>Source Files\Processing</Filter>
+      <Filter>2.0\Processing</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Processing\MRSSAO.fx">
-      <Filter>Source Files\Processing</Filter>
+      <Filter>2.0\Processing</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Processing\MRGB.fx">
-      <Filter>Source Files\Processing</Filter>
+      <Filter>2.0\Processing</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Utility\Math.fx">
       <Filter>Header Files\Utility</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Processing\BilateralAverage.fx">
-      <Filter>Source Files\Processing</Filter>
+      <Filter>2.0\Processing</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Processing\Scrambler.fx">
-      <Filter>Source Files\Processing</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Grass.fx">
-      <Filter>Source Files\Materials\Path</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Marker.fx">
-      <Filter>Source Files\Materials\Path</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Simple.fx">
-      <Filter>Source Files\Materials\Path</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\StretchTextured.fx">
-      <Filter>Source Files\Materials\Path</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Textured.fx">
-      <Filter>Source Files\Materials\Path</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Geometry.fx">
-      <Filter>Header Files\Pipelines\Path</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Pipeline.fx">
-      <Filter>Header Files\Pipelines\Path</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Scene.fx">
-      <Filter>Header Files\Pipelines\Path</Filter>
+      <Filter>2.0\Processing</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Engine\BindPoints.fx">
       <Filter>Header Files\Engine</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Prototypes\Shadow.fx">
-      <Filter>Source Files\Prototypes</Filter>
+      <Filter>2.0\Prototypes</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Prototypes\Feedback.fx">
-      <Filter>Source Files\Prototypes</Filter>
+      <Filter>2.0\Prototypes</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Engine\Feedback.fx">
       <Filter>Header Files\Engine</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\Widget.fx">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>2.0\Materials</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\BumpTextured.fx">
-      <Filter>Source Files\Materials</Filter>
+      <Filter>2.0\Materials</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\SpecTextured.fx">
-      <Filter>Source Files\Materials</Filter>
-    </None>
-    <None Include="..\Bin\Data\Effects\2.0\GI\RayBundles.fx">
-      <Filter>Source Files\GI</Filter>
+      <Filter>2.0\Materials</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Utility\Bits.fx">
       <Filter>Header Files\Utility</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Utility\Hilbert.fx">
+      <Filter>Header Files\Utility</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Fur.fx">
+      <Filter>2.0\Materials</Filter>
     </None>
   </ItemGroup>
 </Project>

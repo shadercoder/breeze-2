@@ -251,6 +251,23 @@ utf8_ntr Material::GetTechniqueName(uint4 techniqueIdx) const
 	return name;
 }
 
+// Gets the index of the technique identified by the given name.
+uint4 Material::GetTechniqueByName(const utf8_ntri &name) const
+{
+	for (uint4 i = 0; i < m_techniques.size(); ++i)
+	{
+		D3DX11_TECHNIQUE_DESC desc;
+
+		if (BE_LOG_DX_ERROR_MSG(
+				m_techniques[i].technique->Get()->GetDesc(&desc),
+				"ID3DX11EffectTechnique::GetDesc()"
+			) && desc.Name == name)
+				return i;
+	}
+
+	return static_cast<uint4>(-1);
+}
+
 // Gets the number of setups.
 uint4 Material::GetSetupCount() const
 {

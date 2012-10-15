@@ -51,9 +51,9 @@ public:
 	BE_PHYSICS_API void Detach();
 
 	/// Gets the character scene.
-	BE_PHYSICS_API CharacterScene& GetScene();
+	BE_PHYSICS_API CharacterScene* GetScene();
 	/// Gets the character scene.
-	BE_PHYSICS_API const CharacterScene& GetScene() const;
+	BE_PHYSICS_API const CharacterScene* GetScene() const;
 
 	/// Gets the controller type.
 	BE_PHYSICS_API static utf8_ntr GetControllerType();

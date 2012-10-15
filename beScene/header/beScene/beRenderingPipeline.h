@@ -75,7 +75,7 @@ public:
 
 	/// Adds a perspective.
 	BE_SCENE_API PipelinePerspective* AddPerspective(const PerspectiveDesc &desc, Pipe *pPipe,
-		PipelineProcessor *pProcessor = nullptr, PipelineStageMask stageMask = 0);
+		PipelineProcessor *pProcessor = nullptr, PipelineStageMask stageMask = 0, bool bNormalOnly = false);
 	/// Clears all perspectives.
 	BE_SCENE_API void ClearPerspectives();
 

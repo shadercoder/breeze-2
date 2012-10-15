@@ -31,6 +31,13 @@ void ConsoleWidget::write(const QString &msg)
 		ui.plainTextEdit->setTextCursor(cursor);
 }
 
+// Writes the given line to the console.
+void ConsoleWidget::writeLine(const QString &msg)
+{
+	write(msg);
+	write("\n");
+}
+
 // Adds the console widget to the given main window.
 ConsoleWidget* addConsoleWidget(MainWindow &mainWindow, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
 {

@@ -21,7 +21,7 @@ LEAN_INLINE bool operator !=(const T1 &left, const T2 &right)
 template <class T1, class T2>
 LEAN_INLINE bool operator <=(const T1 &left, const T2 &right)
 {
-	return (left < right) || (left == right);
+	return !(right < left);
 }
 
 /// Compares the two values given.
@@ -35,7 +35,7 @@ LEAN_INLINE bool operator >=(const T1 &left, const T2 &right)
 template <class T1, class T2>
 LEAN_INLINE bool operator >(const T1 &left, const T2 &right)
 {
-	return !(left < right) && !(left == right);
+	return (right < left);
 }
 
 } // namespace

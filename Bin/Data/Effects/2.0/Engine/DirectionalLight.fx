@@ -18,6 +18,7 @@ struct DirectionalLightLayout
 	float3 Pos;					///< Light position.
 
 	float4 Color;				///< Light color.
+	float4 SkyColor;			///< Sky color.
 
 	float Attenuation;			///< Light attenuation.
 	float AttenuationOffset;	///< Light attenuation offset.

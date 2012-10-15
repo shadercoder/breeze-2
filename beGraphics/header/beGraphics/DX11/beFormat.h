@@ -87,7 +87,7 @@ LEAN_INLINE DXGI_FORMAT ToAPI(Format::T format)
 		Format::Unknown, Format::End, DXGI_FORMAT_UNKNOWN>(format);
 }
 /// Converts the given DX11 to a corresponding format, if available, returns unknown otherwise.
-LEAN_INLINE Format::T ToBE(DXGI_FORMAT format)
+LEAN_INLINE Format::T FromAPI(DXGI_FORMAT format)
 {
 	return EnumFrom<DXGI_FORMAT, Format::T, BE_GRAPHICS_WRAPPED_ENUM_TEMPLATE(ToFormatDX11),
 		Format::Unknown, Format::End, Format::Unknown>(format);
@@ -107,12 +107,12 @@ inline DXGI_MODE_DESC ToAPI(const DisplayMode &mode)
 	return modeDX;
 }
 /// Constructs a display mode description from the given DirectX 11 mode description.
-inline DisplayMode ToBE(const DXGI_MODE_DESC &modeDX)
+inline DisplayMode FromAPI(const DXGI_MODE_DESC &modeDX)
 {
 	return DisplayMode(
 		modeDX.Width,
 		modeDX.Height,
-		ToBE(modeDX.Format),
+		FromAPI(modeDX.Format),
 		RefreshRate(
 			modeDX.RefreshRate.Numerator,
 			modeDX.RefreshRate.Denominator) );
@@ -128,7 +128,7 @@ inline DXGI_SAMPLE_DESC ToAPI(const SampleDesc &desc)
 }
 
 /// Constructs a DirectX 11 mode description from the given description.
-inline SampleDesc ToBE(const DXGI_SAMPLE_DESC &desc)
+inline SampleDesc FromAPI(const DXGI_SAMPLE_DESC &desc)
 {
 	return SampleDesc(
 			desc.Count,

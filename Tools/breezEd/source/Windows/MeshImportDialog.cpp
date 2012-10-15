@@ -34,10 +34,12 @@ void restoreDefaults(Ui::MeshImportDialog &ui, const QSettings &settings)
 
 	ui.colorsCheckBox->setChecked( settings.value("meshImportDialog/colors", false).toBool() );
 	ui.texCoordsCheckBox->setChecked( settings.value("meshImportDialog/texCoords", true).toBool() );
+	ui.forceTexCoordsCheckBox->setChecked( settings.value("meshImportDialog/forceTexCoords", false).toBool() );
 
 	ui.scaleFactorLineEdit->setText(QString::number( settings.value("meshImportDialog/scaleFactor", 1.0f).toFloat() ));
 
 	ui.indicesCheckBox->setChecked( settings.value("meshImportDialog/wideIndices", false).toBool() );
+	ui.optimizationCheckBox->setChecked( settings.value("meshImportDialog/cacheOptimization", true).toBool() );
 
 	ui.inputWidget->setPath( settings.value("meshImportDialog/inputPath", QDir::currentPath()).toString() );
 	ui.outputWidget->setPath( settings.value("meshImportDialog/outputPath", QDir::currentPath()).toString() );
@@ -58,10 +60,12 @@ void saveDefaults(const Ui::MeshImportDialog &ui, QSettings &settings)
 
 	settings.setValue("meshImportDialog/colors", ui.colorsCheckBox->isChecked());
 	settings.setValue("meshImportDialog/texCoords", ui.texCoordsCheckBox->isChecked());
+	settings.setValue("meshImportDialog/forceTexCoords", ui.forceTexCoordsCheckBox->isChecked());
 
 	settings.setValue("meshImportDialog/scaleFactor", ui.scaleFactorLineEdit->text().toFloat());
 
 	settings.setValue("meshImportDialog/wideIndices", ui.indicesCheckBox->isChecked());
+	settings.setValue("meshImportDialog/cacheOptimization", ui.optimizationCheckBox->isChecked());
 
 	settings.setValue("meshImportDialog/inputPath", absolutePathToDir(ui.inputWidget->path()));
 	settings.setValue("meshImportDialog/outputPath", absolutePathToDir(ui.outputWidget->path()));
@@ -194,15 +198,24 @@ void MeshImportDialog::accept()
 		rcCommand << "/Vc";
 	if (!ui.texCoordsCheckBox->isChecked())
 		rcCommand << "/VDt";
+	if (ui.forceTexCoordsCheckBox->isChecked())
+		rcCommand << "/VFt";
 
 	if (!ui.indicesCheckBox->isChecked())
 		rcCommand << "/Iw";
 
+	if (ui.optimizationCheckBox->isChecked())
+		rcCommand << "/O";
+
 	rcCommand << QString("/Tsf:%1").arg(ui.scaleFactorLineEdit->text());
+
+	rcCommand << ui.argsLineEdit->text().split(" ");
 
 	rcCommand << inputFile;
 	rcCommand << outputFile;
 
+	m_pEditor->write( "berc\n\t" + rcCommand.join("\n\t") );
+	
 	// Run resource compiler
 	QProcess rc;
 	checkedConnect(&rc, SIGNAL(readyReadStandardOutput()), this, SLOT(forwardConsoleOutput()));
@@ -220,6 +233,8 @@ void MeshImportDialog::accept()
 		if (result != QMessageBox::Yes)
 			break;
 	}
+
+	m_pEditor->newLine();
 
 	// Close dialog
 	if (rc.exitCode() == 0)
@@ -272,3 +287,138 @@ void MeshImportDialog::forwardConsoleOutput()
 	if (pProcess)
 		m_pEditor->write( QString::fromUtf8(pProcess->readAllStandardOutput()) );
 }
+
+// Browses for a mesh file.
+QString browseForMesh(const QString &currentPath, Editor &editor, QWidget *pParent)
+{
+	QSettings &settings = *editor.settings();
+
+	QString location = (!currentPath.isEmpty())
+		? currentPath
+		// Default location
+		: settings.value("meshImportDialog/outputPath", QDir::currentPath()).toString();
+
+	QString selectedFilter;
+
+	// Open either breeze mesh or importable 3rd-party mesh format
+	QString file = QFileDialog::getOpenFileName( pParent,
+		MeshImportDialog::tr("Select a mesh resource"),
+		location,
+		QString("%1 (*.mesh);;%2 (*.dae *.obj *.3ds *.dxf *.x *.mdl *.*);;%3 (*.*)")
+			.arg( MeshImportDialog::tr("breeze Meshes") )
+			.arg( MeshImportDialog::tr("Importable Meshes") )
+			.arg( MeshImportDialog::tr("All Files") ),
+		&selectedFilter );
+
+	if (!file.isEmpty())
+	{
+		// Launch import dialog for 3rd-party mesh formats
+		if (!file.endsWith(".mesh", Qt::CaseInsensitive) && selectedFilter.contains("*.dae"))
+		{
+			MeshImportDialog meshImportDialog(&editor, pParent);
+			meshImportDialog.setInput(file);
+		
+			file = (MeshImportDialog::Accepted == meshImportDialog.exec())
+				? meshImportDialog.output()
+				: "";
+		}
+		else
+			// Update default location
+			settings.setValue("meshImportDialog/outputPath", QFileInfo(file).absolutePath());
+	}
+
+	return file;
+}
+
+#include "Widgets/GenericComponentPicker.h"
+#include "Widgets/ComponentPickerFactory.h"
+#include "Plugins/FactoryManager.h"
+
+namespace
+{
+
+/// Plugin class.
+struct MeshComponentPickerPlugin : public ComponentPickerFactory
+{
+	/// Constructor.
+	MeshComponentPickerPlugin()
+	{
+		getComponentPickerFactories().addFactory("Mesh", this);
+	}
+
+	/// Destructor.
+	~MeshComponentPickerPlugin()
+	{
+		getComponentPickerFactories().removeFactory("Mesh");
+	}
+
+	/// Creates a component picker.
+	ComponentPicker* createComponentPicker(const beCore::ComponentReflector *reflector, const lean::any *pCurrent, Editor *editor, QWidget *pParent) const
+	{
+		return new GenericComponentPicker(reflector, pCurrent, editor, pParent);
+	}
+
+	/// Browses for a component resource.
+	virtual QString browseForComponent(const beCore::ComponentReflector &reflector, const QString &currentPath, Editor &editor, QWidget *pParent) const
+	{
+		return browseForMesh(currentPath, editor, pParent);
+	}
+};
+
+const MeshComponentPickerPlugin MeshComponentPickerPlugin;
+
+} // namespace
+
+#include "Plugins/AbstractPlugin.h"
+#include "Plugins/PluginManager.h"
+#include "Windows/MainWindow.h"
+#include "Utility/SlotObject.h"
+
+namespace
+{
+
+class MeshImportTool : public SlotObject
+{
+	Editor *editor;
+
+public:
+	MeshImportTool(Editor *editor, QWidget *parent)
+		: SlotObject(parent),
+		editor(editor) { }
+
+	void slot()
+	{
+		MeshImportDialog dlg( editor, qobject_cast<QWidget*>(this->parent()) );
+		dlg.exec();
+	}
+};
+
+/// Plugin class.
+struct MeshImportToolPlugin : public AbstractPlugin<MainWindow*>
+{
+	/// Constructor.
+	MeshImportToolPlugin()
+	{
+		mainWindowPlugins().addPlugin(this);
+	}
+
+	/// Destructor.
+	~MeshImportToolPlugin()
+	{
+		mainWindowPlugins().removePlugin(this);
+	}
+
+	/// Initializes the plugin.
+	void initialize(MainWindow *mainWindow) const
+	{
+		MeshImportTool *tool = new MeshImportTool(mainWindow->editor(), mainWindow);
+
+		checkedConnect(mainWindow->widgets().actionMesh_Import, SIGNAL(triggered()), tool, SLOT(slot()));
+	}
+	/// Finalizes the plugin.
+	void finalize(MainWindow *pWindow) const { }
+};
+
+const MeshImportToolPlugin MeshImportToolPlugin;
+
+} // namespace

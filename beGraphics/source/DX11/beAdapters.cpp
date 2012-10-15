@@ -178,7 +178,7 @@ Adapter::display_mode_vector Adapter::GetDisplayModes(lean::uint4 outputID, Form
 		display_mode_vector_dx displayModesDX(displayModeCount);
 
 		BE_THROW_DX_ERROR_MSG(
-			m_outputs[outputID]->GetDisplayModeList(formatDX, DXGI_ENUM_MODES_INTERLACED, &displayModeCount, &displayModesDX[0]),
+			m_outputs[outputID]->GetDisplayModeList(formatDX, 0, &displayModeCount, &displayModesDX[0]),
 			"IDXGIOutput::GetDisplayModeList()" );
 
 		displayModes.reserve(displayModeCount);
@@ -201,7 +201,7 @@ Adapter::display_mode_vector Adapter::GetDisplayModes(lean::uint4 outputID, Form
 				modeDX.RefreshRate.Numerator != pPrevModeDX->RefreshRate.Numerator ||
 				modeDX.RefreshRate.Denominator != pPrevModeDX->RefreshRate.Denominator )
 			{
-				displayModes.push_back( ToBE(displayModesDX[i]) );
+				displayModes.push_back( FromAPI(displayModesDX[i]) );
 				pPrevModeDX = &modeDX;
 			}
 		}

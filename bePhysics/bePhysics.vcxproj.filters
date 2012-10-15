@@ -13,11 +13,17 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\PX">
-      <UniqueIdentifier>{514b7c14-e324-4eb4-8053-99142b0fed30}</UniqueIdentifier>
+    <Filter Include="Source Files\Serialization">
+      <UniqueIdentifier>{4c64a9e2-969d-4262-b1d0-d6f4378c8e67}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\PX">
+    <Filter Include="Header Files\Serialization">
+      <UniqueIdentifier>{d6ba69be-83a2-41c7-8817-144157c02a02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PX3">
       <UniqueIdentifier>{27b74e1a-142b-48c6-bc81-31bee469b8ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\PX3">
+      <UniqueIdentifier>{514b7c14-e324-4eb4-8053-99142b0fed30}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -33,35 +39,32 @@
     <ClInclude Include="header\bePhysics\bePhysics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beDevice.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beDevice.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
     <ClInclude Include="header\bePhysics\beDevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\beImplementations.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="header\bePhysics\PX3\bePhysics.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\bePhysics.h">
-      <Filter>Header Files\PX</Filter>
-    </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beAPI.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beAPI.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
     <ClInclude Include="header\bePhysics\beScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beScene.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beScene.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beMath.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beMath.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
     <ClInclude Include="header\bePhysics\beSceneController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beRigidActors.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beRigidActors.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
     <ClInclude Include="header\bePhysics\beRigidActors.h">
       <Filter>Header Files</Filter>
@@ -78,14 +81,14 @@
     <ClInclude Include="header\bePhysics\beMaterial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beMaterial.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beMaterial.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
     <ClInclude Include="header\bePhysics\beShapes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beShapes.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beShapes.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
     <ClInclude Include="header\bePhysics\beCharacterSceneController.h">
       <Filter>Header Files</Filter>
@@ -93,20 +96,50 @@
     <ClInclude Include="header\bePhysics\beCharacter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beCharacter.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beCharacter.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beCharactersAPI.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beCharactersAPI.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
     <ClInclude Include="header\bePhysics\beCharacterScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\PX\beCharacterScene.h">
-      <Filter>Header Files\PX</Filter>
+    <ClInclude Include="header\bePhysics\PX3\beCharacterScene.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
     <ClInclude Include="header\bePhysics\beCharacterController.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\beSerializationParameters.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\beShapeCache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\PX3\beShapeCache.h">
+      <Filter>Header Files\PX3</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\beMaterialCache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\PX3\beMaterialCache.h">
+      <Filter>Header Files\PX3</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\beResourceManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\beRigidControllerSerializer.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\beInlineMaterialSerialization.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\beMaterialSerialization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\bePhysics\PX3\beJoints.h">
+      <Filter>Header Files\PX3</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -119,23 +152,17 @@
     <ClCompile Include="source\bePhysics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\PX\beDevice.cpp">
-      <Filter>Source Files\PX</Filter>
+    <ClCompile Include="source\PX3\beDevice.cpp">
+      <Filter>Source Files\PX3</Filter>
     </ClCompile>
-    <ClCompile Include="source\beDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\PX\beScene.cpp">
-      <Filter>Source Files\PX</Filter>
+    <ClCompile Include="source\PX3\beScene.cpp">
+      <Filter>Source Files\PX3</Filter>
     </ClCompile>
     <ClCompile Include="source\beSceneController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\beScene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\PX\beRigidActors.cpp">
-      <Filter>Source Files\PX</Filter>
+    <ClCompile Include="source\PX3\beRigidActors.cpp">
+      <Filter>Source Files\PX3</Filter>
     </ClCompile>
     <ClCompile Include="source\beRigidDynamicController.cpp">
       <Filter>Source Files</Filter>
@@ -146,38 +173,56 @@
     <ClCompile Include="source\beEntityController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\beRigidActors.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\PX3\beMaterial.cpp">
+      <Filter>Source Files\PX3</Filter>
     </ClCompile>
-    <ClCompile Include="source\PX\beMaterial.cpp">
-      <Filter>Source Files\PX</Filter>
+    <ClCompile Include="source\PX3\beShapes.cpp">
+      <Filter>Source Files\PX3</Filter>
     </ClCompile>
-    <ClCompile Include="source\beMaterial.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\PX3\beCharacter.cpp">
+      <Filter>Source Files\PX3</Filter>
     </ClCompile>
-    <ClCompile Include="source\PX\beShapes.cpp">
-      <Filter>Source Files\PX</Filter>
-    </ClCompile>
-    <ClCompile Include="source\beShapes.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\PX\beCharacter.cpp">
-      <Filter>Source Files\PX</Filter>
-    </ClCompile>
-    <ClCompile Include="source\PX\beCharacterScene.cpp">
-      <Filter>Source Files\PX</Filter>
-    </ClCompile>
-    <ClCompile Include="source\beCharacter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\beCharacterScene.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="source\PX3\beCharacterScene.cpp">
+      <Filter>Source Files\PX3</Filter>
     </ClCompile>
     <ClCompile Include="source\beCharacterSceneController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\beCharacterController.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beSerializationParameters.cpp">
+      <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PX3\beShapeSerialization.cpp">
+      <Filter>Source Files\PX3</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PX3\beDefaultRigidActors.cpp">
+      <Filter>Source Files\PX3</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PX3\beShapeCache.cpp">
+      <Filter>Source Files\PX3</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PX3\beMaterialCache.cpp">
+      <Filter>Source Files\PX3</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beResourceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beMaterialComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beShapeComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beRigidControllerSerializer.cpp">
+      <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beInlineMaterialSerialization.cpp">
+      <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PX3\beJoints.cpp">
+      <Filter>Source Files\PX3</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

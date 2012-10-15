@@ -3,5 +3,7 @@
   <PropertyGroup>
     <IncludePath>C:\SDKs\Boost\1_48_0;$(IncludePath)</IncludePath>
   </PropertyGroup>
-  <PropertyGroup />
+  <PropertyGroup>
+    <LibraryPath>C:\SDKs\Boost\1_48_0\bin;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
 </Project>

@@ -19,9 +19,34 @@ namespace DX11
 {
 
 /// Creates a structured buffer.
-BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateStructuredBuffer(ID3D11Device *pDevice, uint4 bindFlags, uint4 size, uint4 count = 1);
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateStructuredBuffer(ID3D11Device *device, uint4 bindFlags, uint4 size, uint4 count = 1, uint4 flags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED, const void *pInitialData = nullptr);
 /// Creates a constant buffer.
-BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateConstantBuffer(ID3D11Device *pDevice, uint4 size, uint4 count = 1);
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateConstantBuffer(ID3D11Device *device, uint4 size, uint4 count = 1, const void *pInitialData = nullptr);
+/// Creates a staging buffer.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateStagingBuffer(ID3D11Device *device, uint4 size, uint4 count = 1, uint4 cpuAccess = D3D11_CPU_ACCESS_READ, const void *pInitialData = nullptr);
+/// Creates a staging buffer matching the given buffer.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateStagingBuffer(ID3D11Device *device, ID3D11Buffer *buffer, uint4 cpuAccess = D3D11_CPU_ACCESS_READ, const void *pInitialData = nullptr);
+/// Copies data from the given source buffer to the given destination buffer.
+BE_GRAPHICS_DX11_API void CopyBuffer(ID3D11DeviceContext *context, ID3D11Buffer *dest, uint4 destOffset, ID3D11Buffer *src, uint4 srcOffset, uint4 srcCount);
+/// Copies the given data to the given destination buffer.
+BE_GRAPHICS_DX11_API void WriteBuffer(ID3D11DeviceContext *context, ID3D11Buffer *dest, uint4 destOffset, const void *data, uint4 srcOffset, uint4 srcCount);
+
+/// Creates an unordered access view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11UnorderedAccessView, true> CreateUAV(ID3D11Buffer *buffer, const D3D11_UNORDERED_ACCESS_VIEW_DESC *pDesc = nullptr);
+/// Creates a shader resource view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11ShaderResourceView, true> CreateSRV(ID3D11Buffer *buffer, const D3D11_SHADER_RESOURCE_VIEW_DESC *pDesc = nullptr);
+
+/// Creates an unordered access view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11UnorderedAccessView, true> CreateUAV(ID3D11Buffer *buffer, DXGI_FORMAT fmt, uint4 flags, uint4 offset, uint4 count);
+/// Creates a shader resource view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11ShaderResourceView, true> CreateSRV(ID3D11Buffer *buffer, DXGI_FORMAT fmt, uint4 flags, uint4 offset, uint4 count);
+
+/// Creates a counting view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11UnorderedAccessView, true> CreateCountingUAV(ID3D11Buffer *buffer, uint4 flags = 0, uint4 offset = 0, uint4 count = -1);
+/// Creates a raw view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11UnorderedAccessView, true> CreateRawUAV(ID3D11Buffer *buffer, uint4 flags = 0, uint4 offset = 0, uint4 count = -1);
+/// Creates a raw view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11ShaderResourceView, true> CreateRawSRV(ID3D11Buffer *buffer, uint4 flags = 0, uint4 offset = 0, uint4 count = -1);
 
 /// Creates a buffer according to the given description.
 BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Buffer, true> CreateBuffer(const D3D11_BUFFER_DESC &desc, const void *pInitialData, ID3D11Device *pDevice);
@@ -33,7 +58,12 @@ BE_GRAPHICS_DX11_API bool Map(ID3D11DeviceContext *pDeviceContext, ID3D11Buffer 
 BE_GRAPHICS_DX11_API void Unmap(ID3D11DeviceContext *pDeviceContext, ID3D11Buffer *pBuffer);
 
 /// Gets the description of the given buffer.
-BE_GRAPHICS_DX11_API D3D11_BUFFER_DESC GetDesc(ID3D11Buffer *pBuffer);
+BE_GRAPHICS_DX11_API D3D11_BUFFER_DESC GetDesc(ID3D11Buffer *buffer);
+
+/// Gets data from the given buffer.
+BE_GRAPHICS_DX11_API bool ReadBufferData(ID3D11DeviceContext *context, ID3D11Buffer *buffer, void *bytes, uint4 byteCount, uint4 resourceOffset = 0);
+/// Gets data from the given buffer using a TEMPORARY staging buffer. SLOW!
+BE_GRAPHICS_DX11_API bool DebugFetchBufferData(ID3D11DeviceContext *context, ID3D11Buffer *buffer, void *bytes, uint4 byteCount, uint4 resourceOffset = 0);
 
 /// Buffer wrapper.
 class Buffer : public beCore::IntransitiveWrapper<ID3D11Buffer, Buffer>, public beGraphics::Buffer

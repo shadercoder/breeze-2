@@ -32,7 +32,7 @@ public:
 	BE_SCENE_API bool ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
 		const RenderableEffectData *pRenderableData, const Perspective &perspective,
 		const LightJob *lights, const LightJob *lightsEnd,
-		RenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
 
 	/// Gets the pipe effect binder.
 	LEAN_INLINE const PipeEffectBinder& GetPipeBinder() const { return m_pipeBinder; }

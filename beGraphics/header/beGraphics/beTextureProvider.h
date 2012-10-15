@@ -25,6 +25,8 @@ public:
 	virtual uint4 GetTextureID(const utf8_ntri &name) const = 0;
 	/// Gets the name of the given texture.
 	virtual utf8_ntr GetTextureName(uint4 id) const = 0;
+	/// Gets whether the texture is a color texture.
+	virtual bool IsColorTexture(uint4 id) const = 0;
 
 	/// Sets the given texture.
 	virtual void SetTexture(uint4 id, const TextureView *pView) = 0;

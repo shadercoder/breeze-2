@@ -41,6 +41,9 @@ public:
 	/// Destructor.
 	BE_SCENE_API ~SceneController();
 
+	/// Synchronizes this controller with the simulation.
+	BE_SCENE_API void Flush();
+
 	/// Renders the scene using the stored context.
 	BE_SCENE_API void Render();
 	/// Renders the scene using the given context.

@@ -39,6 +39,9 @@ const beCore::ReflectionProperties DirectionalLightControllerProperties = beCore
 	<< beCore::MakeReflectionProperty<float[4]>("color", beCore::Widget::Color)
 		.set_setter( BE_CORE_PROPERTY_SETTER_UNION(&DirectionalLightController::SetColor, float) )
 		.set_getter( BE_CORE_PROPERTY_GETTER_UNION(&DirectionalLightController::GetColor, float) )
+	<< beCore::MakeReflectionProperty<float[4]>("sky color", beCore::Widget::Color)
+		.set_setter( BE_CORE_PROPERTY_SETTER_UNION(&DirectionalLightController::SetSkyColor, float) )
+		.set_getter( BE_CORE_PROPERTY_GETTER_UNION(&DirectionalLightController::GetSkyColor, float) )
 	<< beCore::MakeReflectionProperty<float>("attenuation", beCore::Widget::Raw)
 		.set_setter( BE_CORE_PROPERTY_SETTER(&DirectionalLightController::SetAttenuation) )
 		.set_getter( BE_CORE_PROPERTY_GETTER(&DirectionalLightController::GetAttenuation) )
@@ -121,6 +124,7 @@ DirectionalLightController::DirectionalLightController(beEntitySystem::Entity *p
 	m_pPipePool( LEAN_ASSERT_NOT_NULL(pPipePool) ),
 
 	m_color(1.0f),
+	m_sky(1.0f),
 	
 	m_attenuation(1.0f),
 	m_attenuationOffset(1.0f),
@@ -181,57 +185,74 @@ inline void ComputeShadowMatrices(beMath::fmat4 &view, beMath::fmat4 &proj, beMa
 	beMath::fvec3 &center, float &nearPlane, float &farPlane,
 	const beMath::fmat3 &camOrientation, const beMath::fvec3 &camPosition, const beMath::fmat4 &camViewProj,
 	float splitNear, float splitFar,
-	const beMath::fmat3 &orientation, float range, uint4 resolution)
+	const beMath::fmat3 &orientation, float range, uint4 resolution,
+	bool bOmnidirectional)
 {
-	center = camPosition + 0.5f * (splitNear + splitFar) * camOrientation[2];
+	center = camPosition;
+	if (!bOmnidirectional)
+		center += 0.5f * (splitNear + splitFar) * camOrientation[2];
+
 	view = beMath::mat_view(center, orientation[2], orientation[1], orientation[0]);
-
-	beMath::fvec3 centers[2];
-	centers[0] = camPosition + splitNear * camOrientation[2];
-	centers[1] = camPosition + splitFar * camOrientation[2];
-
-	beMath::fplane3 sides[2];
-	sides[0] = frustum_left(camViewProj);
-	sides[1] = frustum_right(camViewProj);
-
-	beMath::fvec3 sideCenters[4];
-
-	for (int i = 0; i < 2; ++i)
-	{
-		// Project side normal to camera plane
-		beMath::fvec3 toSideDir = sides[i].n() - camOrientation[2] * dot(sides[i].n(), camOrientation[2]);
-		// Scale to erase side plane distance
-		toSideDir /= -dot(toSideDir, sides[i].n());
-		
-		for (int j = 0; j < 2; ++j)
-			// Project split centers to side
-			sideCenters[2 * j + i] = centers[j] + toSideDir * sdist(sides[i], centers[j]);
-	}
-
-	beMath::fplane3 vertSides[2];
-	vertSides[0] = frustum_top(camViewProj);
-	vertSides[1] = frustum_bottom(camViewProj);
 
 	beMath::fvec3 cornerPoints[8];
 
-	for (int i = 0; i < 2; ++i)
+	if (!bOmnidirectional)
 	{
-		// Compute vector orthogonal to both side & cam plane
-		beMath::fvec3 orthoSide = cross(sides[i].n(), camOrientation[2]);
-		
-		for (int j = 0; j < 2; ++j)
+		beMath::fvec3 centers[2];
+		centers[0] = camPosition + splitNear * camOrientation[2];
+		centers[1] = camPosition + splitFar * camOrientation[2];
+
+		beMath::fplane3 sides[2];
+		sides[0] = frustum_left(camViewProj);
+		sides[1] = frustum_right(camViewProj);
+
+		beMath::fvec3 sideCenters[4];
+
+		for (int i = 0; i < 2; ++i)
 		{
-			// Scale to erase vertical side plane distance
-			beMath::fvec3 toVertSide = orthoSide / -dot(orthoSide, vertSides[j].n());
+			// Project side normal to camera plane
+			beMath::fvec3 toSideDir = sides[i].n() - camOrientation[2] * dot(sides[i].n(), camOrientation[2]);
+			// Scale to erase side plane distance
+			toSideDir /= -dot(toSideDir, sides[i].n());
+		
+			for (int j = 0; j < 2; ++j)
+				// Project split centers to side
+				sideCenters[2 * j + i] = centers[j] + toSideDir * sdist(sides[i], centers[j]);
+		}
 
-			for (int k = 0; k < 2; ++k)
+		beMath::fplane3 vertSides[2];
+		vertSides[0] = frustum_top(camViewProj);
+		vertSides[1] = frustum_bottom(camViewProj);
+
+		for (int i = 0; i < 2; ++i)
+		{
+			// Compute vector orthogonal to both side & cam plane
+			beMath::fvec3 orthoSide = cross(sides[i].n(), camOrientation[2]);
+		
+			for (int j = 0; j < 2; ++j)
 			{
-				const beMath::fvec3 &sideCenter = sideCenters[2 * k + i];
+				// Scale to erase vertical side plane distance
+				beMath::fvec3 toVertSide = orthoSide / -dot(orthoSide, vertSides[j].n());
 
-				// Project side center to vertical side
-				cornerPoints[4 * k + 2 * j + i] = sideCenter + toVertSide * sdist(vertSides[j], sideCenter);
+				for (int k = 0; k < 2; ++k)
+				{
+					const beMath::fvec3 &sideCenter = sideCenters[2 * k + i];
+
+					// Project side center to vertical side
+					cornerPoints[4 * k + 2 * j + i] = sideCenter + toVertSide * sdist(vertSides[j], sideCenter);
+				}
 			}
 		}
+	}
+	else
+	{
+		for (int i = 0; i < 2; ++i)
+			for (int j = 0; j < 2; ++j)
+				for (int k = 0; k < 2; ++k)
+					cornerPoints[4 * k + 2 * j + i] = camPosition
+						+ (i ? -splitFar : splitFar) * camOrientation[2]
+						+ (j ? -splitFar : splitFar) * camOrientation[1]
+						+ (k ? -splitFar : splitFar) * camOrientation[0];
 	}
 
 	beMath::fvec3 splitSpaceMin(2.0e16f), splitSpaceMax(-2.0e16f);
@@ -317,7 +338,8 @@ void* DirectionalLightController::Prepare(Perspective &perspective, PerspectiveS
 				splitCenter, splitMin, splitMax,
 				camOrientation, perspectiveDesc.CamPos, perspectiveDesc.ViewProjMat,
 				splitNear, splitFar,
-				m_orientation, m_range, m_shadowResolution);
+				m_orientation, m_range, m_shadowResolution,
+				perspectiveDesc.Flags & PerspectiveFlags::Omnidirectional);
 
 			PerspectiveDesc splitPerspectiveDesc(
 					splitCenter,
@@ -416,7 +438,8 @@ void DirectionalLightController::Render(const RenderJob &job, const Perspective 
 
 	DirectionalLightController &self = *lightData.pController;
 
-	if (self.m_bConstantsChanged)
+	// WRONG: Perspectives may change!
+//	if (self.m_bConstantsChanged)
 	{
 		DirectionalLightConstantBuffer directionalLight;
 
@@ -430,6 +453,7 @@ void DirectionalLightController::Render(const RenderJob &job, const Perspective 
 		directionalLight.Pos[3] = 1.0f;
 
 		memcpy(&directionalLight.Color, self.m_color.cdata(), sizeof(float) * 4);
+		memcpy(&directionalLight.Sky, self.m_sky.cdata(), sizeof(float) * 4);
 
 		directionalLight.Attenuation = self.m_attenuation;
 		directionalLight.AttenuationOffset = self.m_attenuationOffset;

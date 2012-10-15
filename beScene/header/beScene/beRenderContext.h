@@ -10,19 +10,16 @@
 #include <beGraphics/beDeviceContext.h>
 #include <beGraphics/beStateManager.h>
 #include <lean/smart/resource_ptr.h>
-#include <lean/pimpl/pimpl_ptr.h>
+#include <lean/smart/scoped_ptr.h>
 
 namespace beScene
 {
-	
-// Prototypes
-class RenderingPipeline;
 
 /// Render context.
 class RenderContext : public beCore::Resource
 {
 private:
-	const lean::pimpl_ptr<beGraphics::DeviceContext> m_pContext;
+	const lean::scoped_ptr<beGraphics::DeviceContext> m_pContext;
 
 	const lean::resource_ptr<beGraphics::StateManager> m_pStateManager;
 

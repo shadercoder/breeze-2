@@ -54,6 +54,11 @@ private:
 	void LoadWorld(const rapidxml::xml_node<lean::utf8_t> &node, beCore::ParameterSet &parameters);
 
 public:
+	/// Entity range.
+	typedef lean::range<Entity *const *> Entities;
+	/// Const entity range.
+	typedef lean::range<const Entity *const *> ConstEntities;
+
 	/// Creates an empty world.
 	BE_ENTITYSYSTEM_API explicit World(const utf8_ntri &name, const WorldDesc &desc = WorldDesc());
 	/// Loads the world from the given file.
@@ -79,14 +84,14 @@ public:
 	BE_ENTITYSYSTEM_API const Entity* GetEntity(uint4 id) const;
 
 	/// Gets a range of all entities.
-	LEAN_INLINE lean::range<Entity *const *> GetEntities()
+	LEAN_INLINE Entities GetEntities()
 	{
-		return lean::range<Entity *const *>( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
+		return Entities( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
 	}
 	/// Gets a range of all entities.
-	LEAN_INLINE lean::range<const Entity *const *> GetEntities() const
+	LEAN_INLINE ConstEntities GetEntities() const
 	{
-		return lean::range<const Entity *const *>( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
+		return ConstEntities( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
 	}
 
 	/// Attaches all entities to their simulations.

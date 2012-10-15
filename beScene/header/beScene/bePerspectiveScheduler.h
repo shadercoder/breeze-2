@@ -27,7 +27,7 @@ protected:
 public:
 	/// Adds a perspective.
 	virtual Perspective* AddPerspective(const PerspectiveDesc &desc, Pipe *pPipe,
-		PipelineProcessor *pProcessor = nullptr, PipelineStageMask stageMask = 0) = 0;
+		PipelineProcessor *pProcessor = nullptr, PipelineStageMask stageMask = 0, bool bNormalOnly = false) = 0;
 };
 
 } // nmaespace

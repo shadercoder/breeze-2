@@ -41,22 +41,22 @@ void StateManager::RecordOverridden()
 {
 	DX11::Record(m_setup, m_pContext, m_overrideMask);
 	
-	if (~m_overrideMask & StateMasks::VertexShader)
+	if (m_overrideMask & StateMasks::VertexShader)
 		if (m_VSManager.RecordOverridden())
 			m_setup.StateMask |= StateMasks::VertexShader;
-	if (~m_overrideMask & StateMasks::HullShader)
+	if (m_overrideMask & StateMasks::HullShader)
 		if (m_HSManager.RecordOverridden())
 			m_setup.StateMask |= StateMasks::HullShader;
-	if (~m_overrideMask & StateMasks::DomainShader)
+	if (m_overrideMask & StateMasks::DomainShader)
 		if (m_DSManager.RecordOverridden())
 			m_setup.StateMask |= StateMasks::DomainShader;
-	if (~m_overrideMask & StateMasks::GeometryShader)
+	if (m_overrideMask & StateMasks::GeometryShader)
 		if (m_GSManager.RecordOverridden())
 			m_setup.StateMask |= StateMasks::GeometryShader;
-	if (~m_overrideMask & StateMasks::PixelShader)
+	if (m_overrideMask & StateMasks::PixelShader)
 		if (m_PSManager.RecordOverridden())
 			m_setup.StateMask |= StateMasks::PixelShader;
-	if (~m_overrideMask & StateMasks::ComputeShader)
+	if (m_overrideMask & StateMasks::ComputeShader)
 		if (m_CSManager.RecordOverridden())
 			m_setup.StateMask |= StateMasks::ComputeShader;
 
@@ -194,7 +194,7 @@ void Record(StateSetup &setup, ID3D11DeviceContext *pContext, uint4 stateMask)
 		ID3D11RenderTargetView *renderTargets[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT] = { nullptr };
 		pContext->OMGetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, renderTargets, setup.DepthStencilTarget.rebind());
 
-		UINT maxTargetIndex = 0;
+		UINT maxTargetIndex = -1;
 
 		for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
 		{

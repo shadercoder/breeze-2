@@ -14,6 +14,18 @@
 namespace beMath
 {
 
+// Named debug info.
+template <class Component, size_t Dimension>
+struct matrix_components { };
+template <class Component>
+struct matrix_components<Component, 1> { Component _11; };
+template <class Component>
+struct matrix_components<Component, 2> { Component _11, _12; Component _21, _22; };
+template <class Component>
+struct matrix_components<Component, 3> { Component _11, _12, _13; Component _21, _22, _23; Component _31, _32, _33; };
+template <class Component>
+struct matrix_components<Component, 4> { Component _11, _12, _13, _14; Component _21, _22, _23, _24; Component _31, _32, _33, _34; Component _41, _42, _43, _44; };
+
 /// Matrix class.
 template <class Component, size_t RowCount, size_t ColumnCount>
 class matrix : public tuple<
@@ -27,7 +39,12 @@ private:
 		Component,
 		RowCount * ColumnCount> base_type;
 
-	vector<Component, ColumnCount> m_rows[RowCount];
+	union
+	{
+		Component c[RowCount * ColumnCount];
+		matrix_components<Component, (RowCount < ColumnCount) ? RowCount : ColumnCount> n;
+		Component r[RowCount][ColumnCount];
+	};
 
 public:
 	/// Component type.
@@ -51,7 +68,7 @@ public:
 
 	/// Creates a default-initialized matrix.
 	LEAN_INLINE matrix()
-		: m_rows() { }
+		: c() { }
 	/// Creates am un-initialized matrix.
 	LEAN_INLINE matrix(uninitialized_t) { }
 	/// Initializes all components with the components of given tuple.
@@ -74,7 +91,7 @@ public:
 			Destination_matrix_type_cannot_have_more_elements_than_source_matrix_type);
 
 		for (size_t i = 0; i < RowCount; ++i)
-			m_rows[i] = static_cast<row_type>(right[i]);
+			this->row(i) = static_cast<row_type>(right[i]);
 	}
 	/// Initializes all components with the casted components of the given matrix, filling remaining matrix components, if needed.
 	template <class Other, size_t OtherRowCount, size_t OtherColumnCount>
@@ -84,10 +101,10 @@ public:
 		size_t i = 0;
 
 		for (; i < minRowCount; ++i)
-			m_rows[i] = row_type(right[i], fill);
+			this->row(i) = row_type(right[i], fill);
 
 		for (; i < RowCount; ++i)
-			m_rows[i] = static_cast<component_type>(fill);
+			this->row(i) = static_cast<component_type>(fill);
 	}
 
 	/// Assigns the given value to all matrix components.
@@ -103,21 +120,26 @@ public:
 	}
 
 	/// Accesses the n-th component.
-	LEAN_INLINE component_type& element(size_type n) { return data()[n]; }
+	LEAN_INLINE component_type& element(size_type n) { return this->c[n]; }
 	/// Accesses the n-th component.
-	LEAN_INLINE const component_type& element(size_type n) const { return data()[n]; }
+	LEAN_INLINE const component_type& element(size_type n) const { return this->c[n]; }
 
 	/// Accesses the n-th row.
-	LEAN_INLINE row_type& operator [](size_type n) { return m_rows[n]; }
+	LEAN_INLINE row_type& row(size_type n) { return *reinterpret_cast<row_type*>(this->r[n]); }
 	/// Accesses the n-th row.
-	LEAN_INLINE const row_type& operator [](size_type n) const { return m_rows[n]; }
+	LEAN_INLINE const row_type& row(size_type n) const { return *reinterpret_cast<const row_type*>(this->r[n]); }
+
+	/// Accesses the n-th row.
+	LEAN_INLINE row_type& operator [](size_type n) { return row(n); }
+	/// Accesses the n-th row.
+	LEAN_INLINE const row_type& operator [](size_type n) const { return row(n); }
 
 	/// Gets a raw data pointer.
-	LEAN_INLINE component_type* data() { return m_rows[0].data(); }
+	LEAN_INLINE component_type* data() { return this->c; }
 	/// Gets a raw data pointer.
-	LEAN_INLINE const component_type* data() const { return m_rows[0].data(); }
+	LEAN_INLINE const component_type* data() const { return this->c; }
 	/// Gets a raw data pointer.
-	LEAN_INLINE const component_type* cdata() const { return m_rows[0].cdata(); }
+	LEAN_INLINE const component_type* cdata() const { return this->c; }
 };
 
 /// Constructs a diagonal matrix from the given value.

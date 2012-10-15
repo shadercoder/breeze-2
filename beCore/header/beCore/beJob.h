@@ -32,7 +32,6 @@ class Job : public lean::noncopyable
 {
 private:
 	class Impl;
-	friend class Impl;
 	lean::pimpl_ptr<Impl> m_impl;
 
 protected:

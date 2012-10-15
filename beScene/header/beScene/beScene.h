@@ -62,6 +62,7 @@ namespace beScene
 {
 	// Import important types
 	using namespace lean::types;
+	LEAN_REIMPORT_NUMERIC_TYPES;
 	using namespace lean::strings::types;
 
 	/// Opens a message box containing version information.

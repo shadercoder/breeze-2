@@ -49,9 +49,12 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 {
 	using namespace beMath;
 
+	// TODO: Change-based update?
+	updateWidgets();
+
 	uint4 axisID = InvalidAxisID;
 
-	// Keep / stop moving
+	// Keep / stop scaling
 	if (input.buttonPressed(Qt::LeftButton))
 	{
 		axisID = m_axisID;
@@ -66,18 +69,19 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 					axisID = i;
 		}
 
-		// Moving
+		// Scaling
 		if (axisID != InvalidAxisID)
 			input.setButtonHandled(Qt::LeftButton);
 	}
 	else
-	{
-		m_pCommand = nullptr;
-		m_axisID = InvalidAxisID;
-	}
+		finishEditing();
 
 	if (axisID < 3)
 	{
+		// NOTE: Make sure widgets are up to date *before* editing has started
+		if (m_axisID == InvalidAxisID)
+			updateWidgets();
+
 		fvec3 axisOrig = m_axes[axisID]->GetPosition();
 		fvec3 axisDir = m_axes[axisID]->GetOrientation()[2];
 
@@ -91,7 +95,7 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 
 		fvec3 nextAxisStop = axisOrig + axisDir * axisDelta;
 
-		// Perform move operation
+		// Perform sacle operation
 		if (m_axisID != InvalidAxisID)
 		{
 			float scaleFactor = dot(m_axisStop - axisOrig, axisDir);
@@ -111,6 +115,7 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 					
 //					(*itEntity)->SetPosition(position);
 					(*itEntity)->SetScaling(scaling);
+					(*itEntity)->Synchronize();
 				}
 				
 				m_axisStop = nextAxisStop;
@@ -118,7 +123,7 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 				updateWidgets();
 			}
 		}
-		// Initialize move operation
+		// Initialize scale operation
 		else
 		{
 			m_pCommand = new ScaleEntityCommand(m_selection);
@@ -136,7 +141,7 @@ void ScaleInteraction::attach()
 	for (int i = 0; i < 3; ++i)
 		m_axes[i]->Attach();
 
-	checkedConnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(updateWidgets()));
+	checkedConnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(selectionChanged()));
 }
 
 // Detaches this interaction.
@@ -145,22 +150,38 @@ void ScaleInteraction::detach()
 	for (int i = 0; i < 3; ++i)
 		m_axes[i]->Detach();
 
-	disconnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(updateWidgets()));
+	disconnect(m_pDocument, SIGNAL(selectionChanged(SceneDocument*)), this, SLOT(selectionChanged()));
+}
+
+// Finish editing.
+void ScaleInteraction::finishEditing()
+{
+	m_pCommand = nullptr;
+	m_axisID = InvalidAxisID;
+}
+
+// Update widgets.
+void ScaleInteraction::selectionChanged()
+{
+	finishEditing();
+	m_selection = m_pDocument->selection();
+	updateWidgets();
 }
 
 // Update widgets.
 void ScaleInteraction::updateWidgets()
 {
-	m_selection = m_pDocument->selection();
-
 	beMath::fmat3 orientation = (m_selection.size() == 1) ? m_selection.front()->GetOrientation() : beMath::mat_diag<3, 3>(1.0f);
 	
 	m_centroid = 0.0f;
 
-	for (entity_vector::const_iterator itEntity = m_selection.begin(); itEntity != m_selection.end(); ++itEntity)
-		m_centroid += (*itEntity)->GetPosition();
+	if (!m_selection.empty())
+	{
+		for (entity_vector::const_iterator itEntity = m_selection.begin(); itEntity != m_selection.end(); ++itEntity)
+			m_centroid += (*itEntity)->GetPosition();
 
-	m_centroid /= m_selection.size();
+		m_centroid /= m_selection.size();
+	}
 
 	for (int i = 0; i < 3; ++i)
 	{
@@ -172,7 +193,7 @@ void ScaleInteraction::updateWidgets()
 					orientation[ (i + 0) % 3 ]
 				)
 			);
-	}
 
-	// TODO: show / hide?
+		m_axes[i]->SetVisible(!m_selection.empty());
+	}
 }

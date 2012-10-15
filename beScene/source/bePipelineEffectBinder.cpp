@@ -115,6 +115,13 @@ PipelineEffectBinder::pass_vector GetPasses(beGraphics::Any::API::Effect *pEffec
 	{
 		ID3DX11EffectPass *pPass = pTechnique->GetPassByIndex(passID);
 
+		BOOL bNormalPass = true;
+		pPass->GetAnnotationByName("Normal")->AsScalar()->GetBool(&bNormalPass);
+
+		// Skip special passes
+		if (!bNormalPass)
+			continue;
+
 		uint4 stageID = InvalidPipelineStage;
 		uint4 queueID = InvalidRenderQueue;
 

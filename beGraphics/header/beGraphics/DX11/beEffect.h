@@ -63,15 +63,32 @@ BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11ShaderReflection, true> MaybeReflectSha
 BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11ShaderReflection, true> MaybeReflectShader(ID3DX11EffectPass *pShaderVariable, ShaderType::T type);
 
 /// Gets the description of the given effect variable.
-BE_GRAPHICS_DX11_API D3DX11_EFFECT_VARIABLE_DESC GetDesc(ID3DX11EffectVariable *pVariable);
+BE_GRAPHICS_DX11_API D3DX11_EFFECT_VARIABLE_DESC GetDesc(ID3DX11EffectVariable *variable, const char *name = nullptr);
 /// Gets the description of the given effect variable.
-BE_GRAPHICS_DX11_API D3DX11_EFFECT_TYPE_DESC GetDesc(ID3DX11EffectType *pType);
+BE_GRAPHICS_DX11_API D3DX11_EFFECT_TYPE_DESC GetDesc(ID3DX11EffectType *type, const char *name = nullptr);
 /// Gets the description of the given effect variable.
-BE_GRAPHICS_DX11_API D3DX11_EFFECT_DESC GetDesc(ID3DX11Effect *pEffect);
+BE_GRAPHICS_DX11_API D3DX11_EFFECT_DESC GetDesc(ID3DX11Effect *effect, const char *name = nullptr);
 /// Gets the description of the given effect variable.
-BE_GRAPHICS_DX11_API D3DX11_TECHNIQUE_DESC GetDesc(ID3DX11EffectTechnique *pTechnique);
+BE_GRAPHICS_DX11_API D3DX11_TECHNIQUE_DESC GetDesc(ID3DX11EffectTechnique *technique, const char *name = nullptr);
 /// Gets the description of the given effect variable.
-BE_GRAPHICS_DX11_API D3DX11_PASS_DESC GetDesc(ID3DX11EffectPass *pPass);
+BE_GRAPHICS_DX11_API D3DX11_PASS_DESC GetDesc(ID3DX11EffectPass *pass, const char *name = nullptr);
+
+/// Validates the given effect variable.
+BE_GRAPHICS_DX11_API ID3DX11EffectVariable* Validate(ID3DX11EffectVariable *pVariable, const char *src = nullptr, const char *name = nullptr);
+/// Validates the given effect variable.
+BE_GRAPHICS_DX11_API ID3DX11EffectType* Validate(ID3DX11EffectType *pVariable, const char *src = nullptr, const char *name = nullptr);
+/// Validates the given effect variable.
+BE_GRAPHICS_DX11_API ID3DX11EffectTechnique* Validate(ID3DX11EffectTechnique *pVariable, const char *src = nullptr, const char *name = nullptr);
+/// Validates the given effect variable.
+BE_GRAPHICS_DX11_API ID3DX11EffectPass* Validate(ID3DX11EffectPass *pVariable, const char *src = nullptr, const char *name = nullptr);
+
+/// Validates the given effect variable.
+template <class Variable>
+LEAN_INLINE Variable* ValidateEffectVariable(Variable *pVariable, const char *src = nullptr, const char *name = nullptr)
+{
+	Validate(pVariable, src, name);
+	return pVariable;
+}
 
 /// Effect implementation.
 class Effect : public beCore::IntransitiveWrapper<ID3DX11Effect, Effect>, public beGraphics::Effect

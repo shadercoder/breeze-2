@@ -21,8 +21,8 @@ namespace DX11
 BE_SCENE_API D3D11_BUFFER_DESC GetVertexBufferDesc(uint4 vertexSize, uint4 vertexCount);
 // Constructs an index buffer description form the given parameters.
 BE_SCENE_API D3D11_BUFFER_DESC GetIndexBufferDesc(uint4 indexSize, uint4 indexCount);
-/// Computes a bounding sphere from the given vertices.
-BE_SCENE_API beMath::fsphere3 ComputeBounds(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
+/// Computes a bounding box from the given vertices.
+BE_SCENE_API beMath::faab3 ComputeBounds(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 	uint4 vertexSize, const void *pVertices, uint4 vertexCount);
 
 /// Mesh base.
@@ -46,7 +46,8 @@ public:
 	BE_SCENE_API Mesh(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 		uint4 vertexSize, const void *pVertices, uint4 vertexCount,
 		DXGI_FORMAT indexFormat, const void *pIndices, uint4 indexCount,
-		const beMath::fsphere3 &bounds, beGraphics::Any::API::Device *pDevice, MeshCompound *pCompound = nullptr);
+		const beMath::faab3 &bounds, 
+		beGraphics::Any::API::Device *pDevice, MeshCompound *pCompound = nullptr);
 	/// Constructor.
 	BE_SCENE_API Mesh(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 		uint4 vertexSize, const void *pVertices, uint4 vertexCount,

@@ -27,7 +27,12 @@ namespace MeshLoadFlags
 
 		SmoothNormals = 1 << 4,		/// Regenerate all normals.
 		
-		NonIndexed = 1 << 5			/// Disables indexing (required for physics processing).
+		NonIndexed = 1 << 5,		/// Disables indexing (required for physics processing).
+
+		Optimize = 1 << 6,			/// Vertex cache optimization.
+		ForceUV = 1 << 7,			/// Enforces UV coords for all (even untextured) vertices.
+		ObjectNormals = 1 << 8,		/// Compute object normals (stored as bitangents).
+		RemoveMaterials = 1 << 9	/// Removes all materials.
 	};
 }
 

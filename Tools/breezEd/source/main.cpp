@@ -30,6 +30,10 @@ int main(int argc, char *argv[])
 		beCore::FileSystem::Get().AddPath("Materials", "Data/Materials");
 	if (!beCore::FileSystem::Get().HasLocation("Meshes"))
 		beCore::FileSystem::Get().AddPath("Meshes", "Data/Meshes");
+	if (!beCore::FileSystem::Get().HasLocation("PhysicsMaterials"))
+		beCore::FileSystem::Get().AddPath("PhysicsMaterials", "Data/Materials");
+	if (!beCore::FileSystem::Get().HasLocation("PhysicsShapes"))
+		beCore::FileSystem::Get().AddPath("PhysicsShapes", "Data/Meshes");
 	if (!beCore::FileSystem::Get().HasLocation("Maps"))
 		beCore::FileSystem::Get().AddPath("Maps", "Data/Maps");
 

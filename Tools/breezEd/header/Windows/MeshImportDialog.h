@@ -45,4 +45,7 @@ public Q_SLOTS:
 	void browseForOutput();
 };
 
+/// Browses for a mesh file.
+QString browseForMesh(const QString &currentPath, Editor &editor, QWidget *pParent);
+
 #endif

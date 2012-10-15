@@ -17,6 +17,21 @@
 namespace beScene
 {
 
+/// Renderable effect driver state.
+struct RenderableDriverState
+{
+	LightBinderState Light;	///< Light binder state.
+	uint4 PassID;			///< Pass id.
+};
+
+/// Casts the given abstract state data into renderable driver state.
+template <class RenderableDriverState>
+LEAN_INLINE RenderableDriverState& ToRenderableDriverState(AbstractRenderableDriverState &state)
+{
+	LEAN_STATIC_ASSERT(sizeof(RenderableDriverState) <= sizeof(AbstractRenderableDriverState));
+	return *reinterpret_cast<RenderableDriverState*>(state.Data);
+}
+
 /// Renderable effect driver.
 class RenderableEffectDriver : public AbstractRenderableEffectDriver
 {
@@ -34,13 +49,20 @@ public:
 
 	/// Applies the given renderable & perspective data to the effect bound by this effect driver.
 	BE_SCENE_API bool Apply(const RenderableEffectData *pRenderableData, const Perspective &perspective,
-		beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
 
 	/// Applies the given pass to the effect bound by this effect driver.
 	BE_SCENE_API bool ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
 		const RenderableEffectData *pRenderableData, const Perspective &perspective,
 		const LightJob *lights, const LightJob *lightsEnd,
-		RenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
+
+	/// Draws the given number of primitives.
+	BE_SCENE_API void DrawIndexed(uint4 indexCount, uint4 startIndex, int4 baseVertex,
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
+	/// Draws the given number of primitives and instances.
+	BE_SCENE_API void DrawIndexedInstanced(uint4 indexCount, uint4 instanceCount, uint4 startIndex, uint4 startInstance, int4 baseVertex,
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
 
 	/// Gets the number of passes.
 	BE_SCENE_API uint4 GetPassCount() const;

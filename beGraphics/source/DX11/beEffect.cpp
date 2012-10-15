@@ -72,10 +72,11 @@ lean::com_ptr<ID3DBlob, true> CompileEffect(const lean::utf8_t *source, uint4 so
 		pIncludeManager,
 		nullptr,
 		"fx_5_0",
+		D3D10_SHADER_PACK_MATRIX_ROW_MAJOR | D3D10_SHADER_PARTIAL_PRECISION | D3D10_SHADER_ENABLE_STRICTNESS | 
 #ifdef LEAN_DEBUG_BUILD
-		D3D10_SHADER_DEBUG | D3D10_SHADER_OPTIMIZATION_LEVEL1 | D3D10_SHADER_PACK_MATRIX_ROW_MAJOR,
+		D3D10_SHADER_DEBUG | D3D10_SHADER_OPTIMIZATION_LEVEL2,
 #else
-		D3D10_SHADER_OPTIMIZATION_LEVEL3 | D3D10_SHADER_PACK_MATRIX_ROW_MAJOR,
+		D3D10_SHADER_OPTIMIZATION_LEVEL3,
 #endif
 		0,
 		pBytecode.rebind(),
@@ -152,53 +153,82 @@ lean::com_ptr<ID3D11ShaderReflection, true> MaybeReflectShader(ID3DX11EffectPass
 }
 
 // Gets the description of the given effect variable.
-D3DX11_EFFECT_VARIABLE_DESC GetDesc(ID3DX11EffectVariable *pVariable)
+D3DX11_EFFECT_VARIABLE_DESC GetDesc(ID3DX11EffectVariable *variable, const char *name)
 {
 	D3DX11_EFFECT_VARIABLE_DESC desc;
-	BE_THROW_DX_ERROR_MSG(
-		pVariable->GetDesc(&desc),
-		"ID3DX11EffectVariable::GetDesc()" );
+	BE_THROW_DX_ERROR_CTX(
+		variable->GetDesc(&desc),
+		"ID3DX11EffectVariable::GetDesc()", name );
 	return desc;
 }
 
 // Gets the description of the given effect variable.
-D3DX11_EFFECT_TYPE_DESC GetDesc(ID3DX11EffectType *pType)
+D3DX11_EFFECT_TYPE_DESC GetDesc(ID3DX11EffectType *type, const char *name)
 {
 	D3DX11_EFFECT_TYPE_DESC desc;
-	BE_THROW_DX_ERROR_MSG(
-		pType->GetDesc(&desc),
-		"ID3DX11EffectType::GetDesc()" );
+	BE_THROW_DX_ERROR_CTX(
+		type->GetDesc(&desc),
+		"ID3DX11EffectType::GetDesc()", name );
 	return desc;
 }
 
 // Gets the description of the given effect variable.
-D3DX11_EFFECT_DESC GetDesc(ID3DX11Effect *pEffect)
+D3DX11_EFFECT_DESC GetDesc(ID3DX11Effect *effect, const char *name)
 {
 	D3DX11_EFFECT_DESC desc;
-	BE_THROW_DX_ERROR_MSG(
-		pEffect->GetDesc(&desc),
-		"ID3DX11Effect::GetDesc()" );
+	BE_THROW_DX_ERROR_CTX(
+		effect->GetDesc(&desc),
+		"ID3DX11Effect::GetDesc()", name );
 	return desc;
 }
 
 // Gets the description of the given effect variable.
-D3DX11_TECHNIQUE_DESC GetDesc(ID3DX11EffectTechnique *pTechnique)
+D3DX11_TECHNIQUE_DESC GetDesc(ID3DX11EffectTechnique *technique, const char *name)
 {
 	D3DX11_TECHNIQUE_DESC desc;
-	BE_THROW_DX_ERROR_MSG(
-		pTechnique->GetDesc(&desc),
-		"ID3DX11EffectTechnique::GetDesc()" );
+	BE_THROW_DX_ERROR_CTX(
+		technique->GetDesc(&desc),
+		"ID3DX11EffectTechnique::GetDesc()", name );
 	return desc;
 }
 
 // Gets the description of the given effect variable.
-D3DX11_PASS_DESC GetDesc(ID3DX11EffectPass *pPass)
+D3DX11_PASS_DESC GetDesc(ID3DX11EffectPass *pass, const char *name)
 {
 	D3DX11_PASS_DESC desc;
-	BE_THROW_DX_ERROR_MSG(
-		pPass->GetDesc(&desc),
-		"ID3DX11EffectPass::GetDesc()" );
+	BE_THROW_DX_ERROR_CTX(
+		pass->GetDesc(&desc),
+		"ID3DX11EffectPass::GetDesc()", name );
 	return desc;
+}
+
+// Validates the given effect variable.
+ID3DX11EffectVariable* Validate(ID3DX11EffectVariable *pVariable, const char *src, const char *name)
+{
+	if (!pVariable || !pVariable->IsValid())
+		LEAN_THROW_ERROR_CTX_FROM(src, "ID3DX11EffectVariable::Validate()", name);
+	return pVariable;
+}
+// Validates the given effect variable.
+ID3DX11EffectType* Validate(ID3DX11EffectType *pVariable, const char *src, const char *name)
+{
+	if (!pVariable || !pVariable->IsValid())
+		LEAN_THROW_ERROR_CTX_FROM(src, "ID3DX11EffectVariable::Validate()", name);
+	return pVariable;
+}
+// Validates the given effect variable.
+ID3DX11EffectTechnique* Validate(ID3DX11EffectTechnique *pVariable, const char *src, const char *name)
+{
+	if (!pVariable || !pVariable->IsValid())
+		LEAN_THROW_ERROR_CTX_FROM(src, "ID3DX11EffectVariable::Validate()", name);
+	return pVariable;
+}
+// Validates the given effect variable.
+ID3DX11EffectPass* Validate(ID3DX11EffectPass *pVariable, const char *src, const char *name)
+{
+	if (!pVariable || !pVariable->IsValid())
+		LEAN_THROW_ERROR_CTX_FROM(src, "ID3DX11EffectVariable::Validate()", name);
+	return pVariable;
 }
 
 // Creates an effect from the given object code.

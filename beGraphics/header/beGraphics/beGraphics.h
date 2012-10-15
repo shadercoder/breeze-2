@@ -50,30 +50,41 @@
 /// @}
 
 #include <beCore/beCore.h>
-#include "beImplementations.h"
 
 /// @addtogroup GraphicsLibray beGraphics library
 /// For a better overview, see <a href="namespaces.html">Namespaces</a>.
 /// @see <a href="namespaces.html">Namespaces</a>
 /// @{
 
-#ifndef BE_GRAPHICS_IMPLEMENTATION
-	/// Define this to select a graphics implementation.
-	#define BE_GRAPHICS_IMPLEMENTATION BE_GRAPHICS_DX11_IMPLEMENTATION
+#ifdef DOXYGEN_READ_THIS
+	/// Define this to choose the DirectX 11 implementation.
+	#define BE_GRAPHICS_DIRECTX_11
+	#undef BE_GRAPHICS_DIRECTX_11
 #endif
 
-// Define implementation switches
-#include "beImplementations.h"
+// Default to DirectX 11 if nothing else specified
+#if !defined(BE_GRAPHICS_DIRECTX_11) && 1 // ... // TODO: Update for every new alternative
+	#define BE_GRAPHICS_DIRECTX_11
+#endif
 
 /// Main namespace of the beGraphics library.
 namespace beGraphics
 {
 	// Import important types
 	using namespace lean::types;
+	LEAN_REIMPORT_NUMERIC_TYPES;
 	using namespace lean::strings::types;
 
-	/// Active implementation ID.
-	static const ImplementationID ActiveImplementation = BE_GRAPHICS_IMPLEMENTATION;
+	/// Implementation ID enumeration.
+	enum ImplementationID
+	{
+		DX11Implementation = LEAN_MAKE_WORD_4('D', 'X', '1', '1')	///< DirectX 11 implementation ID.
+	};
+
+	#ifdef BE_GRAPHICS_DIRECTX_11
+		/// Active implementation ID.
+		static const ImplementationID ActiveImplementation = DX11Implementation;
+	#endif
 
 	/// Graphics implementation interface.
 	class Implementation

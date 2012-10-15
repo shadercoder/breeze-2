@@ -159,7 +159,7 @@ void LoadTextures(TextureProvider &textures, const rapidxml::xml_node<lean::utf8
 						else
 						{
 							TextureView *pTexture = // (!file.empty())
-								/*?*/ cache.GetTextureView(file);
+								/*?*/ cache.GetTextureView(file, textures.IsColorTexture(textureID));
 //								: nullptr; // TODO: cache.GetTextureViewByName(name, true);
 
 							textures.SetTexture(textureID, pTexture);
@@ -202,7 +202,7 @@ void LoadSetup(Setup &setup, const rapidxml::xml_node<lean::utf8_t> &node, Textu
 	LoadTextures(setup, node, textureCache);
 }
 
-// Load the given setup from the given XML node.
+// Load the given setup from the given XML document.
 void LoadSetup(Setup &setup, const rapidxml::xml_document<lean::utf8_t> &document, TextureCache &textureCache)
 {
 	const rapidxml::xml_node<lean::utf8_t> *root = document.first_node("setup");
@@ -213,14 +213,14 @@ void LoadSetup(Setup &setup, const rapidxml::xml_document<lean::utf8_t> &documen
 		LEAN_THROW_ERROR_MSG("Setup root node missing");
 }
 
-// Load the given setup from the given XML node.
+// Load the given setup from the given XML file.
 void LoadSetup(Setup &setup, const utf8_ntri &file, TextureCache &textureCache)
 {
 	LEAN_LOG("Attempting to load setup \"" << file.c_str() << "\"");
 
 	LoadSetup( setup, lean::xml_file<lean::utf8_t>(file).document(), textureCache );
 
-	LEAN_LOG("setup \"" << file.c_str() << "\" created successfully");
+	LEAN_LOG("Setup \"" << file.c_str() << "\" created successfully");
 }
 
 } // namespace

@@ -26,7 +26,6 @@ class RenderableMaterialCache : public lean::noncopyable, public beCore::Resourc
 {
 public:
 	struct M;
-	friend struct M;
 
 private:
 	lean::pimpl_ptr<M> m;
@@ -47,7 +46,7 @@ public:
 };
 
 /// Creates a new material cache.
-lean::resource_ptr<RenderableMaterialCache, true> CreateRenderableMaterialCache(EffectBinderCache<AbstractRenderableEffectDriver> *pDriverCache);
+BE_SCENE_API lean::resource_ptr<RenderableMaterialCache, true> CreateRenderableMaterialCache(EffectBinderCache<AbstractRenderableEffectDriver> *pDriverCache);
 
 } // namespace
 

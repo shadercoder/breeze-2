@@ -32,8 +32,11 @@ RenderableEffectDriver::~RenderableEffectDriver()
 
 // Applies the given renderable & perspective data to the effect bound by this effect driver.
 bool RenderableEffectDriver::Apply(const RenderableEffectData *pRenderableData, const Perspective &perspective,
-		beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
+		AbstractRenderableDriverState &abstractState, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
 {
+	// Initialize state
+	new (abstractState.Data) RenderableDriverState();
+
 	return m_renderableBinder.Apply(pRenderableData, perspective, ToImpl(stateManager), ToImpl(context));
 }
 
@@ -41,11 +44,13 @@ bool RenderableEffectDriver::Apply(const RenderableEffectData *pRenderableData, 
 bool RenderableEffectDriver::ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
 		const RenderableEffectData *pRenderableData, const Perspective &perspective,
 		const LightJob *lights, const LightJob *lightsEnd,
-		RenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
+		AbstractRenderableDriverState &abstractState,
+		beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
 {
 	const PipelineEffectBinderPass* pPipelinePass = static_cast<const PipelineEffectBinderPass*>(pPass);
-	ID3D11DeviceContext *pContextDX = ToImpl(context);
+	RenderableDriverState &state = ToRenderableDriverState<RenderableDriverState>(abstractState);
 	beGraphics::Any::StateManager &stateManagerDX11 = ToImpl(stateManager);
+	ID3D11DeviceContext *pContextDX = ToImpl(context);
 
 	uint4 step;
 	const StateEffectBinderPass *pStatePass;
@@ -61,11 +66,26 @@ bool RenderableEffectDriver::ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
 			if (nextPassID == passID)
 				--nextStep;
 
+			state.PassID = passID;
 			return pPipelinePass->Apply(step, stateManagerDX11, pContextDX);
 		}
 	}
 
 	return false;
+}
+
+// Draws the given number of primitives.
+void RenderableEffectDriver::DrawIndexed(uint4 indexCount, uint4 startIndex, int4 baseVertex,
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
+{
+	ToImpl(context)->DrawIndexed(indexCount, startIndex, baseVertex);
+}
+
+// Draws the given number of primitives and instances.
+void RenderableEffectDriver::DrawIndexedInstanced(uint4 indexCount, uint4 instanceCount, uint4 startIndex, uint4 startInstance, int4 baseVertex,
+		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
+{
+	ToImpl(context)->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
 }
 
 // Gets the number of passes.

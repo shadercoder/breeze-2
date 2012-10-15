@@ -84,6 +84,15 @@
     <ClInclude Include="header\beMath\beSphereDef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\beMath\beAAB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beMath\beAABDef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beMath\beAABFwd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\stdafx.cpp">

@@ -168,6 +168,9 @@
     <ClInclude Include="header\beCore\bePropertyListener.h">
       <Filter>Header Files\Reflection</Filter>
     </ClInclude>
+    <ClInclude Include="header\beCore\beResourceIndex.h">
+      <Filter>Header Files\Resource Management</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\beCore.cpp">

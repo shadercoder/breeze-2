@@ -50,7 +50,7 @@ struct VectorStream : public physx::PxOutputStream
 	}
 };
 
-struct FileStream : public physx::PxSerialStream
+struct FileStream : public physx::PxOutputStream
 {
 	lean::raw_file *File;
 	uint8 Base;
@@ -59,14 +59,17 @@ struct FileStream : public physx::PxSerialStream
 		: File(pFile),
 		Base(pFile->pos()) { }
 
-	void storeBuffer(const void* buffer, physx::PxU32 size)
+	physx::PxU32 write(const void* buffer, physx::PxU32 size)
 	{
 		// WARNING: PhysX passes nullptrs from time to time
 		if (buffer)
 			File->write( static_cast<const char*>(buffer), size );
 //		else
 //			LEAN_LOG_ERROR("PhysX nullptr buffer caught while writing to file");
+
+		return size;
 	}
+
 	physx::PxU32 getTotalStoredSize()
 	{
 		return static_cast<uint4>( File->pos() - Base );
@@ -80,7 +83,9 @@ void SaveBox(physx::PxCollection &shapeCollection, physx::PxMaterial &defaultMat
 	aiVector3D pos;
 	aiQuaternion rot;
 	aiVector3D scale;
+
 	transform.Decompose(scale, rot, pos);
+	rot.Normalize();
 
 	LEAN_LOG("Box at " << pos.x << "; " << pos.y << "; " << pos.z
 		<< " (" << scale.x << "; " << scale.y << "; " << scale.z << ")");
@@ -100,7 +105,9 @@ void SaveSphere(physx::PxCollection &shapeCollection, physx::PxMaterial &default
 	aiVector3D pos;
 	aiQuaternion rot;
 	aiVector3D scale;
+
 	transform.Decompose(scale, rot, pos);
+	rot.Normalize();
 
 	float radius = pow( abs(scale.x * scale.y * scale.z), 1.0f / 3.0f );
 
@@ -123,7 +130,9 @@ void SaveConvex(physx::PxCollection &meshCollection, physx::PxCollection &shapeC
 	aiVector3D pos;
 	aiQuaternion rot;
 	aiVector3D scale;
+
 	transform.Decompose(scale, rot, pos);
+	rot.Normalize();
 
 	LEAN_LOG("Convex at " << pos.x << "; " << pos.y << "; " << pos.z
 		<< " (" << scale.x << "; " << scale.y << "; " << scale.z << ")");
@@ -151,14 +160,14 @@ void SaveConvex(physx::PxCollection &meshCollection, physx::PxCollection &shapeC
 	if (!cooking.cookConvexMesh(convexDesc, meshData))
 		LEAN_THROW_ERROR_MSG("PxCooking::cookConvexMesh()");
 
-	bePhysics::scoped_pxptr_t<physx::PxConvexMesh>::t pMesh(
+	bePhysics::PX3::scoped_pxptr_t<physx::PxConvexMesh>::t pMesh(
 			physics.createConvexMesh( MemoryStream(&meshData.Data[0]) )
 		);
 
 	if (!pMesh)
 		LEAN_THROW_ERROR_MSG("PxPhysics::createConvexMesh()");
 
-	void *meshSerializationID = reinterpret_cast<void*>(bePhysics::RigidActorSerializationID::InternalBase + meshCollection.getNbObjects());
+	physx::PxSerialObjectRef meshSerializationID = bePhysics::RigidActorSerializationID::InternalBase + meshCollection.getNbObjects();
 	pMesh->collectForExport(meshCollection);
 	meshCollection.setUserData(*pMesh, meshSerializationID);
 
@@ -179,7 +188,9 @@ void SaveMesh(physx::PxCollection &meshCollection, physx::PxCollection &shapeCol
 	aiVector3D pos;
 	aiQuaternion rot;
 	aiVector3D scale;
+
 	transform.Decompose(scale, rot, pos);
+	rot.Normalize();
 
 	LEAN_LOG("Triangle Mesh at " << pos.x << "; " << pos.y << "; " << pos.z
 		<< " (" << scale.x << "; " << scale.y << "; " << scale.z << ")");
@@ -207,14 +218,14 @@ void SaveMesh(physx::PxCollection &meshCollection, physx::PxCollection &shapeCol
 	if (!cooking.cookTriangleMesh(meshDesc, meshData))
 		LEAN_THROW_ERROR_MSG("PxCooking::cookTriangleMesh()");
 
-	bePhysics::scoped_pxptr_t<physx::PxTriangleMesh>::t pMesh(
+	bePhysics::PX3::scoped_pxptr_t<physx::PxTriangleMesh>::t pMesh(
 			physics.createTriangleMesh( MemoryStream(&meshData.Data[0]) )
 		);
 
 	if (!pMesh)
 		LEAN_THROW_ERROR_MSG("PxPhysics::createTriangleMesh()");
 
-	void *meshSerializationID = reinterpret_cast<void*>(bePhysics::RigidActorSerializationID::InternalBase + meshCollection.getNbObjects());
+	physx::PxSerialObjectRef meshSerializationID = bePhysics::RigidActorSerializationID::InternalBase + meshCollection.getNbObjects();
 	pMesh->collectForExport(meshCollection);
 	meshCollection.setUserData(*pMesh, meshSerializationID);
 
@@ -288,14 +299,14 @@ void SavePhysXShapes(const utf8_ntri &file, const Scene &scene, PhysicsCooker &c
 
 
 	// Default material
-	bePhysics::scoped_pxptr_t<physx::PxMaterial>::t pDefaultMaterial( pPhysics->createMaterial(0.5f, 0.5f, 0.5f) );
+	bePhysics::PX3::scoped_pxptr_t<physx::PxMaterial>::t pDefaultMaterial( pPhysics->createMaterial(0.5f, 0.5f, 0.5f) );
 
 	if (!pDefaultMaterial)
 		LEAN_THROW_ERROR_MSG("PxPhysics::createMaterial()");
 
 
 	// Dummy actor
-	bePhysics::scoped_pxptr_t<physx::PxRigidActor>::t pActor(
+	bePhysics::PX3::scoped_pxptr_t<physx::PxRigidActor>::t pActor(
 			pPhysics->createRigidDynamic( physx::PxTransform::createIdentity() )
 		);
 
@@ -304,8 +315,8 @@ void SavePhysXShapes(const utf8_ntri &file, const Scene &scene, PhysicsCooker &c
 
 
 	// Target collections
-	physx::PxCollection *pMeshCollection = pPhysics->createCollection();
-	physx::PxCollection *pShapeCollection = pPhysics->createCollection();
+	bePhysics::PX3::scoped_pxptr_t<physx::PxCollection>::t pMeshCollection( pPhysics->createCollection() );
+	bePhysics::PX3::scoped_pxptr_t<physx::PxCollection>::t pShapeCollection( pPhysics->createCollection() );
 	
 	if (!pMeshCollection || !pShapeCollection)
 		LEAN_THROW_ERROR_MSG("PxPhysics::createCollection()");
@@ -316,9 +327,9 @@ void SavePhysXShapes(const utf8_ntri &file, const Scene &scene, PhysicsCooker &c
 		*sceneImpl.GetScene()->mRootNode, aiMatrix4x4(), *sceneImpl.GetScene());
 
 	// Provide links for actor & material
-	pShapeCollection->addExternalRef(*pDefaultMaterial, reinterpret_cast<void*>(bePhysics::RigidActorSerializationID::DefaultMaterial));
+	pShapeCollection->addExternalRef(*pDefaultMaterial, bePhysics::RigidActorSerializationID::DefaultMaterial);
 	pActor->collectForExport(*pShapeCollection);
-	pShapeCollection->setUserData(*pActor, reinterpret_cast<void*>(bePhysics::RigidActorSerializationID::Actor));
+	pShapeCollection->setUserData(*pActor, bePhysics::RigidActorSerializationID::Actor);
 //	pCollection->addExternalRef(pActor, reinterpret_cast<void*>(bePhysics::RigidActorSerializationID::Actor));
 
 	// Serialize meshes
@@ -352,10 +363,6 @@ void SavePhysXShapes(const utf8_ntri &file, const Scene &scene, PhysicsCooker &c
 		shapeFile.write( reinterpret_cast<const char*>(&shapeSize), sizeof(shapeSize) );
 		shapeFile.pos(pos);
 	}
-
-	// MONITOR: Manual release required - not exception safe!
-	pPhysics->releaseCollection(*pMeshCollection);
-	pPhysics->releaseCollection(*pShapeCollection);
 }
 
 } // namespace

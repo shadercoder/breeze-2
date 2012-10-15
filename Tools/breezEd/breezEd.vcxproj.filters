@@ -63,9 +63,6 @@
     <Filter Include="Header Files\Utility">
       <UniqueIdentifier>{d41011da-7f5b-4e26-97ea-33dac9f070c7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Tiles">
-      <UniqueIdentifier>{eb026d5a-2703-4341-8be5-883284f80e41}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Tiles">
       <UniqueIdentifier>{82613d4e-a45f-4cbb-a84e-0b5d92fc368a}</UniqueIdentifier>
     </Filter>
@@ -95,6 +92,9 @@
     </Filter>
     <Filter Include="Source Files\Binders">
       <UniqueIdentifier>{313ab64e-6ed2-4212-afb9-4bf5345d8bce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tiles">
+      <UniqueIdentifier>{eb026d5a-2703-4341-8be5-883284f80e41}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -335,27 +335,6 @@
     <ClCompile Include="source\Widgets\BrowseWidget.cpp">
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="source\Widgets\CreationParameterWidgetFactory.cpp">
-      <Filter>Source Files\Widgets</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Widgets\FileCreationParameterWidget.cpp">
-      <Filter>Source Files\Widgets</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Widgets\MeshCreationParameterWidget.cpp">
-      <Filter>Source Files\Widgets</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_FileCreationParameterWidget.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_FileCreationParameterWidget.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_MeshCreationParameterWidget.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_MeshCreationParameterWidget.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_MeshImportDialog.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
@@ -506,15 +485,6 @@
     <ClCompile Include="GeneratedFiles\Release\moc_ShapeImportDialog.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="source\Widgets\ShapeCreationParameterWidget.cpp">
-      <Filter>Source Files\Widgets</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_ShapeCreationParameterWidget.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_ShapeCreationParameterWidget.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_TreeViewEx.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
@@ -526,15 +496,6 @@
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_ItemDelegateEx.cpp">
       <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_ComponentSelectorWidget.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_ComponentSelectorWidget.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Widgets\ComponentSelectorWidget.cpp">
-      <Filter>Source Files\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="source\Commands\ChangeProperty.cpp">
       <Filter>Source Files\Commands</Filter>
@@ -584,6 +545,27 @@
     <ClCompile Include="GeneratedFiles\Release\moc_SlotObject.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_GenericComponentPicker.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_GenericComponentPicker.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\GenericComponentPicker.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ComponentPicker.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ComponentPicker.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\ComponentPicker.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\ComponentPickerFactory.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
@@ -631,17 +613,8 @@
     <ClInclude Include="header\DeviceManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\Plugins\WidgetFactoryManager.h">
-      <Filter>Header Files\Plugins</Filter>
-    </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_BrowseWidget.h">
       <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Widgets\CreationParameterWidget.h">
-      <Filter>Header Files\Widgets</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Widgets\CreationParameterWidgetFactory.h">
-      <Filter>Header Files\Widgets</Filter>
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_MeshImportDialog.h">
       <Filter>Generated Files</Filter>
@@ -688,9 +661,6 @@
     <ClInclude Include="GeneratedFiles\ui_ShapeImportDialog.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="GeneratedFiles\ui_ComponentSelectorWidget.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
     <ClInclude Include="header\Commands\ChangeProperty.h">
       <Filter>Header Files\Commands</Filter>
     </ClInclude>
@@ -705,6 +675,15 @@
     </ClInclude>
     <ClInclude Include="header\Utility\UI.h">
       <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Plugins\FactoryManager.h">
+      <Filter>Header Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_GenericComponentPicker.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Widgets\ComponentPickerFactory.h">
+      <Filter>Header Files\Widgets</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -828,12 +807,6 @@
     <CustomBuild Include="header\Widgets\BrowseWidget.h">
       <Filter>Header Files\Widgets</Filter>
     </CustomBuild>
-    <CustomBuild Include="header\Widgets\FileCreationParameterWidget.h">
-      <Filter>Header Files\Widgets</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\MeshCreationParameterWidget.h">
-      <Filter>Header Files\Widgets</Filter>
-    </CustomBuild>
     <CustomBuild Include="ui\MeshImportDialog.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
@@ -897,20 +870,11 @@
     <CustomBuild Include="header\Windows\ShapeImportDialog.h">
       <Filter>Header Files\Windows</Filter>
     </CustomBuild>
-    <CustomBuild Include="header\Widgets\ShapeCreationParameterWidget.h">
-      <Filter>Header Files\Widgets</Filter>
-    </CustomBuild>
     <CustomBuild Include="header\Utility\TreeViewEx.h">
       <Filter>Header Files\Utility</Filter>
     </CustomBuild>
     <CustomBuild Include="header\Utility\ItemDelegateEx.h">
       <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\ComponentSelectorWidget.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\ComponentSelectorWidget.h">
-      <Filter>Header Files\Widgets</Filter>
     </CustomBuild>
     <CustomBuild Include="ui\EntitySelectionWidget.ui">
       <Filter>Form Files</Filter>
@@ -932,6 +896,15 @@
     </CustomBuild>
     <CustomBuild Include="header\Utility\SlotObject.h">
       <Filter>Header Files\Utility</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\GenericComponentPicker.h">
+      <Filter>Header Files\Widgets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ui\GenericComponentPicker.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="header\Widgets\ComponentPicker.h">
+      <Filter>Header Files\Widgets</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

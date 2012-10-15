@@ -31,6 +31,15 @@ SceneController::~SceneController()
 	Detach();
 }
 
+// Synchronizes this controller with the simulation.
+void SceneController::Flush()
+{
+	// NOTE: Make sure new renderables get flushed right away
+	m_pScenery->Prepare();
+
+	SynchronizedHost::Flush();
+}
+
 // Renders the scene using the stored context.
 void SceneController::Render()
 {

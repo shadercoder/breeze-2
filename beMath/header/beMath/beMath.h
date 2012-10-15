@@ -72,6 +72,7 @@ namespace beMath
 {
 	// Import important types
 	using namespace lean::types;
+	LEAN_REIMPORT_NUMERIC_TYPES;
 
 	// Import important functions
 	using lean::min;

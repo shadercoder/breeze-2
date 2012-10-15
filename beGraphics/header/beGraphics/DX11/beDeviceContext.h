@@ -17,6 +17,16 @@ namespace beGraphics
 namespace DX11
 {
 
+/// Clears all pixel shader output resources.
+BE_GRAPHICS_DX11_API void UnbindAllRenderTargets(ID3D11DeviceContext *context);
+/// Clears all compute shader output resources.
+BE_GRAPHICS_DX11_API void UnbindAllComputeTargets(ID3D11DeviceContext *context);
+/// Clears all output resources.
+BE_GRAPHICS_DX11_API void UnbindAllTargets(ID3D11DeviceContext *context);
+
+/// Clears all shader resources.
+BE_GRAPHICS_DX11_API void UnbindAllShaderResources(ID3D11DeviceContext *context);
+
 /// Device context implementation.
 class DeviceContext : public beCore::IntransitiveWrapper<ID3D11DeviceContext, DeviceContext>,
 	public beGraphics::DeviceContext

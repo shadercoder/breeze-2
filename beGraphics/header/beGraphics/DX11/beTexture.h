@@ -29,20 +29,45 @@ BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Texture2D, true> CreateTexture(const D3
 BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Texture3D, true> CreateTexture(const D3D11_TEXTURE3D_DESC &desc,
 	const D3D11_SUBRESOURCE_DATA *pInitialData, ID3D11Device *pDevice);
 
+/// Creates a 2D texture.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Texture2D, true> CreateTexture2D(ID3D11Device *device, uint4 bindFlags, DXGI_FORMAT format,
+	uint4 width, uint4 height, uint4 elements = 1, uint4 mipLevels = 1, uint4 flags = 0);
+// Creates a 3D texture.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Texture3D, true> CreateTexture3D(ID3D11Device *device, uint4 bindFlags, DXGI_FORMAT format,
+	uint4 width, uint4 height, uint4 depth, uint4 mipLevels = 1, uint4 flags = 0);
+
+/// Creates a staging texture matching the given texture.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Texture2D, true> CreateStagingTexture(ID3D11Device *device, ID3D11Texture2D *texture, uint4 element = -1, uint4 mipLevel = -1, uint4 cpuAccess = D3D11_CPU_ACCESS_READ);
+/// Creates a staging texture matching the given texture.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Texture3D, true> CreateStagingTexture(ID3D11Device *device, ID3D11Texture3D *texture, uint4 mipLevel = -1, uint4 cpuAccess = D3D11_CPU_ACCESS_READ);
+/// Copies data from the given source texture to the given destination texture.
+BE_GRAPHICS_DX11_API void CopyTexture(ID3D11DeviceContext *context, ID3D11Resource *dest, uint4 destOffset, ID3D11Resource *src, uint4 srcOffset);
+
+/// Creates an unordered access view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11UnorderedAccessView, true> CreateUAV(ID3D11Resource *buffer, const D3D11_UNORDERED_ACCESS_VIEW_DESC *pDesc = nullptr);
+/// Creates a shader resource view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11ShaderResourceView, true> CreateSRV(ID3D11Resource *buffer, const D3D11_SHADER_RESOURCE_VIEW_DESC *pDesc = nullptr);
+/*
+/// Creates an unordered access view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11UnorderedAccessView, true> CreateMipUAV(ID3D11Resource *buffer, uint4 mipLevel, DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN);
+/// Creates a shader resource view.
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11ShaderResourceView, true> CreateMipSRV(ID3D11Resource *buffer, uint4 mipLevel, DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN);
+*/
+
 /// Creates a shader resource view from the given texture.
 BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11ShaderResourceView, true> CreateShaderResourceView(ID3D11Resource *pTexture,
 	const D3D11_SHADER_RESOURCE_VIEW_DESC *pDesc, ID3D11Device *pDevice);
 
 /// Maps this texture to allow for CPU access.
-BE_GRAPHICS_DX11_API bool Map(ID3D11DeviceContext *pDeviceContext, ID3D11Resource *pTexture, uint4 subResource,
+BE_GRAPHICS_DX11_API bool Map(ID3D11DeviceContext *deviceContext, ID3D11Resource *texture, uint4 subResource,
 		D3D11_MAPPED_SUBRESOURCE &data, D3D11_MAP map, uint4 flags = 0);
 /// Unmaps this texture to allow for GPU access.
-BE_GRAPHICS_DX11_API void Unmap(ID3D11DeviceContext *pDeviceContext, ID3D11Resource *pTexture, uint4 subResource);
+BE_GRAPHICS_DX11_API void Unmap(ID3D11DeviceContext *deviceContext, ID3D11Resource *texture, uint4 subResource);
 
 /// Loads a texture from the given file.
-BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Resource, true> LoadTexture(const lean::utf8_ntri &fileName, const TextureDesc *pDesc, ID3D11Device *pDevice);
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Resource, true> LoadTexture(ID3D11Device *device, const lean::utf8_ntri &fileName, const TextureDesc *pDesc = nullptr, bool bSRGB = false);
 /// Loads a texture from the given memory.
-BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Resource, true> LoadTexture(const char *data, uint4 dataLength, const TextureDesc *pDesc, ID3D11Device *pDevice);
+BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Resource, true> LoadTexture(ID3D11Device *device, const char *data, uint4 dataLength, const TextureDesc *pDesc = nullptr, bool bSRGB = false);
 
 /// Creates a texture from the given texture resource.
 BE_GRAPHICS_DX11_API lean::resource_ptr<Texture, true> CreateTexture(ID3D11Resource *pTextureResource, beGraphics::TextureCache *pCache = nullptr);
@@ -58,6 +83,13 @@ BE_GRAPHICS_DX11_API TextureDesc GetDesc(ID3D11Resource *pTexture);
 
 /// Gets the type of the given texture.
 BE_GRAPHICS_DX11_API TextureType::T GetType(ID3D11Resource *pTexture);
+
+/// Gets data from the given texture.
+BE_GRAPHICS_DX11_API bool ReadTextureData(ID3D11DeviceContext *context, ID3D11Resource *texture, void *bytes, uint4 rowByteCount, uint4 rowCount, uint4 sliceCount, uint4 subResource = 0);
+/// Gets data from the given texture using a TEMPORARY texture texture. SLOW!
+BE_GRAPHICS_DX11_API bool DebugFetchTextureData(ID3D11DeviceContext *context, ID3D11Texture2D *texture, void *bytes, uint4 rowByteCount, uint4 rowCount, uint4 subResource = 0);
+/// Gets data from the given texture using a TEMPORARY texture texture. SLOW!
+BE_GRAPHICS_DX11_API bool DebugFetchTextureData(ID3D11DeviceContext *context, ID3D11Texture3D *texture, void *bytes, uint4 rowByteCount, uint4 rowCount, uint4 sliceCount, uint4 subResource = 0);
 
 /// Texture implementation.
 class Texture : public beGraphics::Texture

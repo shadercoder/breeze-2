@@ -74,14 +74,17 @@ public:
 		utf8_string name;
 		ID3DX11EffectShaderResourceVariable *pTexture;
 		lean::resource_ptr<const TextureView> pView;
+		bool bColorTexture;
 
 		/// Constructor.
 		Texture(const utf8_ntri& name,
 			ID3DX11EffectShaderResourceVariable *pTexture,
-			const TextureView *pView)
+			const TextureView *pView,
+			bool bColorTexture)
 				: name(name.to<utf8_string>()),
 				pTexture(pTexture),
-				pView(pView) { }
+				pView(pView),
+				bColorTexture(bColorTexture) { }
 	};
 	typedef std::vector<Texture> texture_vector;
 
@@ -142,6 +145,8 @@ public:
 	BE_GRAPHICS_DX11_API uint4 GetTextureID(const utf8_ntri &name) const;
 	/// Gets the name of the given texture.
 	BE_GRAPHICS_DX11_API utf8_ntr GetTextureName(uint4 id) const;
+	/// Gets whether the texture is a color texture.
+	BE_GRAPHICS_DX11_API bool IsColorTexture(uint4 id) const;
 
 	/// Sets the given texture.
 	BE_GRAPHICS_DX11_API void SetTexture(uint4 id, const beGraphics::TextureView *pView);

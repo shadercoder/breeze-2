@@ -61,6 +61,7 @@ struct PipeEffectBinder::Pass
 
 	bool bMultisampled;
 	bool bMultisamplingOnly;
+	bool bRevertTargets;
 
 	/// NON-INITIALIZING Constructor.
 	Pass(uint4 passID,
@@ -250,6 +251,10 @@ PipeEffectBinder::target_vector GetTargets(ID3DX11Effect *pEffect)
 			target.pTexture->GetDesc(&variableDesc),
 			"ID3DX11EffectVariable::GetDesc()");
 
+		// Skip unmanaged
+		if (variableDesc.Flags & D3DX11_EFFECT_VARIABLE_UNMANAGED)
+			continue;
+
 		// Name required
 		if (!variableDesc.Semantic || lean::char_traits<char>::empty(variableDesc.Semantic))
 			LEAN_THROW_ERROR_CTX("GetTargets()", "Target missing name semantic.");
@@ -278,9 +283,12 @@ PipeEffectBinder::target_vector GetTargets(ID3DX11Effect *pEffect)
 		
 		int mipLevels = 1;
 		target.pTexture->GetAnnotationByName("MipLevels")->AsScalar()->GetInt(&mipLevels);
-		target.MipLevels = (mipLevels != 1)
-			? static_cast<uint4>(mipLevels) | beGraphics::TextureTargetFlags::AutoGenMipMaps
-			: 1;
+		target.MipLevels = static_cast<uint4>(mipLevels);
+
+		BOOL bAutoGenMips = true;
+		target.pTexture->GetAnnotationByName("AutoGenMips")->AsScalar()->GetBool(&bAutoGenMips);
+		if (bAutoGenMips && target.MipLevels != 1)
+			target.MipLevels |= beGraphics::TextureTargetFlags::AutoGenMipMaps;
 
 		D3DX11_EFFECT_TYPE_DESC typeDesc;
 		BE_THROW_DX_ERROR_MSG(
@@ -429,6 +437,11 @@ PipeEffectBinder::Pass GetPass(ID3DX11EffectTechnique *pTechnique, UINT passID,
 	BOOL multisamplingOnly = FALSE;
 	pass.pPass->GetAnnotationByName("MultisamplingOnly")->AsScalar()->GetBool(&multisamplingOnly);
 	pass.bMultisamplingOnly = (multisamplingOnly != FALSE);
+
+	// NOTE: Required to resolve resource hazards in time
+	BOOL revertTargets = FALSE;
+	pass.pPass->GetAnnotationByName("RevertTargets")->AsScalar()->GetBool(&revertTargets);
+	pass.bRevertTargets = (revertTargets != FALSE);
 
 	return pass;
 }
@@ -977,13 +990,20 @@ LEAN_INLINE bool SetTargets(const PipeEffectBinder::Pass &pass, const PipeEffect
 
 		stateManager.Override(beGraphics::DX11::StateMasks::RenderTargets);
 
-		pContext->OMSetRenderTargets(pass.colorCount, renderTargets, pDepthStencilTarget);
+		pContext->OMSetRenderTargetsAndUnorderedAccessViews(pass.colorCount, renderTargets,
+			pDepthStencilTarget,
+			pass.colorCount, D3D11_KEEP_UNORDERED_ACCESS_VIEWS, nullptr, nullptr);
+
 		pContext->RSSetViewports(1, &ToViewport(mainDesc));
 
 		MaybeSetResolution(pResolution, mainDesc);
 		MaybeSetScaling(pScaling, mainDesc, pPipe->GetDesc());
 		MaybeSetMultisampling(pMultisampling, mainDesc);
 	}
+	// IMPORTANT: Resolve resource hazards early
+	else if (pass.bRevertTargets)
+		pContext->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, nullptr,
+			0, D3D11_KEEP_UNORDERED_ACCESS_VIEWS, nullptr, nullptr);
 
 	return bRepeatPass;
 }
@@ -996,41 +1016,44 @@ bool PipeEffectBinder::Apply(uint4 &nextPassID, DX11::Pipe *pPipe, uint4 outputI
 {
 	uint4 passID = nextPassID++;
 
-	if (passID >= m_passes.size() || !pPipe)
+	if (passID >= m_passes.size())
 		return false;
 
 	const Pass &pass = m_passes[passID];
 
-	const uint4 targetCount = static_cast<uint4>(m_targets.size());
-
-	// ORDER: Set target textures BEFORE being overwritten by this pass
-	for (uint4 targetID = 0; targetID < targetCount; ++targetID)
-		if (m_targetsUsed[passID * m_targetsUsedPitch + targetID])
-			SetTargetTexture(m_targets[targetID], &m_targets[0], targetCount, pPipe, outputIndex, pObject, pContext);
-
-	// ORDER: Only replace texture targets AFTER having been set by this pass
-	if ( SetTargets(pass, &m_targets[0],
-			m_pDestinationResolution, m_pDestinationScaling, m_pDestinationMultisampling,
-			pPipe, outputIndex, pObject, stateManager, pContext) )
-		// Repeat pass, if requested
-		--nextPassID;
-
-	MaybeSetResolution(m_pResolution, pPipe->GetDesc());
-	MaybeSetMultisampling(m_pMultisampling, pPipe->GetDesc());
-
-	// ORDER: Dispose after everything has been set
-	for (target_vector::const_iterator itTarget = m_targets.begin(); itTarget != m_targets.end(); ++itTarget)
+	if (pPipe)
 	{
-		const Target &target = *itTarget;
+		const uint4 targetCount = static_cast<uint4>(m_targets.size());
 
-		// Dispose temporary targets as soon as possible
-		if (target.disposePassID <= passID)
+		// ORDER: Set target textures BEFORE being overwritten by this pass
+		for (uint4 targetID = 0; targetID < targetCount; ++targetID)
+			if (m_targetsUsed[passID * m_targetsUsedPitch + targetID])
+				SetTargetTexture(m_targets[targetID], &m_targets[0], targetCount, pPipe, outputIndex, pObject, pContext);
+
+		// ORDER: Only replace texture targets AFTER having been set by this pass
+		if ( SetTargets(pass, &m_targets[0],
+				m_pDestinationResolution, m_pDestinationScaling, m_pDestinationMultisampling,
+				pPipe, outputIndex, pObject, stateManager, pContext) )
+			// Repeat pass, if requested
+			--nextPassID;
+
+		MaybeSetResolution(m_pResolution, pPipe->GetDesc());
+		MaybeSetMultisampling(m_pMultisampling, pPipe->GetDesc());
+
+		// ORDER: Dispose after everything has been set
+		for (target_vector::const_iterator itTarget = m_targets.begin(); itTarget != m_targets.end(); ++itTarget)
 		{
-			utf8_t nameBuffer[256];
-			utf8_ntr targetName = GetTargetName(target, nameBuffer, pObject);
+			const Target &target = *itTarget;
 
-			pPipe->SetColorTarget(targetName, nullptr, outputIndex, 0);
-			pPipe->SetDepthStencilTarget(targetName, nullptr, outputIndex, 0);
+			// Dispose temporary targets as soon as possible
+			if (target.disposePassID <= passID)
+			{
+				utf8_t nameBuffer[256];
+				utf8_ntr targetName = GetTargetName(target, nameBuffer, pObject);
+
+				pPipe->SetColorTarget(targetName, nullptr, outputIndex, 0);
+				pPipe->SetDepthStencilTarget(targetName, nullptr, outputIndex, 0);
+			}
 		}
 	}
 

@@ -17,7 +17,7 @@ cbuffer SetupConstants
 	<
 		String UIName = "Specular";
 		String UIWidget = "Color";
-	> = float4(1.0f, 1.0f, 1.0f, 0.0f);
+	> = float4(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 Texture2D DiffuseTexture
@@ -46,7 +46,7 @@ Pixel VSMain(Vertex v)
 	
 	o.Position = mul(v.Position, WorldViewProj);
 	o.World = mul(v.Position, World);
-	o.NormalDepth.xyz = mul((float3x3) WorldInverse, v.Normal);
+	o.NormalDepth.xyz = normalize( mul((float3x3) WorldInverse, v.Normal) );
 	o.NormalDepth.w = o.Position.w;
 
 	float3 scaledObj = v.Position * float3(length(World[0]), length(World[1]), length(World[2]));
@@ -68,7 +68,7 @@ GeometryOutput PSGeometry(Pixel p)
 {
 	float3 normal = normalize(p.NormalDepth.xyz);
 	float4 diffuse = DiffuseColor;
-	diffuse.xyz *= FromSRGB(DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz);
+	diffuse.xyz *= DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz;
 	return ReturnGeometry(p.NormalDepth.w, normal, diffuse, SpecularColor);
 }
 

@@ -27,6 +27,8 @@ public:
 
 	/// Writes the given text to the console.
 	void write(const QString &msg);
+	/// Writes the given line to the console.
+	void writeLine(const QString &msg);
 };
 
 /// Log target interface.

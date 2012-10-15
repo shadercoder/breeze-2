@@ -4,7 +4,7 @@
 
 #include "beResourceCompilerInternal/stdafx.h"
 #include "beResourceCompiler/bePhysicsCookerImpl.h"
-#include <bePhysics/PX/beDevice.h>
+#include <bePhysics/PX3/beDevice.h>
 #include <lean/logging/errors.h>
 
 namespace beResourceCompiler
@@ -15,10 +15,10 @@ namespace
 
 PhysicsCooker::Data* CreateCookerData()
 {
-	bePhysics::scoped_pxptr_t<physx::PxFoundation>::t pFoundation( bePhysics::CreateFoundation() );
-	bePhysics::scoped_pxptr_t<physx::PxPhysics>::t pPhysics( bePhysics::CreatePhysics(*pFoundation) );
+	bePhysics::PX3::scoped_pxptr_t<physx::PxFoundation>::t pFoundation( bePhysics::PX3::CreateFoundation() );
+	bePhysics::PX3::scoped_pxptr_t<physx::PxPhysics>::t pPhysics( bePhysics::PX3::CreatePhysics(*pFoundation.detach()) );
 
-	bePhysics::scoped_pxptr_t<physx::PxCooking>::t pCooker(
+	bePhysics::PX3::scoped_pxptr_t<physx::PxCooking>::t pCooker(
 			PxCreateCooking(PX_PHYSICS_VERSION, pPhysics->getFoundation(), physx::PxCookingParams())
 		);
 

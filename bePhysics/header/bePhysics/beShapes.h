@@ -14,6 +14,8 @@
 namespace bePhysics
 {
 
+class ShapeCache;
+
 /// Shape compound interface.
 class ShapeCompound : public beCore::OptionalResource, public Implementation
 {
@@ -22,6 +24,9 @@ protected:
 
 public:
 	virtual ~ShapeCompound() throw() { }
+
+	/// Gets the shape cache.
+	virtual bePhysics::ShapeCache* GetCache() const = 0;
 };
 
 // Prototypes
@@ -29,7 +34,7 @@ class Device;
 class Material;
 
 /// Creates a shape from the given shape file.
-BE_PHYSICS_API lean::resource_ptr<ShapeCompound, true> LoadShape(const utf8_ntri &file, const Material *pMaterial, Device &device);
+BE_PHYSICS_API lean::resource_ptr<ShapeCompound, true> LoadShape(const utf8_ntri &file, const Material *pMaterial, Device &device, ShapeCache *pShapeCache = nullptr);
 
 } // namespace
 

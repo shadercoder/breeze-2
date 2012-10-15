@@ -21,7 +21,6 @@ class MaterialCache : public beScene::MaterialCache
 {
 public:
 	struct M;
-	friend struct M;
 
 private:
 	lean::pimpl_ptr<M> m;

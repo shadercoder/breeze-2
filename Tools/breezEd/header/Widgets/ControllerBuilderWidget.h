@@ -21,11 +21,9 @@ private:
 
 	const beEntitySystem::ControllerSerializer *m_pSerializer;
 
-	QList<CreationParameterWidget*> m_parameters;
-
 public:
 	/// Constructor.
-	ControllerBuilderWidget(const beEntitySystem::ControllerSerializer *pSerializer, Editor *pEditor, QWidget *pParent = nullptr , Qt::WFlags flags = 0);
+	ControllerBuilderWidget(const beEntitySystem::ControllerSerializer *pSerializer, Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
 	/// Destructor.
 	~ControllerBuilderWidget();
 

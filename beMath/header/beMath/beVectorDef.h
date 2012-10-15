@@ -12,6 +12,18 @@
 namespace beMath
 {
 
+// Named debug info.
+template <class Component, size_t Dimension>
+struct vector_components { };
+template <class Component>
+struct vector_components<Component, 1> { Component x; };
+template <class Component>
+struct vector_components<Component, 2> { Component x, y; };
+template <class Component>
+struct vector_components<Component, 3> { Component x, y, z; };
+template <class Component>
+struct vector_components<Component, 4> { Component x, y, z, w; };
+
 /// Vector class.
 template <class Component, size_t Dimension>
 class vector : public tuple< vector<Component, Dimension>, Component, Dimension >
@@ -19,7 +31,11 @@ class vector : public tuple< vector<Component, Dimension>, Component, Dimension 
 private:
 	typedef tuple< vector<Component, Dimension>, Component, Dimension > base_type;
 
-	Component m_elements[Dimension];
+	union
+	{
+		vector_components<Component, Dimension> n;
+		Component c[Dimension];
+	};
 
 public:
 	/// Component type.
@@ -33,7 +49,7 @@ public:
 
 	/// Creates a default-initialized vector.
 	LEAN_INLINE vector()
-		: m_elements() { }
+		: c() { }
 	/// Creates an uninitialized vector.
 	LEAN_INLINE vector(uninitialized_t) { }
 	/// Initializes all components with the given value.
@@ -56,7 +72,7 @@ public:
 			Destination_tuple_type_cannot_have_more_elements_than_source_tuple_type);
 
 		for (size_t i = 0; i < Dimension; ++i)
-			m_elements[i] = static_cast<component_type>(right[i]);
+			this->c[i] = static_cast<component_type>(right[i]);
 	}
 	/// Initializes all components with the casted elements of the given tuple, filling remaining components, if needed.
 	template <class Class, class Other, size_t OtherDimension>
@@ -66,10 +82,10 @@ public:
 		size_t i = 0;
 
 		for (; i < minDimension; ++i)
-			m_elements[i] = static_cast<component_type>(right[i]);
+			this->c[i] = static_cast<component_type>(right[i]);
 
 		for (; i < Dimension; ++i)
-			m_elements[i] = static_cast<component_type>(fill);
+			this->c[i] = static_cast<component_type>(fill);
 	}
 
 	/// Assigns the given value to all vector components.
@@ -85,21 +101,21 @@ public:
 	}
 
 	/// Accesses the n-th component.
-	LEAN_INLINE component_type& element(size_type n) { return m_elements[n]; }
+	LEAN_INLINE component_type& element(size_type n) { return this->c[n]; }
 	/// Accesses the n-th component.
-	LEAN_INLINE const component_type& element(size_type n) const { return m_elements[n]; }
+	LEAN_INLINE const component_type& element(size_type n) const { return this->c[n]; }
 
 	/// Accesses the n-th component.
-	LEAN_INLINE component_type& operator [](size_type n) { return m_elements[n]; }
+	LEAN_INLINE component_type& operator [](size_type n) { return this->c[n]; }
 	/// Accesses the n-th component.
-	LEAN_INLINE const component_type& operator [](size_type n) const { return m_elements[n]; }
+	LEAN_INLINE const component_type& operator [](size_type n) const { return this->c[n]; }
 
 	/// Gets a raw data pointer.
-	LEAN_INLINE component_type* data() { return m_elements; }
+	LEAN_INLINE component_type* data() { return this->c; }
 	/// Gets a raw data pointer.
-	LEAN_INLINE const component_type* data() const { return m_elements; }
+	LEAN_INLINE const component_type* data() const { return this->c; }
 	/// Gets a raw data pointer.
-	LEAN_INLINE const component_type* cdata() const { return m_elements; }
+	LEAN_INLINE const component_type* cdata() const { return this->c; }
 };
 
 /// Constructs a vector from the given values.

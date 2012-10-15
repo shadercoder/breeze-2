@@ -89,6 +89,7 @@
     <addaction name="actionCut"/>
     <addaction name="separator"/>
     <addaction name="actionDeselect"/>
+    <addaction name="actionSelect_All"/>
     <addaction name="separator"/>
     <addaction name="actionSelectFrom"/>
    </widget>
@@ -170,8 +171,16 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionMesh_Import"/>
+    <addaction name="actionShape_Import"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuTools"/>
    <addaction name="menuWindows"/>
    <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
@@ -662,6 +671,27 @@
    </property>
    <property name="text">
     <string>World Tree</string>
+   </property>
+  </action>
+  <action name="actionMesh_Import">
+   <property name="text">
+    <string>Mesh Import</string>
+   </property>
+  </action>
+  <action name="actionShape_Import">
+   <property name="text">
+    <string>Shape Import</string>
+   </property>
+  </action>
+  <action name="actionSelect_All">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Select All</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
    </property>
   </action>
  </widget>

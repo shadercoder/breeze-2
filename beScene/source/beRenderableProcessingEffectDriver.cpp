@@ -35,11 +35,12 @@ RenderableProcessingEffectDriver::~RenderableProcessingEffectDriver()
 bool RenderableProcessingEffectDriver::ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
 		const RenderableEffectData *pRenderableData, const Perspective &perspective,
 		const LightJob *lights, const LightJob *lightsEnd,
-		RenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
+		AbstractRenderableDriverState &abstractState, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
 {
 	const PipelineEffectBinderPass* pPipelinePass = static_cast<const PipelineEffectBinderPass*>(pPass);
-	ID3D11DeviceContext *pContextDX = ToImpl(context);
+	RenderableDriverState &state = ToRenderableDriverState<RenderableDriverState>(abstractState);
 	beGraphics::Any::StateManager &stateManagerDX11 = ToImpl(stateManager);
+	ID3D11DeviceContext *pContextDX = ToImpl(context);
 
 	uint4 step;
 	const StateEffectBinderPass *pStatePass;
@@ -64,6 +65,7 @@ bool RenderableProcessingEffectDriver::ApplyPass(const QueuedPass *pPass, uint4 
 			if (bRepeat)
 				--nextStep;
 
+			state.PassID = passID;
 			return pPipelinePass->Apply(step, stateManagerDX11, pContextDX);
 		}
 	}
