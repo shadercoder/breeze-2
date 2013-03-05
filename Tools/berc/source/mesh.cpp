@@ -6,7 +6,13 @@
 #include <beResourceCompiler/beMeshImporter.h>
 #include <beResourceCompiler/beMesh.h>
 #include <beResourceCompiler/beMeshSerialization.h>
+
+#include <vector>
+#include <string>
+
 #include <lean/io/numeric.h>
+#include <lean/io/filesystem.h>
+
 #include <lean/smart/resource_ptr.h>
 
 /// Mesh tool help.
@@ -20,7 +26,7 @@ const struct MeshToolHelp : public CommandLineTool
 	/// Runs the command line tool.
 	int Run(int argc, const char* argv[]) const
 	{
-		std::cout << " Syntax: berc mesh [/VDn] [/Vc] [/VDt] [/Vtan] [/Vbtan] [/Vsn] [/Vsna] [/Iw] [/O] <input> <output>"  << std::endl << std::endl;
+		std::cout << " Syntax: berc mesh [/VDn] [/Vc] [/VDt] [/Vtan] [/Vbtan] [/Vsn] [/Vsna] [/Von] [/Tsf] [/Iw] [/O] [/S]  [/Ms] <input> <output>"  << std::endl << std::endl;
 
 		std::cout << " Arguments:"  << std::endl;
 		std::cout << "  /VDn           Don't include vertex normals"  << std::endl;
@@ -35,6 +41,7 @@ const struct MeshToolHelp : public CommandLineTool
 		std::cout << "  /Tsf:<float>   Set scale factor to <float> (default 1.0)"  << std::endl;
 		std::cout << "  /Iw            Write wide indices"  << std::endl;
 		std::cout << "  /O             Optimize mesh"  << std::endl;
+		std::cout << "  /S             Sort meshes"  << std::endl;
 		std::cout << "  /Ms            Single material"  << std::endl;
 		std::cout << "  <input>        Input mesh file path"  << std::endl;
 		std::cout << "  <output>       Output mesh file path"  << std::endl;
@@ -61,11 +68,15 @@ const struct MeshTool : public CommandLineTool
 			return -1;
 		}
 
+		std::vector<const char*> storedArgs;
+		storedArgs.reserve(argc);
+
 		const char *inputFile = argv[argc - 2];
 		const char *outputFile = argv[argc - 1];
 
 		uint4 importerFlags = beResourceCompiler::MeshLoadFlags::Normals | beResourceCompiler::MeshLoadFlags::TexCoords;
-		uint4 writeFlags = beResourceCompiler::MeshWriteFlags::Normals | beResourceCompiler::MeshWriteFlags::TexCoords;
+		uint4 writeFlags = beResourceCompiler::MeshWriteFlags::Normals | beResourceCompiler::MeshWriteFlags::TexCoords
+			| beResourceCompiler::MeshWriteFlags::SubsetNames;
 		float smoothingAngle = 30.0f;
 		float scaleFactor = 1.0f;
 
@@ -132,14 +143,31 @@ const struct MeshTool : public CommandLineTool
 			{
 				importerFlags |= beResourceCompiler::MeshLoadFlags::Optimize;
 			}
+			else if (_stricmp(arg, "/S") == 0)
+			{
+				importerFlags |= beResourceCompiler::MeshLoadFlags::Sort;
+			}
 			else if (_stricmp(arg, "/Ms") == 0)
 			{
 				importerFlags |= beResourceCompiler::MeshLoadFlags::RemoveMaterials;
 			}
 			else
 				std::cout << "Unrecognized argument, consult meshhelp for help: " << arg << std::endl;
+
+			storedArgs.push_back(arg);
 		}
 
+		{
+			std::string inputFilename = lean::get_filename(inputFile);
+			storedArgs.push_back(inputFilename.c_str());
+			std::string relativeOutputFile = lean::relative_path<std::string>(
+					lean::absolute_path(outputFile),
+					lean::get_directory<std::string>( lean::absolute_path(inputFile) )
+				);
+			storedArgs.push_back(relativeOutputFile.c_str());
+
+			StoreCommand("mesh", inputFile, storedArgs.data(), storedArgs.size());
+		}
 
 		beResourceCompiler::MeshImporter importer;
 		lean::resource_ptr<beResourceCompiler::Mesh> pMesh = importer.LoadMesh(inputFile, importerFlags, smoothingAngle, scaleFactor);

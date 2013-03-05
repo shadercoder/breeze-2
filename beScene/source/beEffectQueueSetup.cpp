@@ -27,27 +27,25 @@ EffectQueueSetup::~EffectQueueSetup()
 void EffectQueueSetup::SetupRendering(uint4 stageID, uint4 queueID, const Perspective &perspective, const RenderContext &context) const
 {
 	beGraphics::Any::StateManager &stateManager = ToImpl( context.StateManager() );
-
 	stateManager.Revert();
 
-	AbstractRenderableDriverState driverState;
-	m_pEffectDriver->Apply(nullptr, perspective, driverState, stateManager, context.Context());
-
-	const uint4 passCount = m_pEffectDriver->GetPassCount();
-
-	for (uint4 passID = 0; passID < passCount; ++passID)
+	struct NoDraw : lean::vcallable_base<AbstractRenderableEffectDriver::DrawJobSignature, NoDraw>
 	{
-		const QueuedPass *pPass = m_pEffectDriver->GetPass(passID);
-		uint4 passStageID = pPass->GetStageID();
-		uint4 passQueueID = pPass->GetQueueID();
+		void operator ()(uint4 passIdx, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) { }
+	} noDraw;
+	AbstractRenderableEffectDriver::PassRange passes = m_pEffectDriver->GetPasses();
+
+	for (uint4 passID = 0; passID < Size(passes); ++passID)
+	{
+		const QueuedPass *pass = &passes.Begin[passID];
+		uint4 passStageID = pass->GetStageID();
+		uint4 passQueueID = pass->GetQueueID();
 
 		bool bStageMatch = passStageID == stageID || passStageID == InvalidPipelineStage;
 		bool bQueueMatch = passQueueID == queueID || passQueueID == InvalidRenderQueue;
 
 		if (bStageMatch && bQueueMatch)
-			for (uint4 i = 0;
-				m_pEffectDriver->ApplyPass(pPass, i, nullptr, perspective, nullptr, nullptr, driverState, stateManager, context.Context());
-				);
+			m_pEffectDriver->Render(pass, nullptr, perspective, noDraw, stateManager, context.Context());
 	}
 
 	stateManager.RecordOverridden();

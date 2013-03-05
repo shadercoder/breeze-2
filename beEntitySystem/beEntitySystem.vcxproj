@@ -109,6 +109,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BEENTITYSYSTEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>beEntitySystemInternal/StdAfx.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -189,16 +191,14 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="header\beEntitySystem\beAnimatedController.h" />
+    <ClInclude Include="header\beEntitySystem\beEntities.h" />
     <ClInclude Include="header\beEntitySystem\beAnimated.h" />
     <ClInclude Include="header\beEntitySystem\beAnimatedHost.h" />
     <ClInclude Include="header\beEntitySystem\beAsset.h" />
     <ClInclude Include="header\beEntitySystem\beAttachable.h" />
     <ClInclude Include="header\beEntitySystem\beController.h" />
-    <ClInclude Include="header\beEntitySystem\beControllerDriven.h" />
-    <ClInclude Include="header\beEntitySystem\beControllerDrivenSerializer.h" />
-    <ClInclude Include="header\beEntitySystem\beControllerSerialization.h" />
     <ClInclude Include="header\beEntitySystem\beControllerSerializer.h" />
-    <ClInclude Include="header\beEntitySystem\beEntity.h" />
     <ClInclude Include="header\beEntitySystem\beEntityController.h" />
     <ClInclude Include="header\beEntitySystem\beEntityGroup.h" />
     <ClInclude Include="header\beEntitySystem\beEntitySerialization.h" />
@@ -206,45 +206,40 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beEntitySystem\beEntitySystem.h" />
     <ClInclude Include="header\beEntitySystemInternal\stdafx.h" />
     <ClInclude Include="header\beEntitySystemInternal\targetver.h" />
+    <ClInclude Include="header\beEntitySystem\beGenericControllerSerializer.h" />
     <ClInclude Include="header\beEntitySystem\beRenderable.h" />
     <ClInclude Include="header\beEntitySystem\beRenderableHost.h" />
     <ClInclude Include="header\beEntitySystem\beSerialization.h" />
-    <ClInclude Include="header\beEntitySystem\beSerializationJob.h" />
     <ClInclude Include="header\beEntitySystem\beSerializationParameters.h" />
     <ClInclude Include="header\beEntitySystem\beSerializationTasks.h" />
-    <ClInclude Include="header\beEntitySystem\beSerializer.h" />
     <ClInclude Include="header\beEntitySystem\beSimulation.h" />
     <ClInclude Include="header\beEntitySystem\beSimulationController.h" />
-    <ClInclude Include="header\beEntitySystem\beSimulationSerialization.h" />
-    <ClInclude Include="header\beEntitySystem\beSimulationSerializer.h" />
     <ClInclude Include="header\beEntitySystem\beStateSerializer.h" />
     <ClInclude Include="header\beEntitySystem\beSynchronized.h" />
     <ClInclude Include="header\beEntitySystem\beSynchronizedHost.h" />
     <ClInclude Include="header\beEntitySystem\beWorld.h" />
+    <ClInclude Include="header\beEntitySystem\beWorldControllers.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\beAnimatedController.cpp" />
     <ClCompile Include="source\beAnimatedHost.cpp" />
     <ClCompile Include="source\beAsset.cpp" />
-    <ClCompile Include="source\beController.cpp" />
-    <ClCompile Include="source\beControllerDriven.cpp" />
-    <ClCompile Include="source\beControllerDrivenSerializer.cpp" />
-    <ClCompile Include="source\beControllerSerialization.cpp" />
     <ClCompile Include="source\beControllerSerializer.cpp" />
-    <ClCompile Include="source\beEntity.cpp" />
+    <ClCompile Include="source\beEntities.cpp" />
+    <ClCompile Include="source\beEntityController.cpp" />
     <ClCompile Include="source\beEntityGroup.cpp" />
     <ClCompile Include="source\beEntitySerialization.cpp" />
     <ClCompile Include="source\beEntitySerializer.cpp" />
     <ClCompile Include="source\beEntitySystem.cpp" />
+    <ClCompile Include="source\beGenericControllerSerializer.cpp" />
     <ClCompile Include="source\beRenderableHost.cpp" />
     <ClCompile Include="source\beSerialization.cpp" />
     <ClCompile Include="source\beSerializationParameters.cpp" />
-    <ClCompile Include="source\beSerializationQueues.cpp" />
-    <ClCompile Include="source\beSerializer.cpp" />
+    <ClCompile Include="source\beSerializationTasks.cpp" />
     <ClCompile Include="source\beSimulation.cpp" />
-    <ClCompile Include="source\beSimulationSerialization.cpp" />
-    <ClCompile Include="source\beSimulationSerializer.cpp" />
     <ClCompile Include="source\beSynchronizedHost.cpp" />
     <ClCompile Include="source\beWorld.cpp" />
+    <ClCompile Include="source\beWorldControllers.cpp" />
     <ClCompile Include="source\dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>

@@ -28,21 +28,21 @@ void RenderableHost::Render()
 }
 
 // Adds a renderable controller.
-void RenderableHost::AddRenderable(Renderable *pRenderable)
+void RenderableHost::AddRenderable(Renderable *renderable)
 {
-	if (!pRenderable)
+	if (!renderable)
 	{
-		LEAN_LOG_ERROR_MSG("pRenderable may not be nullptr");
+		LEAN_LOG_ERROR_MSG("renderable may not be nullptr");
 		return;
 	}
 
-	m_render.push_back(pRenderable);
+	lean::push_unique(m_render, renderable);
 }
 
 // Removes a renderable controller.
-void RenderableHost::RemoveRenderable(Renderable *pRenderable)
+void RenderableHost::RemoveRenderable(Renderable *renderable)
 {
-	lean::remove(m_render, pRenderable);
+	lean::remove(m_render, renderable);
 }
 
 } // namespace

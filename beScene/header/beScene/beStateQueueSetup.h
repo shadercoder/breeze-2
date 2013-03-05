@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_STATE_QUEUE_SETUP
 #define BE_SCENE_STATE_QUEUE_SETUP
 

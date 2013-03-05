@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_STATE_EFFECT_BINDER
 #define BE_SCENE_STATE_EFFECT_BINDER
 
@@ -93,10 +94,8 @@ public:
 	/// Destructor.
 	BE_SCENE_API ~StateEffectBinder();
 
-	/// Gets the number of passes.
-	BE_SCENE_API uint4 GetPassCount() const;
-	/// Gets the pass identified by the given ID.
-	BE_SCENE_API const StateEffectBinderPass* GetPass(uint4 passID) const;
+	/// Gets the passes.
+	BE_SCENE_API PassRange GetPasses() const;
 
 	/// Gets the technique.
 	LEAN_INLINE const beGraphics::Any::Technique& GetTechnique() const { return m_technique; }

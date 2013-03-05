@@ -4,7 +4,7 @@
 #include "Utility/Checked.h"
 
 // Constructor.
-GraphicsCanvas::GraphicsCanvas(QWidget *pParent, Qt::WFlags flags)
+GraphicsCanvas::GraphicsCanvas(QWidget *pParent, Qt::WindowFlags flags)
 	: QWidget( pParent, flags | Qt::MSWindowsOwnDC ),
 	m_activeFPS(60),
 	m_idleFPS(30),
@@ -25,7 +25,7 @@ GraphicsCanvas::GraphicsCanvas(QWidget *pParent, Qt::WFlags flags)
 	// Enqueue frame by frame
 	m_timer.setSingleShot(true);
 
-	checkedConnect(&m_timer, SIGNAL(timeout()), this, SLOT(nextFrame())); 
+	checkedConnect(&m_timer, SIGNAL(timeout()), this, SLOT(nextFrame()), Qt::QueuedConnection); 
 }
 
 // Destructor.
@@ -44,8 +44,19 @@ void GraphicsCanvas::nextFrame()
 	// Step & render
 	Q_EMIT step(timeStep);
 
-	if (this->isVisible())
-		doRender();
+	if (this->isVisible() && this->size() == m_lastSize)
+	{
+		if (m_officialSize != this->size())
+		{
+			m_officialSize = this->size();
+			Q_EMIT resized(m_officialSize.width(), m_officialSize.height());
+		}
+
+		// Draw scene
+		Q_EMIT render();
+		present();
+	}
+	m_lastSize = this->size();
 
 	// Compute time to next frame
 	int targetFrameDelay = 1000 / targetFPS() - (int) m_hrTimer.milliseconds();
@@ -55,17 +66,12 @@ void GraphicsCanvas::nextFrame()
 		m_timer.start( lean::max(targetFrameDelay, 0) );
 }
 
-// Render.
-void GraphicsCanvas::doRender()
+// Presents the rendered scene.
+void GraphicsCanvas::present()
 {
 	// Check if obscured
 	if (m_pSwapChain)
-	{
-		// Draw scene
-		Q_EMIT render();
-
 		m_pSwapChain->Present();
-	}
 }
 
 // Sets the swap chain.
@@ -101,7 +107,7 @@ void GraphicsCanvas::paintEvent(QPaintEvent *pEvent)
 	pEvent->accept();
 
 	if (!pEvent->region().isEmpty())
-		doRender();
+		present();
 }
 
 // Intercepts focus events
@@ -134,7 +140,7 @@ void GraphicsCanvas::resizeEvent(QResizeEvent *pEvent)
 {
 	QWidget::resizeEvent(pEvent);
 
-	Q_EMIT resized(pEvent->size().width(), pEvent->size().height());
+//	Q_EMIT resized(pEvent->size().width(), pEvent->size().height());
 }
 
 // Sets the number of FPS when focussed.

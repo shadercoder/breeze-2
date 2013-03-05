@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <QtCompileRulesPath>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</QtCompileRulesPath>
+    <!-- Set to high to enable, low to disable debug messages -->
+    <QtCompileDebugPriority>low</QtCompileDebugPriority>
+    <!-- Set to true to enable verbose debug messages, false otherwise -->
+    <QtCompileDebugVerbose>false</QtCompileDebugVerbose>
+    <!-- Set to true to disable command line echo -->
+    <QtCompileNoEcho>true</QtCompileNoEcho>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Include item type & build tool properties / build rule -->
+    <PropertyPageSchema Include="$(QtCompileRulesPath)" />
+    <!-- Make build tool / item type available & link to QtCompile build step / target -->
+    <AvailableItemName Include="QtCompile">
+      <Targets>QtCompile</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+
+  <!-- Construct command line task from build rule (provides automated command line construction from build rule properties) -->
+  <UsingTask TaskName="QtCompile" TaskFactory="XamlTaskFactory" AssemblyName="Microsoft.Build.Tasks.v4.0">
+    <Task>$(QtCompileRulesPath)</Task>
+  </UsingTask>
+
+  <!-- Indirection + DependsOnTargets allows _QtCompileFilter to check for @(_QtCompileFiltered) rather than unfiltered @(QtCompile) -->
+  <Target Name="QtIncludeCpp" Condition="'@(QtCompile)' != ''"
+          DependsOnTargets="_QtCompileFilter;_QtCompile;_QtIncludeCpp" BeforeTargets="ClCompile" />
+
+  <!-- Indirection + DependsOnTargets allows _QtCompile to check for @(_QtCompileFiltered) rather than unfiltered @(QtCompile) -->
+  <Target Name="QtCompile" Condition="'@(QtCompile)' != ''"
+          DependsOnTargets="_QtCompileFilter;_QtCompile" />
+  
+  <!-- Filter Qt header files stored in list '@(QtCompile)', removing unselected and excluded files -->
+  <Target Name="_QtCompileFilter" Condition="'@(QtCompile)' != ''"
+          DependsOnTargets="_SelectedFiles">
+
+    <Message Text="QtCompileFilter ..." Importance="$(QtCompileDebugPriority)" />
+
+    <!-- Debug messages printing a list of files to be compiled and files to be selected -->
+    <Message Text="QtCompileFilter has '@(QtCompile)'" Importance="$(QtCompileDebugPriority)" Condition="$(QtCompileDebugVerbose)" />
+    <Message Text="QtCompileFilter selects '@(SelectedFiles)'" Importance="$(QtCompileDebugPriority)" Condition="$(QtCompileDebugVerbose)" />
+
+    <!-- Remove all files that have been excluded -->
+    <ItemGroup>
+      <_QtCompileFiltered Include="@(QtCompile)" Condition="'%(QtCompile.ExcludedFromBuild)' != 'true'" />
+    </ItemGroup>
+    <!-- Remove all files that have not been selected, _iff any selected_ -->
+    <ItemGroup Condition="'@(SelectedFiles)' != ''">
+      <!-- WARNING: Only works in this EXACT form, using unqualified '%(Identity)' reference -->
+      <!-- Actually, cross products are not supported at all, for whatever happens here ... -->
+      <_QtCompileFiltered Remove="@(_QtCompileFiltered)" Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+
+    <!-- Debug message printing files to be compiled after filtering  -->
+    <Message Text="QtCompileFilter now has '@(_QtCompileFiltered)'" Importance="$(QtCompileDebugPriority)" Condition="$(QtCompileDebugVerbose)" />
+  </Target>
+  
+  <!-- Include Qt files into C++ build step -->
+  <Target Name="_QtIncludeCpp" Condition="'@(_QtCompileFiltered)' != ''"
+          DependsOnTargets="_QtCompileFilter" BeforeTargets="ClCompile">
+
+    <Message Text="QtIncludeCpp ..." Importance="$(QtCompileDebugPriority)" />
+
+    <ItemGroup>
+      <!-- Include all Qt compiler output files into C++ build step -->
+      <ClCompile Include="%(_QtCompileFiltered.CompilerOutput)" Condition="'%(_QtCompileFiltered.Link)' != 'false'">
+        <!-- Store back link to original Qt header file in item metadata -->
+        <_QtCompileSrc>%(_QtCompileFiltered.Identity)</_QtCompileSrc>
+      </ClCompile>
+	  <!-- Optionally include Qt compiler input files into C++ build step -->
+      <ClCompile Include="%(_QtCompileFiltered.Identity)" Condition="'%(_QtCompileFiltered.ReverseLink)' != 'false'">
+        <!-- Store back link to original Qt header file in item metadata -->
+        <_QtCompileSrc>%(_QtCompileFiltered.Identity)</_QtCompileSrc>
+      </ClCompile>
+    </ItemGroup>
+
+  </Target>
+  
+  <!-- Execute Qt compiler for all Qt headers to be compiled -->
+  <Target Name="_QtCompile"
+          DependsOnTargets="_QtCompileFilter"
+          Inputs="@(_QtCompileFiltered);$(MSBuildProjectFile)"
+          Outputs="@(_QtCompileFiltered->'%(CompilerOutput)')">
+
+    <!-- Resolve remote metadata -->
+      <Message Text="QtResolveMetadata ..." Importance="$(QtCompileDebugPriority)" />
+
+      <!-- Call inline task to evaluate remote metadata references to C++ compiler properties -->
+      <EvaluateProjectMetadata ItemName="ClCompile" Destination="@(_QtCompileFiltered)">
+        <!-- Store results of the evaluation in internal resolved item group -->
+        <Output TaskParameter="Evaluated" ItemName="_QtCompileResolved" />
+      </EvaluateProjectMetadata>
+
+      <!-- Resolution debug message -->
+      <Message Text="QtResolveMetadata: %(_QtCompileResolved.Identity); Defines: %(_QtCompileResolved.Defines); Includes: %(_QtCompileResolved.Include)"
+               Importance="$(QtCompileDebugPriority)" Condition="$(QtCompileDebugVerbose)" />
+    <!-- / Resolve remote metadata -->
+
+    <!-- Compile headers -->
+      <Message Text="QtCompile ..." Importance="$(QtCompileDebugPriority)" />
+    
+      <!-- Notify that compilation is starting -->
+      <Message Text="Compiling: %(_QtCompileResolved.Filename)%(_QtCompileResolved.Extension) using MOC" Importance="high" />
+
+      <!-- Call imported build-rule-based command line task -->
+      <!-- CommandLineTemplate supports [AllOptions], command line construction follows the build rule property specifications -->
+      <QtCompile
+        CommandLineTemplate="&quot;%(_QtCompileResolved.MOCPath)&quot; [AllOptions] [AdditionalOptions] &quot;%(_QtCompileResolved.FullPath)&quot;"
+        CompilerOutput="%(_QtCompileResolved.CompilerOutput)"
+        Defines="%(_QtCompileResolved.Defines)"
+        Include="%(_QtCompileResolved.Include)"
+        AdditionalDeps="%(_QtCompileResolved.AdditionalDeps)"
+        AdditionalOptions="%(_QtCompileResolved.AdditionalOptions)"
+        StandardOutputImportance="High"
+        StandardErrorImportance="High"
+        EchoOff="$(QtCompileNoEcho)" />
+    <!-- / Compile headers -->
+  </Target>
+
+  <Target Name="QtClean" AfterTargets="Clean">
+    <Delete Files="@(QtCompile->'%(CompilerOutput)')" />
+  </Target>
+
+  <UsingTask TaskName="EvaluateProjectMetadata" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <ItemName ParameterType="System.String" Required="true" />
+      <Destination ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <DestinationPrefix ParameterType="System.String" Required="false" />
+      <Evaluated ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Reference Include="$(MSBuildToolsPath)\Microsoft.Build.dll" />
+      <Using Namespace="System.IO"/>
+      <Using Namespace="System.Reflection"/>
+      <Using Namespace="System.Text.RegularExpressions"/>
+      <Using Namespace="Microsoft.Build.Execution"/>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        ProjectInstance project;
+        
+        // Get project instance
+        {
+          const BindingFlags bindingFlags = BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+          var targetBuilderCallback = this.BuildEngine.GetType().GetField("targetBuilderCallback", bindingFlags).GetValue(this.BuildEngine);
+          project = (ProjectInstance) targetBuilderCallback.GetType().GetField("projectInstance", bindingFlags).GetValue(targetBuilderCallback);
+        }
+        
+        if (String.IsNullOrEmpty(DestinationPrefix))
+          DestinationPrefix = "_";
+        
+        var itemDefs = project.ItemDefinitions[ItemName];
+        Regex resolveExpression = new Regex("%" + Regex.Escape(DestinationPrefix) + @"\((\w*)\)");
+        var evaluatedItems = new List<TaskItem>();
+        
+        // Resolve remote metadata references
+        foreach (var destItem in Destination)
+        {
+          var newItem = new TaskItem(destItem);
+        
+          foreach (string name in newItem.MetadataNames)
+          {
+            string val = newItem.GetMetadata(name);
+            bool valChanged = false;
+            
+            // Find unresolved references in destination item metadata
+            if (!String.IsNullOrEmpty(val))
+              foreach (Match match in resolveExpression.Matches(val))
+              {
+                var resolved = itemDefs.GetMetadata(match.Groups[1].Value);
+
+                // Resolve references with remote item metadata
+                if (resolved != null)
+                {
+                  val = val.Replace(match.Value, resolved.EvaluatedValue);
+                  valChanged = true;
+                }
+                
+                // Match Debugging
+//              Log.LogError("Match: " + match.Groups[1].Value);
+              }
+            
+            // NOTE: Checking for changes also prevents reserved metadata exceptions
+            if (valChanged)
+              newItem.SetMetadata(name, val);
+          }
+          
+          evaluatedItems.Add(newItem);
+          
+          // Allows for introspection of metadata
+/*        var dic = newItem.CloneCustomMetadata();
+          
+          foreach (var k in dic.Keys)
+            Log.LogError(k + " -> " + dic[k]);
+*/
+        }
+        
+        Evaluated = evaluatedItems.ToArray();
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+</Project>

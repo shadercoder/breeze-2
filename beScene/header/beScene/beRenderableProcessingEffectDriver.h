@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_RENDERABLE_PROCESSING_EFFECT_DRIVER
 #define BE_SCENE_RENDERABLE_PROCESSING_EFFECT_DRIVER
 
@@ -28,11 +29,9 @@ public:
 	/// Destructor.
 	BE_SCENE_API ~RenderableProcessingEffectDriver();
 
-	/// Applies the given pass to the effect bound by this effect driver.
-	BE_SCENE_API bool ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
-		const RenderableEffectData *pRenderableData, const Perspective &perspective,
-		const LightJob *lights, const LightJob *lightsEnd,
-		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
+	/// Draws the given pass.
+	BE_SCENE_API void Render(const QueuedPass *pPass, const RenderableEffectData *pRenderableData, const Perspective &perspective,
+		lean::vcallable<DrawJobSignature> &drawJob, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const LEAN_OVERRIDE;
 
 	/// Gets the pipe effect binder.
 	LEAN_INLINE const PipeEffectBinder& GetPipeBinder() const { return m_pipeBinder; }

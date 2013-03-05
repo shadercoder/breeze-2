@@ -14,7 +14,7 @@
 
 #include "Views/AbstractView.h"
 
-#include <QtGui/QFileDialog>
+#include <QtWidgets/QFileDialog>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 #include <QtCore/QSettings>
@@ -22,6 +22,9 @@
 #include "Windows/WindowsDialog.h"
 #include "Tiles/ConsoleWidget.h"
 
+#include "Docking/DockContainer.h"
+
+#include "Utility/UI.h"
 #include "Utility/Checked.h"
 
 #include <lean/logging/errors.h>
@@ -30,28 +33,30 @@ namespace
 {
 
 /// Restores the docking layout.
-void restoreLayout(QMainWindow &window, const Editor &editor)
+void restoreLayout(QMainWindow &window, DockContainer &dock, const Editor &editor)
 {
 	window.restoreState(editor.settings()->value("mainWindow/windowState").toByteArray());
+	dock.restoreState(editor.settings()->value("mainWindow/dockState").toByteArray());
 }
 
 /// Initializes window state and docking layout.
-void restoreWindow(QMainWindow &window, const Editor &editor)
+void restoreWindow(QMainWindow &window, DockContainer &dock, const Editor &editor)
 {
 	window.restoreGeometry(editor.settings()->value("mainWindow/geometry").toByteArray());
-	restoreLayout(window, editor);
+	restoreLayout(window, dock, editor);
 }
 
 /// Saves docking layout.
-void saveLayout(const QMainWindow &window, Editor &editor)
+void saveLayout(const QMainWindow &window, const DockContainer &dock, Editor &editor)
 {
 	editor.settings()->setValue("mainWindow/windowState", window.saveState());
+	editor.settings()->setValue("mainWindow/dockState", dock.saveState());
 }
 
 /// Saves window state and docking layout.
-void saveWindow(const QMainWindow &window, Editor &editor)
+void saveWindow(const QMainWindow &window, const DockContainer &dock, Editor &editor)
 {
-	saveLayout(window, editor);
+	saveLayout(window, dock, editor);
 	editor.settings()->setValue("mainWindow/geometry", window.saveGeometry());
 }
 
@@ -108,7 +113,6 @@ bool addDocumentWindow(const Ui::MainWindow &mainWindow, QWidget *pView, Abstrac
 			return false;
 		}
 	}
-
 	pWindow->setWidget(pView);
 
 	// ORDER: Add subwindow after FULL CONSTRUCTION (activation signals ...)
@@ -144,13 +148,52 @@ Mode* maybeAddDocumentMode(MainWindow::document_mode_map &modes, Mode &modeStack
 } // namespace
 
 // Constructor.
-MainWindow::MainWindow(Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+MainWindow::MainWindow(Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: QMainWindow(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
 	m_pModeStack( new Mode(this) ),
 	m_pDocument()
 {
 	ui.setupUi(this);
+
+/*	QPalette mainPalette = this->palette();
+	mainPalette.setColor(QPalette::Window, mainPalette.window().color().darker(110));
+	this->setPalette(mainPalette);
+*/
+	// TODO: This is TEST CODE!
+//	if (false)
+	{
+		// Retrieve center widget
+		QScopedPointer<QWidget> centerWidget( this->centralWidget() );
+		centerWidget->setParent(nullptr);
+
+		// Wrap
+		m_dock = new DockContainer(this);
+		this->setCentralWidget(m_dock);
+		m_dock->setCentralWidget(centerWidget.take());
+		this->setCentralWidget(m_dock);
+
+		QColor b = m_dock->palette().window().color();
+		QColor f = b;
+		b.setRed( b.red() / 5 );
+//		b.setGreen( b.green() / 4 );
+		b.setGreen( b.green() / 5 );
+//		b.setBlue( b.blue() / 3 );
+		b.setBlue( b.blue() / 5 );
+		f.setRed( 255 - (255 - f.red()) / 3 );
+		f.setGreen( f.red() * 15 / 16 );
+		f.setBlue( f.red() * 4 / 5 );
+		m_dock->setStyleSheet(
+				QString(
+				"#%2::handle, #%3 > * { background-color:%4; }\n"
+					"#%1 { border:5px solid %4; }\n"
+					"#DockGroup > #TitleBar { background-color: %5; }\n"
+					"#DockGroup > #TabBar { background-color: %4; color:white; }\n"
+					"#DockGroup > #TabBar > * { /* background-color: %4; */ color:white; }\n"
+				).arg(m_dock->objectName(), m_dock->nestedSplitterName(), m_dock->centerName(), b.name(), f.name())
+			);
+	}
+
 	m_pInfoLabel = new QLabel(ui.statusBar);
 	m_pInfoLabel->setMinimumWidth(18);
 	ui.statusBar->addPermanentWidget(m_pInfoLabel);
@@ -165,13 +208,15 @@ MainWindow::MainWindow(Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
 
 	mainWindowPlugins().initializePlugins(this);
 
-	restoreWindow(*this, *m_pEditor);
-
 	checkedConnect(ui.mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(documentActivated(QMdiSubWindow*)));
 
 	LEAN_LOG("Starting up");
 
 	m_pModeStack->enter();
+	
+	// WORKAROUND: Restore broken for hidden main window
+//	show();
+	restoreWindow(*this, *m_dock, *m_pEditor);
 }
 
 // Destructor.
@@ -193,6 +238,37 @@ void MainWindow::setEditingInfo(const QString &info)
 		windowTitle += " [" + info + "]";
 
 	setWindowTitle(windowTitle);
+}
+
+// Adds the given dock widget.
+void MainWindow::addDockWidgetTabified(Qt::DockWidgetArea area, QDockWidget *dockwidget)
+{
+//	if (!this->restoreDockWidget(dockwidget))
+	{
+		QList<QDockWidget*> docks = this->findChildren<QDockWidget*>();
+		QDockWidget *dockTab = nullptr;
+
+		Q_FOREACH (QDockWidget *dock, docks)
+			if (this->dockWidgetArea(dock) & area)
+			{
+				dockTab = dock;
+				break;
+			}
+
+		this->addDockWidget(area, dockwidget);
+		this->tabifyDockWidget(dockTab, dockwidget);
+	}
+}
+
+// Retrieves the dock widget parent to the given widget, potentially overlapping the given dock widget.
+QDockWidget* MainWindow::overlappingDockWidget(QDockWidget *dockwidget, QWidget *potentiallyOverlapping) const
+{
+	if (potentiallyOverlapping)
+		Q_FOREACH(QDockWidget *overlapping, this->tabifiedDockWidgets(dockwidget))
+			if (isChildOf(potentiallyOverlapping, overlapping))
+				return overlapping;
+
+	return nullptr;
 }
 
 // Opens the new document dialog.
@@ -429,7 +505,7 @@ void MainWindow::closeEvent(QCloseEvent *pEvent)
 	}
 
 	// Save layout changes
-	saveWindow(*this, *m_pEditor);
+	saveWindow(*this, *m_dock, *m_pEditor);
 
 	// Close main window
 	QMainWindow::closeEvent(pEvent);

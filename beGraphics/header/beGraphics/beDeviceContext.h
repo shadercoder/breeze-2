@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_DEVICE_CONTEXT
 #define BE_GRAPHICS_DEVICE_CONTEXT
 
@@ -19,6 +20,9 @@ protected:
 
 public:
 	virtual ~DeviceContext() throw() { }
+
+	/// Clears all state.
+	virtual void ClearState() = 0;
 };
 
 } // namespace

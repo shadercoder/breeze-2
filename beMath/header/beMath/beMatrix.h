@@ -2,6 +2,7 @@
 /* breeze Engine Math Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_MATH_MATRIX
 #define BE_MATH_MATRIX
 
@@ -57,7 +58,7 @@ LEAN_INLINE matrix<Component, 4, 4> mat_proj_ortho(const Component &minX, const 
 
 /// Constructs a transformation matrix from the given values.
 template <class Component, class Tuple1, class Tuple2, class Tuple3>
-LEAN_INLINE matrix<Component, 3, 3> mat_transform(
+LEAN_INLINE matrix<Component, 3, 3> mat_transform3(
 	const tuple<Tuple1, Component, 3> &look, const tuple<Tuple2, Component, 3> &up, const tuple<Tuple3, Component, 3> &right)
 {
 	matrix<Component, 3, 3> result(uninitialized);
@@ -74,7 +75,7 @@ template <class Component, class Tuple1, class Tuple2>
 LEAN_INLINE matrix<Component, 3, 3> mat_transform(
 	const tuple<Tuple1, Component, 3> &look, const tuple<Tuple2, Component, 3> &up)
 {
-	return mat_transform(look, up, cross(up, look));
+	return mat_transform3(look, up, cross(up, look));
 }
 
 /// Constructs a transformation matrix from the given values.
@@ -93,8 +94,8 @@ LEAN_INLINE matrix<Component, 4, 4> mat_transform(const tuple<Tuple1, Component,
 }
 
 /// Constructs a transformation matrix from the given values.
-template <class Component, class Tuple1, class Tuple2, class Tuple3, class Tuple4>
-LEAN_INLINE matrix<Component, 4, 4> mat_transform(const tuple<Tuple1, Component, 3> &pos,
+template <class Component, class Tuple1, class Tuple2, class Tuple3>
+LEAN_INLINE matrix<Component, 4, 4> mat_transform4(const tuple<Tuple1, Component, 3> &pos,
 	const tuple<Tuple2, Component, 3> &look, const tuple<Tuple3, Component, 3> &up)
 {
 	return mat_transform(pos, look, up, cross(up, look));
@@ -355,6 +356,13 @@ LEAN_INLINE vector<Component, ColumnCount> mulhx(
 
 /// Constructs a rotation matrix from the given angles.
 template <size_t Dimension, class Component>
+LEAN_INLINE matrix<Component, Dimension, Dimension> mat_rot_zxy(const Component &x, const Component &y, const Component &z)
+{
+	return mul( mul( mat_rot_z<Dimension>(z), mat_rot_x<Dimension>(x) ), mat_rot_y<Dimension>(y) );
+}
+
+/// Constructs a rotation matrix from the given angles.
+template <size_t Dimension, class Component>
 LEAN_INLINE matrix<Component, Dimension, Dimension> mat_rot_yxz(const Component &x, const Component &y, const Component &z)
 {
 	return mul( mat_rot_y<Dimension>(y), mul( mat_rot_x<Dimension>(x), mat_rot_z<Dimension>(z) ) );
@@ -381,6 +389,33 @@ LEAN_INLINE vector<Component, 3> angles_rot_yxz(const matrix<Component, Dimensio
 	else
 	{
 		angles[1] = atan2(rot[2][0], rot[0][0]);
+		angles[2] = Component(0);
+	}
+
+	return angles;
+}
+
+/// Gets angles from the given rotation matrix.
+template <size_t Dimension, class Component>
+LEAN_INLINE vector<Component, 3> angles_rot_zxy(const matrix<Component, Dimension, Dimension> &rot)
+{
+	vector<Component, 3> angles(uninitialized);
+
+	LEAN_STATIC_ASSERT_MSG_ALT(
+		Dimension >= 3,
+		"Matrix required to be at least 3x3",
+		Matrix_required_to_be_at_least_3x3);
+
+	angles[0] = asin( min(max(-rot[2][1], Component(-1)), Component(1))  );
+
+	if (abs(rot[2][1]) < Component(0.999999f))
+	{
+		angles[1] = atan2(rot[2][0], rot[2][2]);
+		angles[2] = atan2(rot[0][1], rot[1][1]);
+	}
+	else
+	{
+		angles[1] = atan2(-rot[0][2], rot[0][0]);
 		angles[2] = Component(0);
 	}
 

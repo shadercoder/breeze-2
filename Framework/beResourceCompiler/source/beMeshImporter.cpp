@@ -87,6 +87,13 @@ uint4 SetUpImporter(Assimp::Importer &importer, const uint4 flags, float smoothi
 		LEAN_LOG("Mesh optimization enabled, this might take a while.");
 	}
 
+	// Sort mesh
+	if (flags & MeshLoadFlags::Sort)
+	{
+		assimpFlags |= aiProcess_SortTris;
+		LEAN_LOG("Sorting enabled, this might take a while.");
+	}
+
 	uint4 assimpRemoveFlags = 0;
 
 	// Remove existing normals, if regeneration requested

@@ -33,6 +33,22 @@ void AddShape(physx::PxRigidActor &actor, const physx::PxGeometry &shape, const 
 		LEAN_THROW_ERROR_MSG("PxRigidDynamic::createShape()");
 }
 
+// Clears all shapes, returning the remaining shape if all cannot be cleared.
+physx::PxShape* ClearShapes(physx::PxRigidActor &actor)
+{
+	physx::PxShape *pRemainingShape = nullptr;
+
+	for (uint4 i = actor.getNbShapes(); i-- > 0; )
+	{
+		physx::PxShape *shape;
+		actor.getShapes(&shape, 1, i);
+		shape->release();
+	}
+
+	actor.getShapes(&pRemainingShape, 1, 0);
+	return pRemainingShape;
+}
+
 // Sets the given mass.
 void SetMass(physx::PxRigidBody &actor, float mass)
 {

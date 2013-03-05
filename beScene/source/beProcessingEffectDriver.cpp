@@ -4,6 +4,7 @@
 
 #include "beSceneInternal/stdafx.h"
 #include "beScene/beProcessingEffectDriver.h"
+#include "beScene/beProcessingEffectDriverCache.h"
 #include "beScene/bePerspective.h"
 #include "beScene/DX11/bePipe.h"
 #include <beGraphics/Any/beEffect.h>
@@ -31,29 +32,24 @@ ProcessingEffectDriver::~ProcessingEffectDriver()
 {
 }
 
-// Applies the given perspective data to the effect bound by this effect driver.
-bool ProcessingEffectDriver::Apply(const Perspective *pPerspective, beGraphics::StateManager& stateManager, const beGraphics::DeviceContext &context) const
+/// Draws the given pass.
+void ProcessingEffectDriver::Render(const QueuedPass *pass_, const void *pProcessor, const Perspective *pPerspective,
+		lean::vcallable<DrawJobSignature> &drawJob, beGraphics::StateManager &stateManager_, const beGraphics::DeviceContext &context) const
 {
-	return (pPerspective)
-		? m_perspectiveBinder.Apply(*pPerspective, ToImpl(stateManager), ToImpl(context))
-		: true;
-}
+	const PipelineEffectBinderPass* pass = static_cast<const PipelineEffectBinderPass*>(pass_);
+	beGraphics::Any::StateManager &stateManager = ToImpl(stateManager_);
+	ID3D11DeviceContext *contextDX = ToImpl(context);
 
-// Applies the given pass to the effect bound by this effect driver.
-bool ProcessingEffectDriver::ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
-	const void *pProcessor, const Perspective *pPerspective,
-	beGraphics::StateManager& stateManager, const beGraphics::DeviceContext &context) const
-{
-	const PipelineEffectBinderPass* pPipelinePass = static_cast<const PipelineEffectBinderPass*>(pPass);
-	ID3D11DeviceContext *pContextDX = ToImpl(context);
-	beGraphics::Any::StateManager &stateManagerDX11 = ToImpl(stateManager);
+	// Prepare
+	if (pPerspective)
+		m_perspectiveBinder.Apply(*pPerspective, stateManager, contextDX);
 
-	uint4 step = nextStep++;
-	const StateEffectBinderPass *pStatePass = pPipelinePass->GetPass(step);
-
-	if (pStatePass)
+	// Render passes
+	for (uint4 step = 0, nextStep; const StateEffectBinderPass *statePass = statePass = pass->GetPass(step); step = nextStep)
 	{
-		uint4 passID = pStatePass->GetPassID();
+		nextStep = step + 1;
+
+		uint4 passID = statePass->GetPassID();
 		uint4 nextPassID = passID;
 
 		DX11::Pipe *pPipe = nullptr;
@@ -65,29 +61,28 @@ bool ProcessingEffectDriver::ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
 			outIndex = pPerspective->GetDesc().OutputIndex;
 		}
 
-		if (m_pipeBinder.Apply(nextPassID, pPipe, outIndex, pProcessor, stateManagerDX11, pContextDX))
+		if (m_pipeBinder.Apply(nextPassID, pPipe, outIndex, pProcessor, stateManager, contextDX))
 		{
 			if (nextPassID == passID)
 				// Repeat this step, if suggested by the pipe effect binder
-				--nextStep;
+				nextStep = step;
 
-			return pStatePass->Apply(stateManagerDX11, pContextDX);
+			if (statePass->Apply(stateManager, contextDX))
+				drawJob(passID, stateManager, context);
 		}
 	}
-
-	return false;
-}
-
-// Gets the number of passes.
-uint4 ProcessingEffectDriver::GetPassCount() const
-{
-	return m_pipelineBinder.GetPassCount();
 }
 
 // Gets the pass identified by the given ID.
-const PipelineEffectBinderPass* ProcessingEffectDriver::GetPass(uint4 passID) const
+ProcessingEffectDriver::PassRange ProcessingEffectDriver::GetPasses() const
 {
-	return m_pipelineBinder.GetPass(passID);
+	return lean::static_range_cast<ProcessingEffectDriver::PassRange>( ToSTD(m_pipelineBinder.GetPasses()) );
+}
+
+// Creates an effect binder from the given effect.
+lean::resource_ptr<EffectDriver, true> ProcessingEffectDriverCache::CreateEffectBinder(const beGraphics::Technique &technique, uint4 flags) const
+{
+	return new_resource ProcessingEffectDriver(technique, m_pipeline, m_pool);
 }
 
 } // namespace

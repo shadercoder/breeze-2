@@ -2,31 +2,44 @@
 /* breeze Engine Simulation System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM_SIMULATIONCONTROLLER
 #define BE_ENTITYSYSTEM_SIMULATIONCONTROLLER
 
 #include "beEntitySystem.h"
+#include <beCore/beShared.h>
 #include "beController.h"
-#include "beSimulation.h"
-#include <lean/smart/weak_resource_ptr.h>
 
 namespace beEntitySystem
 {
 
-/// Simulation controller base class.
-class SimulationController : public Controller
+class Simulation;
+
+/// World controller base class.
+class WorldController : public beCore::Shared, public Controller
 {
-protected:
-	/// Controlled simulation.
-	const lean::weak_resource_ptr<Simulation> m_pSimulation;
+	LEAN_SHARED_INTERFACE_BEHAVIOR(WorldController)
 
 public:
-	/// Constructor.
-	LEAN_INLINE SimulationController(Simulation *pSimulation)
-		: m_pSimulation( LEAN_ASSERT_NOT_NULL(pSimulation) ) { }
+	/// Checks for and commits all changes.
+	virtual void Commit() { }
 
-	/// Gets the controlled simulation.
-	LEAN_INLINE Simulation* GetSimulation() const { return m_pSimulation.get_unchecked(); }
+	/// Attaches this controller to the given simulation.
+	virtual void Attach(Simulation *simulation) { }
+	/// Detaches this controller from the given simulation.
+	virtual void Detach(Simulation *simulation) { }
+};
+
+/// Simulation controller base class.
+class SimulationController : public WorldController
+{
+	LEAN_SHARED_INTERFACE_BEHAVIOR(SimulationController)
+
+public:
+	/// Attaches this controller to the given simulation.
+	virtual void Attach(Simulation *simulation) = 0;
+	/// Detaches this controller from the given simulation.
+	virtual void Detach(Simulation *simulation) = 0;
 };
 
 } // namespace

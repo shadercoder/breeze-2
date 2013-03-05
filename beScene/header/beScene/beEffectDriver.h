@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_EFFECT_DRIVER
 #define BE_SCENE_EFFECT_DRIVER
 
@@ -13,10 +14,9 @@ namespace beScene
 {
 
 /// Effect binder base.
-class EffectDriver : public beCore::Resource, public EffectBinder
+class LEAN_INTERFACE EffectDriver : public beCore::Resource, public EffectBinder
 {
-protected:
-	LEAN_INLINE EffectBinder& operator =(const EffectBinder&) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(EffectDriver)
 };
 
 } // namespace

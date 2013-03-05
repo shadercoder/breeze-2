@@ -2,40 +2,39 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_EFFECT
 #define BE_GRAPHICS_EFFECT
 
 #include "beGraphics.h"
 #include <beCore/beShared.h>
+#include <beCore/beManagedResource.h>
+#include <beCore/beComponent.h>
 #include <lean/tags/noncopyable.h>
 
 namespace beGraphics
 {
 
 class EffectCache;
+class TextureCache;
 
 /// Effect interface.
-class Effect : public lean::nonassignable, public beCore::OptionalResource, public Implementation
+class LEAN_INTERFACE Effect : public lean::nonassignable, public beCore::OptionalResource,
+	public beCore::ManagedResource<EffectCache>, public beCore::HotResource<Effect>, public Implementation
 {
-protected:
-	LEAN_INLINE Effect& operator =(const Effect&) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(Effect)
 
 public:
-	virtual ~Effect() throw() { };
-
-	/// Gets the effect cache.
-	virtual EffectCache* GetCache() const = 0;
+	/// Gets the component type.
+	BE_GRAPHICS_API static const beCore::ComponentType* GetComponentType();
 };
 
 /// Technique interface.
-class Technique : public beCore::OptionalResource, public Implementation
+class LEAN_INTERFACE Technique : public beCore::OptionalResource, public Implementation
 {
-protected:
-	LEAN_INLINE Technique& operator =(const Technique&) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(Technique)
 
 public:
-	virtual ~Technique() throw() { };
-
 	/// Gets the effect.
 	virtual const Effect* GetEffect() const = 0;
 };

@@ -4,7 +4,7 @@
 
 #include "bePhysicsInternal/stdafx.h"
 #include "bePhysics/beCharacterController.h"
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 #include "bePhysics/beCharacterSceneController.h"
 #include "bePhysics/PX3/beCharacter.h"
 #include "bePhysics/PX3/beScene.h"
@@ -17,28 +17,27 @@
 namespace bePhysics
 {
 
+BE_CORE_PUBLISH_COMPONENT(CharacterController)
+
 // Constructor.
-CharacterController::CharacterController(beEntitySystem::Entity *pEntity, CharacterSceneController *pScene, Character *pActor, const Material *pMaterial)
-	: EntityController(pEntity),
-	m_pScene(pScene),
-	m_bAttached(false),
+CharacterController::CharacterController(CharacterSceneController *pScene, Character *pActor, const Material *pMaterial)
+	: m_pScene( LEAN_ASSERT_NOT_NULL(pScene) ),
 	
 	m_pActor( LEAN_ASSERT_NOT_NULL(pActor) ),
 	m_pMaterial( pMaterial ),
 	m_bDynamic(false),
 
+	m_pEntity(nullptr),
 	m_lastScaling(1.0f)
 {
 //	Scale(*ToImpl(*m_pActor)->getActor(), physx::PxVec3(0.9f));
-
-	Synchronize();
 }
 
 // Destructor.
 CharacterController::~CharacterController()
 {
 	// WARNING: Never forget, will crash otherwise
-	Detach();
+	Detach(nullptr);
 }
 
 // Sets the material.
@@ -81,11 +80,14 @@ float CharacterController::GetMass() const
 }
 
 // Forces this controller into synchronization with the simulation.
-void CharacterController::Synchronize()
+void CharacterController::Synchronize(beEntitySystem::EntityHandle entity)
 {
-	ToImpl(*m_pActor)->setPosition( PX3::ToXAPI(PX3::ToAPI(m_pEntity->GetPosition())) );
+	using bees::Entities;
 
-	if (m_lastScaling != m_pEntity->GetScaling())
+	const Entities::Transformation &trafo = Entities::GetTransformation(entity);
+	ToImpl(*m_pActor)->setPosition( PX3::ToXAPI(PX3::ToAPI(trafo.Position)) );
+
+	if (m_lastScaling != trafo.Scaling)
 	{
 		physx::PxShape *pShape = nullptr;
 		ToImpl(*m_pActor)->getActor()->getShapes(&pShape, 1);
@@ -93,19 +95,19 @@ void CharacterController::Synchronize()
 		physx::PxCapsuleGeometry geom;
 		pShape->getCapsuleGeometry(geom);
 
-		PX3::Scale( geom, pShape->getLocalPose(), PX3::ToAPI(m_pEntity->GetScaling() / m_lastScaling) );
+		PX3::Scale( geom, pShape->getLocalPose(), PX3::ToAPI(trafo.Scaling / m_lastScaling) );
 		
 		ToImpl(*m_pActor)->setRadius(geom.radius);
 		ToImpl(*m_pActor)->setHeight(2.0f * geom.halfHeight);
 		
-		m_lastScaling = m_pEntity->GetScaling();
+		m_lastScaling = trafo.Scaling;
 		// Update inertia
 		SetMassAndInertia(GetMass());
 	}
 }
 
 // Synchronizes this controller with the simulation.
-void CharacterController::Flush()
+void CharacterController::Flush(const beEntitySystem::EntityHandle entity)
 {
 }
 
@@ -121,49 +123,43 @@ void CharacterController::SetDynamic(bool bDynamic)
 {
 	if (bDynamic != m_bDynamic)
 	{
-		bool bWasAttached = m_bAttached;
+		bees::Entity *pWasAttachedTo = m_pEntity;
 
-		if (bWasAttached)
-			Detach();
+		if (pWasAttachedTo)
+			Detach(pWasAttachedTo);
 
 		ToImpl(*m_pActor)->getActor()->setRigidDynamicFlags((bDynamic) ? physx::PxRigidDynamicFlags() : physx::PxRigidDynamicFlag::eKINEMATIC);
 		m_bDynamic = bDynamic;
 
-		if (bWasAttached)
-			Attach();
+		if (pWasAttachedTo)
+			Attach(pWasAttachedTo);
 	}
 }
 
 // Attaches this controller to the scene.
-void CharacterController::Attach()
+void CharacterController::Attach(beEntitySystem::Entity *entity)
 {
-	if (m_bAttached)
+	if (m_pEntity)
 		return;
 
 	// ORDER: Active as soon as SOMETHING MIGHT have been attached
-	m_bAttached = true;
+	m_pEntity = entity;
 
-	Synchronize();
+	Synchronize(m_pEntity->Handle());
 
 	m_pScene->AddSynchronized(this, beEntitySystem::SynchronizedFlags::Fetch);
 }
 
 // Detaches this controller from the scene.
-void CharacterController::Detach()
+void CharacterController::Detach(beEntitySystem::Entity *entity)
 {
-	if (!m_bAttached)
+	if (m_pEntity != entity || m_pEntity && !entity)
 		return;
 
 	m_pScene->RemoveSynchronized(this, beEntitySystem::SynchronizedFlags::All);
 
 	// ORDER: Active as long as ANYTHING MIGHT be attached
-	m_bAttached = false;
-}
-
-// Gets the controller type.
-utf8_ntr CharacterController::GetControllerType()
-{
-	return utf8_ntr("CharacterController");
+	m_pEntity = nullptr;
 }
 
 } // namespace

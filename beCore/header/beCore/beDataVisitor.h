@@ -2,6 +2,7 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_DATA_VISITOR
 #define BE_CORE_DATA_VISITOR
 
@@ -11,21 +12,22 @@
 namespace beCore
 {
 
+struct ValueTypeDesc;
+
 /// Data visitor.
 class LEAN_INTERFACE DataVisitor
 {
-protected:
-	~DataVisitor() { }
+	LEAN_INTERFACE_BEHAVIOR(DataVisitor)
 
 public:
 	/// Visits the given values.
-	virtual bool Visit(uint4 typeID, const lean::type_info &typeInfo, void *values, size_t count)
+	BE_CORE_API virtual bool Visit(const ValueTypeDesc &typeDesc, void *values, size_t count)
 	{
-		Visit(typeID, typeInfo, const_cast<const void*>(values), count);
+		Visit(typeDesc, const_cast<const void*>(values), count);
 		return false;
 	}
 	/// Visits the given values.
-	virtual void Visit(uint4 typeID, const lean::type_info &typeInfo, const void *values, size_t count) { }
+	BE_CORE_API virtual void Visit(const ValueTypeDesc &typeDesc, const void *values, size_t count) { }
 };
 
 } // namespace

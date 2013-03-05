@@ -1,7 +1,7 @@
 #ifndef GRAPHICSCANVAS_H
 #define GRAPHICSCANVAS_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include <beGraphics/beDevice.h>
 #include <lean/smart/resource_ptr.h>
 
@@ -23,6 +23,7 @@ private:
 	bool m_bAutoFocus;
 
 	lean::highres_timer m_hrTimer;
+	QSize m_lastSize, m_officialSize;
 
 protected:
 	/// Intercepts show events.
@@ -45,7 +46,7 @@ protected:
 
 public:
 	/// Constructor.
-	GraphicsCanvas(QWidget *pParent = nullptr , Qt::WFlags flags = 0);
+	GraphicsCanvas(QWidget *pParent = nullptr , Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~GraphicsCanvas();
 
@@ -83,7 +84,7 @@ public Q_SLOTS:
 	/// Step & render.
 	void nextFrame();
 	/// Render.
-	void doRender();
+	void present();
 
 Q_SIGNALS:
 	/// Called before any rendering is initiated.

@@ -2,14 +2,18 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_COMPONENT_REFLECTOR
 #define BE_CORE_COMPONENT_REFLECTOR
 
 #include "beCore.h"
 #include <lean/tags/noncopyable.h>
 
-#include <beCore/beParameters.h>
-#include <beCore/beParameterSet.h>
+#include "beComponent.h"
+#include "beComponentInfo.h"
+
+#include "beParameters.h"
+#include "beParameterSet.h"
 
 #include <lean/containers/any.h>
 #include <lean/smart/cloneable_obj.h>
@@ -19,77 +23,93 @@
 namespace beCore
 {
 
-/// Specific parameter.
-struct ComponentParameter
-{
-	utf8_ntr Name;	///< Parameter name.
-	utf8_ntr Type;	///< Parameter type.
-	bool Deducible;	///< True, if deducible from prototype.
-	bool Optional;	///< True, if optional.
-
-	/// Constructor
-	ComponentParameter(const utf8_ntr &name, const utf8_ntr &type, bool bDeducible = false, bool bOptional = false)
-		: Name(name),
-		Type(type),
-		Deducible(bDeducible),
-		Optional(bOptional) { }
-};
-
-/// Component parameter range.
-typedef lean::range<const ComponentParameter*> ComponentParameters;
-
 /// Component state enumeration.
-namespace ComponentState
+struct ComponentState
 {
 	// Enum.
 	enum T
 	{
-		NotSet,		/// Null.
-		Unknown,	/// Valid, but unmanaged.
-		Named,		/// Valid & named.
-		Filed		/// Valid & filed.
+		NotSet,		///< Null.
+		Unknown,	///< Valid, but unmanaged.
+		Named,		///< Valid & named.
+		Filed		///< Valid & filed.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(ComponentState)
+};
+
+/// Component flags.
+struct ComponentFlags
+{
+	/// Enumeration.
+	enum T
+	{
+		None = 0x0,
+		
+		NameMutable = 0x1,	///< Component name may be changed.
+		Filed = 0x2,		///< Component is currently associated with a file.
+		FileMutable = 0x4,	///< Component may be associated with any given file.
+
+		Creatable = 0x10,	///< New components may be created.
+		Cloneable = 0x20,	///< Existing component may be cloned.
+
+	};
+	LEAN_MAKE_ENUM_STRUCT(ComponentFlags)
+};
 
 /// Provides generic access to abstract component types.
-class ComponentReflector
+class LEAN_INTERFACE ComponentReflector
 {
-protected:
-	ComponentReflector& operator =(const ComponentReflector&) { return *this; }
-	~ComponentReflector() throw() { }
+	LEAN_INTERFACE_BEHAVIOR(ComponentReflector)
 
 public:
-	/// Returns true, if the component can be created.
-	virtual bool CanBeCreated() const { return false; }
+	/// Gets principal component flags.
+	virtual uint4 GetComponentFlags() const = 0;
+	/// Gets specific component flags.
+	virtual uint4 GetComponentFlags(const lean::any &component) const = 0;
+
+	/// Gets information on the components currently available.
+	virtual ComponentInfoVector GetComponentInfo(const ParameterSet &parameters) const = 0;
+	
+	/// Gets the component name.
+	virtual ComponentInfo GetInfo(const lean::any &component) const = 0;
+
 	/// Gets a list of creation parameters.
-	virtual ComponentParameters GetCreationParameters() const { return ComponentParameters(); };
+	BE_CORE_API virtual ComponentParameters GetCreationParameters() const { return ComponentParameters(); }
 	/// Creates a component from the given parameters.
-	virtual lean::cloneable_obj<lean::any, true> CreateComponent(
-		const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters,
-		const lean::any *pPrototype = nullptr) const
+	BE_CORE_API virtual lean::cloneable_obj<lean::any, true> CreateComponent(const utf8_ntri &name,
+		const Parameters &creationParameters, const ParameterSet &parameters,
+		const lean::any *pPrototype = nullptr, const lean::any *pReplace = nullptr) const { return nullptr; }
+	/// Gets a list of creation parameters.
+	BE_CORE_API virtual void GetCreationInfo(const lean::any &component, Parameters &creationParameters, ComponentInfo *pInfo = nullptr) const
 	{
-		return nullptr;
+		if (pInfo)
+			*pInfo = GetInfo(component);
 	}
 
-	/// Returns true, if the component can be named.
-	virtual bool HasName() const { return CanBeNamed(); }
-	/// Returns true, if the component can be named.
-	virtual bool CanBeNamed() const { return false; }
+	/// Sets the component name.
+	BE_CORE_API virtual void SetName(const lean::any &component, const utf8_ntri &name) const { }
 	/// Gets a component by name.
-	virtual lean::cloneable_obj<lean::any, true> GetComponentByName(const utf8_ntri &name, const beCore::ParameterSet &parameters) const { return nullptr; }
-
-	/// Returns true, if the component can be loaded from a file.
-	virtual bool CanBeLoaded() const { return false; }
+	BE_CORE_API virtual lean::cloneable_obj<lean::any, true> GetComponentByName(const utf8_ntri &name, const ParameterSet &parameters) const { return nullptr; }
+	
+	/// Sets the component name.
+	BE_CORE_API virtual void SetFile(const lean::any &component, const utf8_ntri &file) const { }
 	/// Gets a fitting file extension, if available.
-	virtual utf8_ntr GetFileExtension() const { return utf8_ntr(""); }
-	/// Gets a component from the given file.
-	virtual lean::cloneable_obj<lean::any, true> GetComponent(const utf8_ntri &file, const beCore::ParameterSet &parameters) const { return nullptr; }
+	BE_CORE_API virtual utf8_ntr GetFileExtension() const { return utf8_ntr(""); }
 
-	/// Gets the name or file of the given component.
-	virtual beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, ComponentState::T *pState = nullptr) const { return beCore::Exchange::utf8_string(); }
+	/// Gets a list of loading parameters.
+	BE_CORE_API virtual ComponentParameters GetFileParameters(const utf8_ntri &file) const { return ComponentParameters(); }
+	/// Gets a component by file.
+	BE_CORE_API virtual lean::cloneable_obj<lean::any, true> GetComponentByFile(const utf8_ntri &file,
+		const Parameters &fileParameters, const ParameterSet &parameters) const { return nullptr; }
+	/// Gets a list of creation parameters.
+	BE_CORE_API virtual void GetFileInfo(const lean::any &component, Parameters &fileParameters, ComponentInfo *pInfo = nullptr) const
+	{
+		if (pInfo)
+			*pInfo = GetInfo(component);
+	}
 
 	/// Gets the component type reflected.
-	virtual utf8_ntr GetType() const = 0;
+	virtual const ComponentType* GetType() const = 0;
 };
 
 } // namespace

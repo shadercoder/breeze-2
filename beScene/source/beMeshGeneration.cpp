@@ -272,7 +272,7 @@ void GenerateGrid(void *vertices, void *indices,
 			}
 	}
 	else
-		LEAN_ASSERT(false);
+		LEAN_ASSERT_UNREACHABLE();
 }
 
 // Generates a regular grid mesh of the given dimensions.
@@ -303,12 +303,12 @@ lean::resource_ptr<Mesh, true> GenerateGridMesh(
 	const beCore::Exchange::vector_t<D3D11_INPUT_ELEMENT_DESC>::t vertexDesc = DX11::ComputeVertexDesc(meshGenFlags);
 	const DXGI_FORMAT indexFormat = DX11::ComputeIndexFormat(vertexCount, meshGenFlags);
 
-	return lean::bind_resource(
-		new DX11::Mesh(
+	return new_resource DX11::Mesh(
+			"Grid",
 			&vertexDesc[0], vertexDesc.size(),
 			vertexSize, &vertexMemory[0], vertexCount,
 			indexFormat, &indexMemory[0], indexCount,
-			ToImpl(device) )
+			ToImpl(device)
 		);
 }
 
@@ -408,12 +408,12 @@ lean::resource_ptr<Mesh, true> GenerateCuboidMesh(
 	const beCore::Exchange::vector_t<D3D11_INPUT_ELEMENT_DESC>::t vertexDesc = DX11::ComputeVertexDesc(meshGenFlags);
 	const DXGI_FORMAT indexFormat = DX11::ComputeIndexFormat(vertexCount, meshGenFlags);
 
-	return lean::bind_resource(
-		new DX11::Mesh(
+	return new_resource DX11::Mesh(
+			"Cuboid",
 			&vertexDesc[0], vertexDesc.size(),
 			vertexSize, &vertexMemory[0], vertexCount,
 			indexFormat, &indexMemory[0], indexCount,
-			ToImpl(device) )
+			ToImpl(device)
 		);
 }
 

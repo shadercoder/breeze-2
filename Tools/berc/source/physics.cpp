@@ -9,7 +9,11 @@
 #include <beResourceCompiler/beMeshSerialization.h>
 #include <lean/smart/resource_ptr.h>
 
+#include <vector>
+#include <string>
+
 #include <lean/io/numeric.h>
+#include <lean/io/filesystem.h>
 
 /// Physics tool help.
 const struct PhysicsToolHelp : public CommandLineTool
@@ -22,7 +26,7 @@ const struct PhysicsToolHelp : public CommandLineTool
 	/// Runs the command line tool.
 	int Run(int argc, const char* argv[]) const
 	{
-		std::cout << " Syntax: berc physics <input> <output>"  << std::endl << std::endl;
+		std::cout << " Syntax: berc physics [/Tsf] <input> <output>"  << std::endl << std::endl;
 
 		std::cout << " Arguments:"  << std::endl;
 		std::cout << "  /Tsf:<float>   Set scale factor to <float> (default 1.0)"  << std::endl;
@@ -51,6 +55,9 @@ const struct PhysicsTool : public CommandLineTool
 			return -1;
 		}
 
+		std::vector<const char*> storedArgs;
+		storedArgs.reserve(argc);
+
 		const char *inputFile = argv[argc - 2];
 		const char *outputFile = argv[argc - 1];
 		float scaleFactor = 1.0f;
@@ -67,6 +74,20 @@ const struct PhysicsTool : public CommandLineTool
 			}
 			else
 				std::cout << "Unrecognized argument, consult physicshelp for help: " << arg << std::endl;
+
+			storedArgs.push_back(arg);
+		}
+
+		{
+			std::string inputFilename = lean::get_filename(inputFile);
+			storedArgs.push_back(inputFilename.c_str());
+			std::string relativeOutputFile = lean::relative_path<std::string>(
+					lean::absolute_path(outputFile),
+					lean::get_directory<std::string>( lean::absolute_path(inputFile) )
+				);
+			storedArgs.push_back(relativeOutputFile.c_str());
+
+			StoreCommand("physics", inputFile, storedArgs.data(), storedArgs.size());
 		}
 
 		beResourceCompiler::MeshImporter importer;

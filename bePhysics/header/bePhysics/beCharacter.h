@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_CHARACTER
 #define BE_PHYSICS_CHARACTER
 
@@ -15,7 +16,7 @@ namespace bePhysics
 {
 
 /// Character collision flags.
-namespace CharacterCollision
+struct CharacterCollision
 {
 	/// Enumeration.
 	enum T
@@ -24,7 +25,8 @@ namespace CharacterCollision
 		Sides = 1 << 1,		///< Wall collisions.
 		Up = 1 << 2			///< Collisions above.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(CharacterCollision)
+};
 /// Collision flags.
 typedef uint4 CharacterCollisionFlags;
 

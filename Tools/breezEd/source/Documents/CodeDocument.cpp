@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Documents/CodeDocument.h"
 
-#include <QtGui/QPlainTextDocumentLayout>
+#include <QtWidgets/QPlainTextDocumentLayout>
 
 #include <QtCore/QFile.h>
 #include <QtCore/QFileInfo.h>
@@ -131,7 +131,7 @@ public:
 	}
 
 	/// Creates a default mdi document view.
-	QWidget* createDocumentView(AbstractDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+	QWidget* createDocumentView(AbstractDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	{
 		DocumentModeState *pDocumentModeState = pDocumentMode->findChild<DocumentModeState*>();
 		Mode *pViewModes = LEAN_ASSERT_NOT_NULL(pDocumentModeState)->viewModes();

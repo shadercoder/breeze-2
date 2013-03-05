@@ -2,6 +2,7 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_TASK
 #define BE_CORE_TASK
 
@@ -11,12 +12,9 @@ namespace beCore
 {
 
 /// Task interface.
-class Task
+class LEAN_INTERFACE Task
 {
-protected:
-#ifndef LEAN_OPTIMIZE_DEFAULT_DESTRUCTOR
-	LEAN_INLINE ~Task() { }
-#endif
+	LEAN_INTERFACE_BEHAVIOR(Task)
 
 public:
 	/// Runs the task.

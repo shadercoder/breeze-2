@@ -2,6 +2,7 @@
 /* breeze Engine Entity System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM_ENTITY_GROUP
 #define BE_ENTITYSYSTEM_ENTITY_GROUP
 
@@ -21,7 +22,7 @@ class Entity;
 class EntityGroup : public lean::nonassignable_chain<beCore::Shared>
 {
 private:
-	typedef std::vector< lean::resource_ptr<Entity> > entity_vector;
+	typedef std::vector<Entity*> entity_vector;
 	entity_vector m_entities;
 
 public:
@@ -57,12 +58,12 @@ public:
 	/// Gets a range of all entities.
 	LEAN_INLINE EntityRange GetEntities()
 	{
-		return EntityRange( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
+		return EntityRange( &m_entities[0], &m_entities[0] + m_entities.size() );
 	}
 	/// Gets a range of all entities.
 	LEAN_INLINE ConstEntityRange GetEntities() const
 	{
-		return ConstEntityRange( &m_entities[0].get(), &m_entities[0].get() + m_entities.size() );
+		return ConstEntityRange( &m_entities[0], &m_entities[0] + m_entities.size() );
 	}
 
 	/// Attaches all entities to their simulations.

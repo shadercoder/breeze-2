@@ -4,12 +4,11 @@
 
 #include "beCoreInternal/stdafx.h"
 #include "beCore/bePropertySerialization.h"
-#include "beCore/beTextSerialization.h"
-
-#include "beCore/bePropertyVisitor.h"
+#include "beCore/beTextSerializer.h"
 
 #include <lean/functional/predicates.h>
 #include <lean/xml/utility.h>
+#include <lean/xml/numeric.h>
 #include <sstream>
 
 #include <lean/logging/log.h>
@@ -17,109 +16,116 @@
 namespace beCore
 {
 
-namespace
+// Visits the given values.
+void PropertySerializer::Visit(const PropertyProvider &provider, uint4 propertyID, const PropertyDesc &desc, const void *values)
 {
+	rapidxml::xml_document<> &document = *LEAN_ASSERT_NOT_NULL(Parent->document());
+	
+	const utf8_t *value = nullptr;
 
-/// Property serializer.
-struct PropertySerializer : public PropertyVisitor
-{
-	const PropertyProvider *properties;
-	rapidxml::xml_node<lean::utf8_t> *parent;
+	const TextSerializer *pSerializer = desc.TypeDesc->Text;
 
-	/// Constructor.
-	PropertySerializer(const PropertyProvider &properties, rapidxml::xml_node<lean::utf8_t> &parent)
-		: properties(&properties),
-		parent(&parent) { }
-
-	/// Visits the given values.
-	void Visit(const PropertyProvider &provider, uint4 propertyID, const PropertyDesc &desc, const void *values)
+	if (pSerializer)
 	{
-		rapidxml::xml_document<> &document = *LEAN_ASSERT_NOT_NULL(parent->document());
-		
-		const utf8_t *value = nullptr;
+		static const size_t StackBufferSize = 2048;
 
-		const TextSerializer *pSerializer = GetTextSerialization().GetSerializer(desc.TypeID);
+		size_t maxLength = pSerializer->GetMaxLength(desc.Count);
 
-		if (pSerializer)
+		// Use stack to speed up small allocations
+		// NOTE: 0 means unpredictable
+		if (maxLength != 0 && maxLength < StackBufferSize)
 		{
-			static const size_t StackBufferSize = 2048;
+			utf8_t buffer[StackBufferSize];
+			
+			// Serialize
+			// NOTE: Required to be null-terminated -> xml
+			utf8_t *bufferEnd = pSerializer->Write(buffer, desc.TypeDesc->Info.type, values, desc.Count);
+			*bufferEnd++ = 0;
 
-			size_t maxLength = pSerializer->GetMaxLength(desc.Count);
-
-			// Use stack to speed up small allocations
-			// NOTE: 0 means unpredictable
-			if (maxLength != 0 && maxLength < StackBufferSize)
-			{
-				utf8_t buffer[StackBufferSize];
-				
-				// Serialize
-				// NOTE: Required to be null-terminated -> xml
-				utf8_t *bufferEnd = pSerializer->Write(buffer, desc.TypeInfo->type, values, desc.Count);
-				*bufferEnd++ = 0;
-
-				size_t length = bufferEnd - buffer;
-				LEAN_ASSERT(length < StackBufferSize);
-				
-				value = document.allocate_string(buffer, length);
-			}
-			// Take generic route, otherwise
-			else
-			{
-				std::basic_ostringstream<utf8_t> stream;
-				stream.imbue(std::locale::classic());
-
-				// Serialize
-				pSerializer->Write(stream, desc.TypeInfo->type, values, desc.Count);
-
-				value = document.allocate_string( stream.str().c_str() );
-			}
+			size_t length = bufferEnd - buffer;
+			LEAN_ASSERT(length < StackBufferSize);
+			
+			value = document.allocate_string(buffer, length);
 		}
+		// Take generic route, otherwise
 		else
-			LEAN_LOG_ERROR("No serializer available for type \"" << GetTypeIndex().GetName(desc.TypeID) << " (" << desc.TypeID << ")");
+		{
+			std::basic_ostringstream<utf8_t> stream;
+			stream.imbue(std::locale::classic());
 
-		rapidxml::xml_node<utf8_t> &node = *lean::allocate_node(document, "p", value);
-		node.append_attribute(
-				lean::allocate_attribute(document, "n", properties->GetPropertyName(propertyID))
-			);
-		parent->append_node(&node);
+			// Serialize
+			pSerializer->Write(stream, desc.TypeDesc->Info.type, values, desc.Count);
+
+			value = document.allocate_string( stream.str().c_str() );
+		}
 	}
-};
+	else
+		LEAN_LOG_ERROR("No serializer available for type \"" << desc.TypeDesc->Name.c_str());
 
-/// Property deserializer.
-struct PropertyDeserializer : public PropertyVisitor
-{
-	PropertyProvider *properties;
-	const rapidxml::xml_node<lean::utf8_t> *node;
-
-	/// Constructor.
-	PropertyDeserializer(PropertyProvider &properties, const rapidxml::xml_node<lean::utf8_t> &node)
-		: properties(&properties),
-		node(&node) { }
-
-	/// Visits the given values.
-	bool Visit(const PropertyProvider &provider, uint4 propertyID, const PropertyDesc &desc, void *values)
+	rapidxml::xml_node<utf8_t> &Node = *lean::allocate_node(document, "p", value);
+	lean::append_attribute(document, Node, "n", Properties->GetPropertyName(propertyID));
+	if (IncludeType)
 	{
-		const TextSerializer *pSerializer = GetTextSerialization().GetSerializer(desc.TypeID);
-
-		if (pSerializer)
-		{
-			if (pSerializer->Read(node->value(), node->value() + node->value_size(), desc.TypeInfo->type, values, desc.Count))
-				return true;
-			// TODO: error logging?
-		}
-		else
-			LEAN_LOG_ERROR("No serializer available for type \"" << GetTypeIndex().GetName(desc.TypeID) << " (" << desc.TypeID << ")");
-
-		return false;
+		lean::append_attribute(document, Node, "t", desc.TypeDesc->Name);
+		lean::append_int_attribute(document, Node, "c", desc.Count);
 	}
-};
+	Parent->append_node(&Node);
+}
 
-} // namespace
+// Gets the property name.
+utf8_ntr PropertyDeserializer::Name() const
+{
+	const utf8_t *chars;
+	size_t count;
+
+	if (Node->first_attribute())
+	{
+		chars = Node->first_attribute()->value();
+		count = Node->first_attribute()->value_size();
+	}
+	else
+	{
+		chars = Node->name();
+		count = Node->name_size();
+	}
+
+	return utf8_ntr(chars, chars + count);
+}
+
+// Gets the number of values.
+utf8_ntr PropertyDeserializer::ValueType() const
+{
+	return lean::get_attribute(*Node, "t");
+}
+
+// Gets the number of values.
+uint4 PropertyDeserializer::ValueCount() const
+{
+	return lean::get_int_attribute(*Node, "c", 1);
+}
+
+// Visits the given values.
+bool PropertyDeserializer::Visit(const PropertyProvider &provider, uint4 propertyID, const PropertyDesc &desc, void *values)
+{
+	const TextSerializer *pSerializer = desc.TypeDesc->Text;
+
+	if (pSerializer)
+	{
+		if (pSerializer->Read(Node->value(), Node->value() + Node->value_size(), desc.TypeDesc->Info.type, values, desc.Count))
+			return true;
+		// TODO: error logging?
+	}
+	else
+		LEAN_LOG_ERROR("No serializer available for type \"" << desc.TypeDesc->Name.c_str());
+
+	return false;
+}
 
 // Saves the given property provider to the given XML node.
-void SaveProperties(const PropertyProvider &properties, rapidxml::xml_node<lean::utf8_t> &node, bool bPersistentOnly)
+void SaveProperties(const PropertyProvider &properties, rapidxml::xml_node<lean::utf8_t> &node, bool bPersistentOnly, bool bWithType)
 {
 	const uint4 propertyCount = properties.GetPropertyCount();
+	uint4 propertyVisitFlags = (bPersistentOnly) ? PropertyVisitFlags::PersistentOnly : PropertyVisitFlags::None;
 
 	if (propertyCount > 0)
 	{
@@ -129,18 +135,18 @@ void SaveProperties(const PropertyProvider &properties, rapidxml::xml_node<lean:
 		// ORDER: Append FIRST, otherwise parent document == nullptrs
 		node.append_node(&propertiesNode);
 
-		PropertySerializer serializer(properties, propertiesNode);
+		PropertySerializer serializer(properties, propertiesNode, bWithType);
 
 		for (uint4 i = 0; i < propertyCount; ++i)
-			properties.ReadProperty(i, serializer, bPersistentOnly);
+			properties.ReadProperty(i, serializer, propertyVisitFlags);
 	}
 }
 
 // Saves the given property provider to the given XML node.
-void SaveProperties(const PropertyProvider &properties, uint4 propertyID, rapidxml::xml_node<lean::utf8_t> &node, bool bPersistentOnly)
+void SaveProperties(const PropertyProvider &properties, uint4 propertyID, rapidxml::xml_node<lean::utf8_t> &node, bool bPersistentOnly, bool bWithType)
 {
 	PropertySerializer serializer(properties, node);
-	properties.ReadProperty(propertyID, serializer, bPersistentOnly);
+	properties.ReadProperty(propertyID, serializer, (bPersistentOnly) ? PropertyVisitFlags::PersistentOnly : PropertyVisitFlags::None );
 }
 
 // Load the given property provider from the given XML node.
@@ -170,7 +176,7 @@ void LoadProperties(PropertyProvider &properties, const rapidxml::xml_node<lean:
 				if (nodeName == properties.GetPropertyName(propertyID))
 				{
 					PropertyDeserializer serializer(properties, *propertyNode);
-					properties.WriteProperty(propertyID, serializer);
+					properties.WriteProperty(propertyID, serializer, PropertyVisitFlags::PersistentOnly);
 
 					// Start next search with next property
 					nextPropertyID = propertyID + 1;
@@ -195,7 +201,7 @@ void LoadProperties(PropertyProvider &properties, uint4 propertyID, const rapidx
 			if (nodeName == propertyName)
 			{
 				PropertyDeserializer serializer(properties, *propertyNode);
-				properties.WriteProperty(propertyID, serializer);
+				properties.WriteProperty(propertyID, serializer, PropertyVisitFlags::PersistentOnly);
 			}
 		}
 }

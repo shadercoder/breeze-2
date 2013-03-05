@@ -1,6 +1,7 @@
 #define BE_PERSPECTIVE_SETUP
 #define BE_SCENE_SETUP
 
+#include "Engine/Pipe.fx"
 #include "Engine/Pipeline.fx"
 #include "Pipelines/LPR/Scene.fx"
 #include "Engine/Feedback.fx"
@@ -34,6 +35,19 @@ PipelineStage DefaultPipelineStage
 <
 	int Layer = 100;
 	string Setup = "PipelineSetup";
+>;
+
+/// Default pipeline stage.
+PipelineStage OverlayPipelineStage
+<
+	int Layer = 10000;
+	string Setup = "PipelineSetup";
+>;
+
+/// Default pipeline stage.
+PipelineStage ProcessingPipelineStage
+<
+	int Layer = 1000;
 >;
 
 /// ID pipeline stage.
@@ -227,7 +241,32 @@ technique11 PipelineSetup <
 		SetDomainShader( NULL );
 		SetGeometryShader( NULL );
 	}
+	
+	pass <
+		string PipelineStage = "OverlayPipelineStage";
 
+		string Color0 = "FinalTarget";
+		bool bClearColorOnce0 = true;
+		bool bKeepColor0 = true;
+
+		string DepthStencil = "SceneDepthBuffer";
+		bool bClearDepth = true;
+		bool bKeepDepthStencil = true;
+
+		string VSBindResources[] = VSDefaultResources;
+		string GSBindResources[] = GSDefaultResources;
+		string PSBindResources[] = PSDefaultResources;
+	>
+	{
+		SetRasterizerState( DefaultRasterizerState );
+		SetDepthStencilState( DefaultDepthStencilState, 0 );
+		SetBlendState( NULL, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xffffffff );
+
+		SetHullShader( NULL );
+		SetDomainShader( NULL );
+		SetGeometryShader( NULL );
+	}
+	
 	pass <
 		string PipelineStage = "ObjectIDPipelineStage";
 

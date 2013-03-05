@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_DEVICE_PX
 #define BE_PHYSICS_DEVICE_PX
 
@@ -28,6 +29,15 @@ BE_PHYSICS_PX_API physx::PxPhysics* CreatePhysics(physx::PxFoundation &foundatio
 BE_PHYSICS_PX_API physx::PxDefaultCpuDispatcher* CreateCPUDispatcher(uint4 threadCount);
 /// Creates a CUDA context. Returns nullptr if unavailable.
 BE_PHYSICS_PX_API physx::pxtask::CudaContextManager* CreateCudaContext();
+
+/// Allocates physx memory.
+BE_PHYSICS_PX_API void* PhysXAllocate(size_t size);
+/// Frees physx memory.
+BE_PHYSICS_PX_API void PhysXFree(void *ptr);
+/// Allocates physx memory (128-BYTE-aligned!).
+BE_PHYSICS_PX_API void* PhysXSerializationAllocate(size_t size);
+/// Frees physx memory.
+BE_PHYSICS_PX_API void PhysXSerializationFree(void *ptr);
 
 /// Converts the given device description into a PhysX tolerance scale object.
 inline physx::PxTolerancesScale ToToleranceScale(const DeviceDesc &desc)
@@ -64,7 +74,9 @@ public:
 	BE_PHYSICS_PX_API ~Device();
 
 	/// Frees the given memory block on destruction.
-	BE_PHYSICS_PX_API void FreeOnRelease(void *pStaticMemory, size_t alignment);
+	BE_PHYSICS_PX_API void FreeOnRelease(void *pStaticMemory);
+	/// Frees the given serialization memory block on destruction.
+	BE_PHYSICS_PX_API void SerializationFreeOnRelease(void *pStaticMemory);
 
 	/// Gets the implementation identifier.
 	LEAN_INLINE ImplementationID GetImplementationID() const { return PX3Implementation; }

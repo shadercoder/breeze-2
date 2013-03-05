@@ -1,13 +1,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtGui/QMainWindow>
+#include <QtWidgets/QMainWindow>
 #include "ui_MainWindow.h"
 
 class Editor;
 class Mode;
 class AbstractDocument;
 class ConsoleWidget;
+class DockContainer;
 
 class MainWindow : public QMainWindow
 {
@@ -26,6 +27,8 @@ private:
 	Mode *m_pModeStack;
 	document_mode_map m_documentModes;
 
+	DockContainer *m_dock;
+
 	ConsoleWidget *m_pConsole;
 
 	AbstractDocument *m_pDocument;
@@ -42,9 +45,15 @@ protected:
 
 public:
 	/// Constructor.
-	MainWindow(Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	MainWindow(Editor *pEditor, QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~MainWindow();
+
+	/// Gets the active document.
+	LEAN_INLINE AbstractDocument* activeDocument() const { return m_pDocument; }
+
+	/// Gets the dock container.
+	LEAN_INLINE DockContainer* dock() { return m_dock; }
 
 	/// Console.
 	LEAN_INLINE ConsoleWidget* console() { return m_pConsole; }
@@ -57,7 +66,7 @@ public:
 	LEAN_INLINE const Ui::MainWindow& widgets() { return ui; }
 
 	/// Main window widgets.
-	LEAN_INLINE Editor* editor() { return m_pEditor; }
+	LEAN_INLINE Editor* editor() const { return m_pEditor; }
 
 public Q_SLOTS:
 	/// Opens the new document dialog.
@@ -66,6 +75,11 @@ public Q_SLOTS:
 	bool openDocument();
 	/// Opens a document of the given type.
 	bool openDocument(const QString &documentType);
+
+	/// Adds the given dock widget.
+	void addDockWidgetTabified(Qt::DockWidgetArea area, QDockWidget *dockwidget);
+	/// Retrieves the dock widget parent to the given widget, potentially overlapping the given dock widget.
+	QDockWidget* overlappingDockWidget(QDockWidget *dockwidget, QWidget *potentiallyOverlapping) const;
 
 	/// Adds the given document.
 	bool addDocument(AbstractDocument *pDocument, QWidget *pView);
@@ -79,6 +93,8 @@ public Q_SLOTS:
 	void tileWindows();
 
 Q_SIGNALS:
+	/// Focus changed.
+	void focusChanged(QWidget *old, QWidget *now);
 	/// Emitted when the current document has been changed.
 	void documentChanged(AbstractDocument *pDocument);
 	/// Emitted when the given document has been closed.

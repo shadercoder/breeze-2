@@ -273,6 +273,7 @@ void Clear(StateSetup &setup, uint4 stateMask)
 	{
 		for (UINT i = 0; i < setup.RenderTargetCount; ++i)
 			setup.RenderTargets[i] = nullptr;
+		setup.RenderTargetCount = 0;
 		setup.DepthStencilTarget = nullptr;
 	}
 }

@@ -31,7 +31,7 @@ void ProcessingPipeline::Add(const Processor *pProcessor)
 // Removes a processor.
 void ProcessingPipeline::Remove(const Processor *pProcessor)
 {
-	lean::remove_ordered(m_processors, pProcessor);
+	lean::remove(m_processors, pProcessor);
 }
 
 // Adds another processor.
@@ -46,8 +46,8 @@ void ProcessingPipeline::Add(const PipelineProcessor *pProcessor)
 // Removes a processor.
 void ProcessingPipeline::Remove(const PipelineProcessor *pProcessor)
 {
-	lean::remove_ordered(m_pipelineProcessors, pProcessor);
-	lean::remove_ordered(m_processors, pProcessor);
+	lean::remove(m_pipelineProcessors, pProcessor);
+	lean::remove(m_processors, pProcessor);
 }
 
 // Applies this processing pipeline.

@@ -2,16 +2,20 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_PERSPECTIVE
 #define BE_SCENE_PERSPECTIVE
 
 #include "beScene.h"
 #include <beCore/beShared.h>
+#include <beCore/bePooled.h>
 #include <beMath/beVectorDef.h>
 #include <beMath/beMatrixDef.h>
 #include <beMath/bePlaneDef.h>
 #include <memory>
 #include <lean/memory/chunk_heap.h>
+#include <lean/smart/com_ptr.h>
+#include <lean/containers/simple_vector.h>
 #include <lean/tags/noncopyable.h>
 
 namespace beScene
@@ -21,7 +25,7 @@ namespace beScene
 class Pipe;
 
 /// Perspective flags.
-namespace PerspectiveFlags
+struct PerspectiveFlags
 {
 	// Enum.
 	enum T
@@ -30,7 +34,8 @@ namespace PerspectiveFlags
 
 		Omnidirectional		/// Treats the perspective as omnidirectional, don't forget to provide custum frustum planes!
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(PerspectiveFlags)
+};
 
 /// Perspective description.
 struct PerspectiveDesc
@@ -128,31 +133,71 @@ struct PerspectiveDesc
 };
 
 /// Rendering perspective.
-class Perspective : public lean::noncopyable_chain<beCore::Shared>
+class Perspective : public lean::noncopyable_chain<beCore::Shared>, public beCore::PooledToRefCounted<Perspective>
 {
+	friend beCore::Pooled<Perspective>;
+
+public:
+	struct State
+	{
+		const void *Owner;
+		// TODO: Enhance by specific interface that allows for expiring?
+		lean::com_ptr<beCore::RefCounted> Data;
+
+		State(const void *owner, beCore::RefCounted *data)
+			: Owner(owner),
+			Data(data) { }
+	};
+
 private:
+	typedef lean::simple_vector<State, lean::containers::vector_policies::semipod> state_t;
+	state_t m_state;
+
 	typedef lean::chunk_heap<0, lean::default_heap, 0, 16> data_heap;
 	data_heap m_dataHeap;
-
 	size_t m_dataHeapWatermark;
+
+	// COMPATIBILITY: Hidden to avoid confusion
+	using PooledToRefCounted::Release;
+	template <class COMType>
+	friend void lean::smart::release_com(COMType*);
 
 protected:
 	PerspectiveDesc m_desc;		///< Perspective description.
 
+	/// Called when all users have released their references.
+	LEAN_INLINE void UsersReleased() { Reset(); }
+
 	/// Frees all data allocated from this perspective's internal heap.
 	BE_SCENE_API void FreeData();
+	/// Resets this perspective after all temporary data has been discarded.
+	BE_SCENE_API virtual void ResetReleased();
 
 public:
+	/// Constructor.
+	BE_SCENE_API Perspective();
 	/// Constructor.
 	BE_SCENE_API Perspective(const PerspectiveDesc &desc);
 	/// Destructor.
 	BE_SCENE_API virtual ~Perspective();
 
-	/// Allocates data from this perspective's internal heap.
-	BE_SCENE_API void* AllocateData(size_t size);
+	/// Resets this perspective.
+	LEAN_INLINE void Reset() { ReleaseIntermediate(); ResetReleased(); }
+	/// Discards temporary data.
+	BE_SCENE_API virtual void ReleaseIntermediate();
 
+	/// Updates the description of this perspective.
+	BE_SCENE_API void SetDesc(const PerspectiveDesc &desc);
 	/// Gets the perspective description.
 	LEAN_INLINE const PerspectiveDesc& GetDesc() const { return m_desc; };
+
+	/// Stores the given state object for the given owner.
+	BE_SCENE_API void SetState(const void *owner, beCore::RefCounted *state);
+	/// Retrieves the state object stored for the given owner.
+	BE_SCENE_API beCore::RefCounted* GetState(const void *owner) const;
+
+	/// Allocates data from this perspective's internal heap.
+	BE_SCENE_API void* AllocateData(size_t size);
 
 	/// Optionally gets a pipe.
 	virtual Pipe* GetPipe() const { return nullptr; }

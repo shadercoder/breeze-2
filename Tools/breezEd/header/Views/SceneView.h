@@ -5,7 +5,7 @@
 #include "AbstractView.h"
 #include "ui_SceneView.h"
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 #include <beScene/beCameraController.h>
 
 #include <lean/smart/scoped_ptr.h>
@@ -16,6 +16,7 @@ class SceneDocument;
 class Mode;
 class InputProvider;
 class FreeCamera;
+class DropInteraction;
 
 class SceneView : public AbstractView
 {
@@ -32,9 +33,11 @@ private:
 
 	InputProvider *m_pInputProvider;
 
-	lean::resource_ptr<beEntitySystem::Entity> m_pCamera;
+	lean::scoped_ptr<beEntitySystem::Entity> m_pCamera;
 	lean::resource_ptr<beScene::CameraController> m_pCameraController;
 	FreeCamera *m_pCameraInteraction;
+
+	DropInteraction *m_pDropInteraction;
 
 protected:
 	/// Handles drag&drop events.
@@ -48,7 +51,7 @@ protected:
 
 public:
 	/// Constructor.
-	SceneView(SceneDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	SceneView(SceneDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~SceneView();
 

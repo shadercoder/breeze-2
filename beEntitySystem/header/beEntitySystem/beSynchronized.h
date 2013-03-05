@@ -2,6 +2,7 @@
 /* breeze Engine Entity System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM_SYNCHRONIZED
 #define BE_ENTITYSYSTEM_SYNCHRONIZED
 
@@ -11,7 +12,7 @@ namespace beEntitySystem
 {
 
 /// Synchronized flag enumeration.
-namespace SynchronizedFlags
+struct SynchronizedFlags
 {
 	/// Enumeration
 	enum T
@@ -23,7 +24,8 @@ namespace SynchronizedFlags
 		
 		All = Flush | Fetch	///< Any synchronization.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(SynchronizedFlags)
+};
 
 /// Synchronized interface.
 class LEAN_INTERFACE Synchronized

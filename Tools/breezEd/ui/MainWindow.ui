@@ -13,12 +13,27 @@
   <property name="windowTitle">
    <string>breezEd</string>
   </property>
+  <property name="animated">
+   <bool>false</bool>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>true</bool>
+  </property>
   <property name="dockOptions">
-   <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
+   <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks</set>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <property name="margin">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
      <number>0</number>
     </property>
     <item row="0" column="0">
@@ -138,11 +153,19 @@
      <addaction name="actionEntity_Properties"/>
      <addaction name="actionMaterial_Properties"/>
     </widget>
+    <widget class="QMenu" name="menuComponents">
+     <property name="title">
+      <string>Components</string>
+     </property>
+     <addaction name="actionComponent_Browser"/>
+     <addaction name="separator"/>
+    </widget>
     <addaction name="menuLayout"/>
     <addaction name="separator"/>
     <addaction name="menuScene"/>
     <addaction name="menuAssets"/>
     <addaction name="menuProperties"/>
+    <addaction name="menuComponents"/>
     <addaction name="menuOther"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -692,6 +715,24 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionComponent_Browser">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/tools/component</normaloff>:/breezEd/icons/tools/component</iconset>
+   </property>
+   <property name="text">
+    <string>New Browser:</string>
+   </property>
+   <property name="iconText">
+    <string>Component</string>
+   </property>
+   <property name="toolTip">
+    <string>Select type of components to browse</string>
    </property>
   </action>
  </widget>

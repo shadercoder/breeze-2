@@ -2,6 +2,7 @@
 /* breeze Engine Entity System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM_ANIMATEDHOST
 #define BE_ENTITYSYSTEM_ANIMATEDHOST
 
@@ -29,9 +30,9 @@ public:
 	BE_ENTITYSYSTEM_API void Step(float timeStep);
 
 	/// Adds an animated controller.
-	BE_ENTITYSYSTEM_API void AddAnimated(Animated *pAnimated);
+	BE_ENTITYSYSTEM_API void AddAnimated(Animated *animated);
 	/// Removes an animated controller.
-	BE_ENTITYSYSTEM_API void RemoveAnimated(Animated *pAnimated);
+	BE_ENTITYSYSTEM_API void RemoveAnimated(Animated *animated);
 };
 
 } // namespace

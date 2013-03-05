@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_DEVICE_CONTEXT_DX11
 #define BE_GRAPHICS_DEVICE_CONTEXT_DX11
 
@@ -43,6 +44,9 @@ public:
 	LEAN_INLINE ID3D11DeviceContext*const& GetInterface() const { return m_pContext.get(); }
 	/// Gets the D3D device context.
 	LEAN_INLINE ID3D11DeviceContext*const& GetContext() const { return m_pContext.get(); }
+
+	/// Clears all state.
+	BE_GRAPHICS_DX11_API void ClearState() LEAN_OVERRIDE { m_pContext->ClearState(); };
 
 	/// Gets the implementation identifier.
 	LEAN_INLINE ImplementationID GetImplementationID() const { return DX11Implementation; };

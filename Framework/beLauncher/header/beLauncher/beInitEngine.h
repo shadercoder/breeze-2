@@ -2,6 +2,7 @@
 /* breeze Framework Launch Lib  (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_LAUNCHER_INITENGINE
 #define BE_LAUNCHER_INITENGINE
 

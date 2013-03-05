@@ -2,6 +2,7 @@
 /* breeze Engine Entity System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM_CONTROLLER
 #define BE_ENTITYSYSTEM_CONTROLLER
 
@@ -14,28 +15,19 @@
 namespace beEntitySystem
 {
 
-/// Controller base class.
-class LEAN_INTERFACE Controller : public beCore::Resource, public Attachable, public beCore::ReflectionPropertyProvider
+/// Controller interface
+class LEAN_INTERFACE Controller : public beCore::UnRefCounted< beCore::NoPropertyFeedbackProvider<beCore::ReflectionPropertyProvider> >
 {
-protected:
-	LEAN_INLINE Controller& operator =(const Controller &right) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(Controller)
 
 public:
-	/// Constructor.
-	BE_ENTITYSYSTEM_API Controller();
-	/// Destructor.
-	BE_ENTITYSYSTEM_API virtual ~Controller();
-
-	/// Synchronizes this controller with the entity controlled.
-	virtual void Synchronize() { }
-
 	/// Gets the reflection properties.
-	BE_ENTITYSYSTEM_API static Properties GetControllerProperties();
+	static Properties GetControllerProperties() { return Properties(); }
 	/// Gets the reflection properties.
-	BE_ENTITYSYSTEM_API Properties GetReflectionProperties() const;
+	Properties GetReflectionProperties() const { return Properties(); }
 
 	/// Gets the controller type.
-	virtual utf8_ntr GetType() const = 0;
+	virtual const beCore::ComponentType* GetType() const = 0;
 };
 
 } // namespace

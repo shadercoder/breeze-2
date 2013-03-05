@@ -24,11 +24,9 @@ private:
 
 	SceneDocument *m_pDocument;
 
-	lean::scoped_ptr<CreationInteraction> m_pInteraction;
-
 public:
 	/// Constructor.
-	AssetBrowserWidget(Editor *pEditor, QWidget *pParent = nullptr , Qt::WFlags flags = 0);
+	AssetBrowserWidget(Editor *pEditor, QWidget *pParent = nullptr , Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~AssetBrowserWidget();
 
@@ -37,9 +35,7 @@ public Q_SLOTS:
 	void setDocument(AbstractDocument *pDocument);
 
 	/// Handles asset dragging.
-	void dragStarted(QTreeWidgetItem *pItem);
-	/// Handles asset dragging.
-	void dragFinished(QTreeWidgetItem *pItem);
+	void performDrag(QTreeWidgetItem *pItem, bool &bPerformed);
 };
 
 #endif

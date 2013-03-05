@@ -2,11 +2,13 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_LIGHT_EFFECT_BINDER
 #define BE_SCENE_LIGHT_EFFECT_BINDER
 
 #include "beScene.h"
 #include "beEffectBinder.h"
+#include "beLightEffectData.h"
 #include <beGraphics/Any/beEffect.h>
 #include <beGraphics/Any/beEffectsAPI.h>
 #include <lean/smart/resource_ptr.h>
@@ -19,32 +21,19 @@ namespace beScene
 struct LightJob;
 class RenderingPipeline;
 
-/// Light effect binder state.
-struct LightBinderState
-{
-	uint4 LightOffset;	///< Current light offset in additive lighting.
-
-	/// Constructor.
-	LightBinderState()
-		: LightOffset(0) { }
-};
-
-/// Light effect binder.
+/// Lighting effect binder.
 class LightEffectBinder : public EffectBinder
 {
 public:
 	struct Pass;
 	typedef std::vector<Pass> pass_vector;
 
-	struct LightGroup;
-	typedef std::vector<LightGroup> light_group_vector;
-
 private:
 	const beGraphics::Any::Technique m_technique;
 
-	light_group_vector m_lightGroups;
-
-	beGraphics::Any::API::EffectScalar *m_pLightCount;
+	beGraphics::API::EffectConstantBuffer *m_pLightData;
+	beGraphics::API::EffectConstantBuffer *m_pShadowData;
+	beGraphics::API::EffectShaderResource *m_pShadowMaps;
 
 	pass_vector m_passes;
 
@@ -55,8 +44,7 @@ public:
 	BE_SCENE_API ~LightEffectBinder();
 
 	/// Applies the n-th step of the given pass.
-	BE_SCENE_API bool Apply(uint4 &nextPassID, const LightJob *lights, const LightJob *lightsEnd,
-		LightBinderState &lightState, beGraphics::Any::API::DeviceContext *pContext) const;
+	BE_SCENE_API bool Apply(uint4 &nextPassID, const LightEffectData &light, beGraphics::Any::API::DeviceContext *pContext) const;
 
 	/// Gets the technique.
 	LEAN_INLINE const beGraphics::Technique& GetTechnique() const { return m_technique; }

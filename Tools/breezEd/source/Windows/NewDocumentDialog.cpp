@@ -5,7 +5,7 @@
 
 #include "Documents/AbstractDocument.h"
 
-#include <QtGui/QFileDialog>
+#include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
 
 namespace
@@ -56,7 +56,7 @@ DocumentType selectedType(const Ui::NewDocumentDialog &dialog, Editor &editor)
 } // namespace
 
 // Constructor.
-NewDocumentDialog::NewDocumentDialog(Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+NewDocumentDialog::NewDocumentDialog(Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: QDialog(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) )
 {

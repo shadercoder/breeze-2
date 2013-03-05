@@ -42,7 +42,7 @@ bool promptToSaveAndClose(AbstractDocument &document)
 } // namespace
 
 // Constructor.
-MdiDocumentWindow::MdiDocumentWindow(AbstractDocument *pDocument, QWidget *pParent, Qt::WFlags flags)
+MdiDocumentWindow::MdiDocumentWindow(AbstractDocument *pDocument, QWidget *pParent, Qt::WindowFlags flags)
 	: QMdiSubWindow(pParent, flags),
 	m_pDocument( LEAN_ASSERT_NOT_NULL(pDocument) )
 {

@@ -22,6 +22,5 @@ void beCore::InfoBox()
 #include "beReflectionProperties.cpp"
 #include "beTextSerialization.cpp"
 #include "beThreadPool.cpp"
-#include "beTypeIndex.cpp"
 #include "dllmain.cpp"
 */

@@ -5,6 +5,7 @@
 #include "beSceneInternal/stdafx.h"
 #include "beScene/beRenderer.h"
 #include "beScene/bePipePool.h"
+#include "beScene/bePerspectivePool.h"
 #include <beGraphics/Any/beDevice.h>
 #include <beGraphics/Any/beDeviceContext.h>
 #include <beGraphics/Any/beTextureTargetPool.h>
@@ -17,11 +18,11 @@ namespace
 {
 
 /// Creates an immediate device context wrapper.
-beGraphics::DeviceContext* CreateImmediateContext(const beGraphics::Device &device)
+beGraphics::DeviceContext* CreateImmediateContext(beGraphics::Device *device)
 {
-	lean::com_ptr<ID3D11DeviceContext> pContext;
-	ToImpl(device)->GetImmediateContext(pContext.rebind());
-	return new beGraphics::Any::DeviceContext(pContext);
+	lean::com_ptr<ID3D11DeviceContext> context;
+	ToImpl(*device)->GetImmediateContext(context.rebind());
+	return new beGraphics::Any::DeviceContext(context);
 }
 
 /// Clones a device context wrapper.
@@ -33,47 +34,62 @@ beGraphics::DeviceContext* CloneContext(const beGraphics::DeviceContext &context
 // Creates a target pool from the given device.
 lean::resource_ptr<beGraphics::TextureTargetPool, true> CreateTargetPool(const beGraphics::Device &device)
 {
-	return lean::bind_resource(
-		new beGraphics::Any::TextureTargetPool(ToImpl(device)) );
+	return new_resource beGraphics::Any::TextureTargetPool(ToImpl(device));
 }
 
 // Creates a pipe pool from the given device.
 lean::resource_ptr<PipePool, true> CreatePipePool(beGraphics::TextureTargetPool *pTargetPool)
 {
-	return lean::bind_resource(
-		new PipePool(pTargetPool) );
+	return new_resource PipePool(pTargetPool);
+}
+
+// Creates a perspective pool from the given device.
+lean::resource_ptr<PerspectivePool, true> CreatePerspectivePool(PipePool *pPipePool)
+{
+	return new_resource PerspectivePool(pPipePool);
 }
 
 // Creates a rendering pipeline.
 lean::resource_ptr<RenderingPipeline, true> CreatePipeline()
 {
-	return lean::bind_resource( new RenderingPipeline("Renderer.Pipeline") );
+	return new_resource RenderingPipeline("Renderer.Pipeline");
 }
 
-}
+} // namespace
 
 // Constructor.
-Renderer::Renderer(beGraphics::Device *pDevice, beGraphics::TextureTargetPool *pTargetPool, class PipePool *pPipePool, beScene::RenderingPipeline *pPipeline)
-	: m_pDevice( LEAN_ASSERT_NOT_NULL(pDevice) ),
-	m_pImmediateContext( CreateImmediateContext(*pDevice) ),
-	m_pTargetPool( LEAN_ASSERT_NOT_NULL(pTargetPool) ),
-	m_pPipePool( LEAN_ASSERT_NOT_NULL(pPipePool) ),
-	m_pPipeline( LEAN_ASSERT_NOT_NULL(pPipeline) )
+
+// Constructor.
+Renderer::Renderer(beGraphics::Device *device, beGraphics::TextureTargetPool *targetPool,
+	class PipePool *pipePool, class PerspectivePool *perspectivePool, beScene::RenderingPipeline *pipeline)
+	: Device( LEAN_ASSERT_NOT_NULL(device) ),
+	ImmediateContext( CreateImmediateContext(device) ),
+	TargetPool( LEAN_ASSERT_NOT_NULL(targetPool) ),
+	PipePool( LEAN_ASSERT_NOT_NULL(pipePool) ),
+	PerspectivePool( LEAN_ASSERT_NOT_NULL(perspectivePool) ),
+	Pipeline( LEAN_ASSERT_NOT_NULL(pipeline) )
 {
 }
 
 // Copy constructor.
 Renderer::Renderer(const Renderer &right)
-	: m_pDevice( right.m_pDevice ),
-	m_pImmediateContext( CloneContext(*right.m_pImmediateContext)  ),
-	m_pTargetPool( right.m_pTargetPool ),
-	m_pPipePool( right.m_pPipePool ),
-	m_pPipeline( right.m_pPipeline )
+	// MONITOR: REDUNDANT
+	: Device( LEAN_ASSERT_NOT_NULL(right.Device) ),
+	ImmediateContext( CloneContext(*right.ImmediateContext) ),
+	TargetPool( LEAN_ASSERT_NOT_NULL(right.TargetPool) ),
+	PipePool( LEAN_ASSERT_NOT_NULL(right.PipePool) ),
+	PerspectivePool( LEAN_ASSERT_NOT_NULL(right.PerspectivePool) ),
+	Pipeline( LEAN_ASSERT_NOT_NULL(right.Pipeline) )
 {
 }
 
 // Destructor.
 Renderer::~Renderer()
+{
+}
+
+// Commits / reacts to changes.
+void Renderer::Commit()
 {
 }
 
@@ -83,41 +99,29 @@ void Renderer::InvalidateCaches()
 }
 
 // Creates a renderer from the given device.
-lean::resource_ptr<Renderer, true> CreateRenderer(beGraphics::Device *pDevice)
+lean::resource_ptr<Renderer, true> CreateRenderer(beGraphics::Device *device)
 {
-	LEAN_ASSERT(pDevice != nullptr);
-
-	return CreateRenderer(pDevice, CreateTargetPool(*pDevice).get(), CreatePipeline().get());
-}
-
-// Creates a renderer from the given device & pool.
-lean::resource_ptr<Renderer, true> CreateRenderer(beGraphics::Device *pDevice, beGraphics::TextureTargetPool *pTargetPool)
-{
-	return CreateRenderer(pDevice, pTargetPool, CreatePipeline().get());
+	return CreateRenderer(device, nullptr);
 }
 
 // Creates a renderer from the given device & pipeline.
-lean::resource_ptr<Renderer, true> CreateRenderer(beGraphics::Device *pDevice, beScene::RenderingPipeline *pPipeline)
+lean::resource_ptr<Renderer, true> CreateRenderer(beGraphics::Device *device, beScene::RenderingPipeline *pPipeline)
 {
-	LEAN_ASSERT(pDevice != nullptr);
-
-	return CreateRenderer(pDevice, CreateTargetPool(*pDevice).get(), pPipeline);
+	return CreateRenderer(device, nullptr, nullptr, nullptr, pPipeline);
 }
 
 // Creates a renderer from the given device, target pool & pipeline.
-lean::resource_ptr<Renderer, true> CreateRenderer(beGraphics::Device *pDevice, beGraphics::TextureTargetPool *pTargetPool,
-	beScene::RenderingPipeline *pPipeline)
+lean::resource_ptr<Renderer, true> CreateRenderer(beGraphics::Device *device, beGraphics::TextureTargetPool *pTargetPool,
+	PipePool *pPipePool, PerspectivePool *pPerspectivePool, beScene::RenderingPipeline *pPipeline)
 {
-	LEAN_ASSERT(pTargetPool != nullptr);
+	LEAN_ASSERT(device != nullptr);
 
-	return CreateRenderer(pDevice, pTargetPool, CreatePipePool(pTargetPool).get(), pPipeline);
-}
+	lean::resource_ptr<beg::TextureTargetPool> targetPool = (pTargetPool) ? lean::secure_resource(pTargetPool) : CreateTargetPool(*device);
+	lean::resource_ptr<PipePool> pipePool = (pPipePool) ? lean::secure_resource(pPipePool) : CreatePipePool(targetPool);
+	lean::resource_ptr<PerspectivePool> perspectivePool = (pPerspectivePool) ? lean::secure_resource(pPerspectivePool) : CreatePerspectivePool(pipePool);
+	lean::resource_ptr<RenderingPipeline> pipeline = (pPipeline) ? lean::secure_resource(pPipeline) : CreatePipeline();
 
-// Creates a renderer from the given device, target pool & pipeline.
-lean::resource_ptr<Renderer, true> CreateRenderer(beGraphics::Device *pDevice, beGraphics::TextureTargetPool *pTargetPool,
-	PipePool *pPipePool, beScene::RenderingPipeline *pPipeline)
-{
-	return lean::bind_resource( new Renderer(pDevice, pTargetPool, pPipePool, pPipeline) );
+	return new_resource Renderer(device, targetPool, pipePool, perspectivePool, pipeline);
 }
 
 } // namespace

@@ -2,6 +2,7 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE
 #define BE_CORE
 
@@ -102,8 +103,13 @@ namespace beCore
 /// Shorthand namespace.
 namespace breeze
 {
-	/// Core namespace alias.
+#ifndef DOXYGEN_READ_THIS
+	/// beCore namespace alias.
 	namespace bec = ::beCore;
+#else
+	/// beCore namespace alias.
+	namespace bec { using namespace ::beCore; }
+#endif
 }
 
 /// @}

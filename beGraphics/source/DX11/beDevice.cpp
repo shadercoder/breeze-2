@@ -43,7 +43,7 @@ lean::uint4 GetShaderModel(D3D_FEATURE_LEVEL featureLevel)
 		return 5;
 	}
 
-	LEAN_ASSERT(false);
+	LEAN_ASSERT_UNREACHABLE();
 }
 
 /// Converts the given DirectX feature level into a shader model version number.
@@ -64,7 +64,7 @@ const lean::utf8_t* GetShaderModelString(D3D_FEATURE_LEVEL featureLevel)
 		return "Shader Model 5.0";
 	}
 
-	LEAN_ASSERT(false);
+	LEAN_ASSERT_UNREACHABLE();
 }
 
 /// Prints information on the given device & adapter.
@@ -399,7 +399,7 @@ lean::com_ptr<IDXGISwapChain, true> CreateD3DSwapChain(ID3D11Device *pDevice, co
 
 	BE_THROW_DX_ERROR_MSG(
 		pAdapter->GetParent(IID_IDXGIFactory1, reinterpret_cast<void**>(pFactory.rebind())),
-		"IDXGIAdapter1::QueryInterface()" );
+		"IDXGIAdapter1::GetParent()" );
 
 	lean::com_ptr<IDXGISwapChain> pSwapChain;
 

@@ -2,6 +2,7 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_PARAMETERS
 #define BE_CORE_PARAMETERS
 
@@ -31,7 +32,7 @@ private:
 		explicit Parameter(const utf8_ntri &name, lean::any *value = nullptr)
 			: name(name.to<utf8_string>()),
 			value(value) { }
-#ifndef LEAN0X_NO_RVALUE_REFERENCES
+#ifdef LEAN0X_NEED_EXPLICIT_MOVE
 		/// Move constructor.
 		Parameter(Parameter &&right)
 			: name(std::move(right.name)),
@@ -64,6 +65,11 @@ public:
 	
 	/// Assigns the given value to the parameter identified by the given ID.
 	BE_CORE_API void SetAnyValue(uint4 parameterID, const lean::any *pValue);
+	/// Assigns the given value to the parameter identified by the given ID.
+	LEAN_INLINE void SetAnyValue(uint4 parameterID, const lean::any &value)
+	{
+		SetAnyValue(parameterID, &value);
+	}
 	/// Gets the value of the parameter identified by the given ID.
 	BE_CORE_API const lean::any* GetAnyValue(uint4 parameterID) const;
 
@@ -71,29 +77,26 @@ public:
 	template <class Value>
 	LEAN_INLINE void SetValue(uint4 parameterID, const Value &value)
 	{
-		typedef typename lean::rec_strip_modifiers<Value>::type parameter_type;
-		SetAnyValue( parameterID, &lean::any_value<parameter_type>( const_cast<const parameter_type&>(value) ) );
+		lean::any_value<Value> anyValue(value);
+		SetAnyValue(parameterID, &anyValue);
 	}
 	/// Gets the value of the parameter identified by the given ID.
 	template <class Value>
 	LEAN_INLINE const Value* GetValue(uint4 parameterID) const
 	{
-		typedef typename lean::rec_strip_modifiers<Value>::type parameter_type;
-		return const_cast<const Value*>( lean::any_cast<parameter_type>( GetAnyValue(parameterID) ) );
+		return lean::any_cast<Value>( GetAnyValue(parameterID) );
 	}
 	/// Gets the value of the parameter identified by the given ID.
 	template <class Value>
 	LEAN_INLINE const Value& GetValueChecked(uint4 parameterID) const
 	{
-		typedef typename lean::rec_strip_modifiers<Value>::type parameter_type;
-		return const_cast<const Value&>( lean::any_cast_checked<const parameter_type&>( GetAnyValue(parameterID) ) );
+		return lean::any_cast_checked<const Value&>( GetAnyValue(parameterID) );
 	}
 	/// Gets the value of the parameter identified by the given ID.
 	template <class Value>
 	LEAN_INLINE bool GetValue(uint4 parameterID, Value &value) const
 	{
-		typedef typename lean::strip_reference<Value>::type nonref_value_type;
-		const nonref_value_type *pValue = GetValue<nonref_value_type>(parameterID);
+		const Value *pValue = GetValue<Value>(parameterID);
 		
 		if (pValue)
 		{
@@ -119,7 +122,7 @@ public:
 	template <class Value>
 	LEAN_INLINE void SetValue(const utf8_ntri &name, const Value &value)
 	{
-		SetValue( GetID(name), value );
+		SetValue( Add(name), value );
 	}
 	/// Gets the value of the parameter identified by the given name.
 	template <class Value>

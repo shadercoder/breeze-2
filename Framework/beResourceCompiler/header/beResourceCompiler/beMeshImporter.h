@@ -2,6 +2,7 @@
 /* breeze Framework Resource Compiler Lib  (c) Tobias Zirr 2011 */
 /****************************************************************/
 
+#pragma once
 #ifndef BE_RESOURCECOMPILER_MESHIMPORTER
 #define BE_RESOURCECOMPILER_MESHIMPORTER
 
@@ -15,7 +16,7 @@ namespace beResourceCompiler
 {
 
 /// Mesh loading flags.
-namespace MeshLoadFlags
+struct MeshLoadFlags
 {
 	// Enumeration.
 	enum T
@@ -32,9 +33,11 @@ namespace MeshLoadFlags
 		Optimize = 1 << 6,			/// Vertex cache optimization.
 		ForceUV = 1 << 7,			/// Enforces UV coords for all (even untextured) vertices.
 		ObjectNormals = 1 << 8,		/// Compute object normals (stored as bitangents).
-		RemoveMaterials = 1 << 9	/// Removes all materials.
+		RemoveMaterials = 1 << 9,	/// Removes all materials.
+		Sort = 1 << 10				/// Sorts tris (and vertices) by position.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(MeshLoadFlags)
+};
 
 /// Mesh importer.
 class MeshImporter

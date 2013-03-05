@@ -16,6 +16,33 @@ namespace bePhysics
 namespace PX3
 {
 
+static const size_t DefaultAlignment = 16;
+static const size_t SerializationAlignment = PX_SERIAL_FILE_ALIGN;
+
+// Allocates physx memory.
+void* PhysXAllocate(size_t size)
+{
+	return beCore::exchange_heap::allocate<DefaultAlignment>(size);
+}
+
+// Frees physx memory.
+void PhysXFree(void *ptr)
+{
+	 beCore::exchange_heap::free<DefaultAlignment>(ptr);
+}
+
+// Allocates physx memory (128-BYTE-aligned!).
+void* PhysXSerializationAllocate(size_t size)
+{
+	return beCore::exchange_heap::allocate<SerializationAlignment>(size);
+}
+
+// Frees physx memory.
+void PhysXSerializationFree(void *ptr)
+{
+	 beCore::exchange_heap::free<SerializationAlignment>(ptr);
+}
+
 // Creates a physics foundation object.
 physx::PxFoundation* CreateFoundation()
 {
@@ -23,12 +50,12 @@ physx::PxFoundation* CreateFoundation()
 	{
 		void* allocate(size_t size, const char*, const char*, int)
 		{
-			return beCore::exchange_heap::allocate<16>(size);
+			return PhysXAllocate(size);
 		}
 
 		void deallocate(void *ptr)
 		{
-			 beCore::exchange_heap::free<16>(ptr);
+			 PhysXFree(ptr);
 		}
 
 	} defaultAllocator;
@@ -151,10 +178,17 @@ Device::~Device()
 }
 
 // Frees the given memory block on destruction.
-void Device::FreeOnRelease(void *pStaticMemory, size_t alignment)
+void Device::FreeOnRelease(void *pStaticMemory)
 {
 	if (pStaticMemory)
-		m_staticMemory.push_back( memory_pair(pStaticMemory, alignment) );
+		m_staticMemory.push_back( memory_pair(pStaticMemory, DefaultAlignment) );
+}
+
+// Frees the given serialization memory block on destruction.
+void Device::SerializationFreeOnRelease(void *pStaticMemory)
+{
+	if (pStaticMemory)
+		m_staticMemory.push_back( memory_pair(pStaticMemory, SerializationAlignment) );
 }
 
 } // namespace

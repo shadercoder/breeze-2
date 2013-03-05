@@ -1,7 +1,7 @@
 #ifndef ABSTRACTVIEW_H
 #define ABSTRACTVIEW_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 
 class AbstractView : public QWidget
 {
@@ -9,7 +9,7 @@ class AbstractView : public QWidget
 
 public:
 	/// Constructor.
-	AbstractView(QWidget *pParent = nullptr, Qt::WFlags flags = 0)
+	AbstractView(QWidget *pParent = nullptr, Qt::WindowFlags flags = 0)
 		: QWidget(pParent, flags) { }
 
 public Q_SLOTS:

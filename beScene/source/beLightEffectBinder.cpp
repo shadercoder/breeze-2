@@ -15,61 +15,29 @@
 namespace beScene
 {
 
-/// Light group.
-struct LightEffectBinder::LightGroup
-{
-	beGraphics::Any::API::EffectConstantBuffer *pConstants;
-	beGraphics::Any::API::EffectShaderResource *pShadowMaps;
-	beGraphics::Any::API::EffectShaderResource *pLightMaps;
-};
-
 /// Pass.
 struct LightEffectBinder::Pass
 {
 	uint4 lightTypeID;
 	tristate shadowed;
+	bool bAllowMultiple;
 };
 
 namespace
 {
 
-/// Gets a scalar variable of the given name or nullptr, if unavailable.
-ID3DX11EffectScalarVariable* MaybeGetScalarVariable(ID3DX11Effect *pEffect, const lean::utf8_ntri &name)
+/// Gets a shader constant variable of the given name or nullptr, if unavailable.
+beg::API::EffectConstantBuffer* MaybeGetConstantVariable(beg::API::Effect *pEffect, const lean::utf8_ntri &name)
 {
-	ID3DX11EffectScalarVariable *pVariable = pEffect->GetVariableBySemantic(name.c_str())->AsScalar();
+	beGraphics::API::EffectConstantBuffer *pVariable = pEffect->GetConstantBufferByName(name.c_str());
 	return (pVariable->IsValid()) ? pVariable : nullptr;
 }
 
 /// Gets a shader resource variable of the given name or nullptr, if unavailable.
-ID3DX11EffectShaderResourceVariable* MaybeGetResourceVariable(ID3DX11Effect *pEffect, const lean::utf8_ntri &name)
+beg::API::EffectShaderResource* MaybeGetResourceVariable(beg::API::Effect *pEffect, const lean::utf8_ntri &name)
 {
-	ID3DX11EffectShaderResourceVariable *pVariable = pEffect->GetVariableBySemantic(name.c_str())->AsShaderResource();
+	beg::API::EffectShaderResource *pVariable = pEffect->GetVariableBySemantic(name.c_str())->AsShaderResource();
 	return (pVariable->IsValid()) ? pVariable : nullptr;
-}
-
-/// Gets all light groups in the given effect.
-LightEffectBinder::light_group_vector GetLightGroups(ID3DX11Effect *pEffect)
-{
-	LightEffectBinder::light_group_vector lightGroups;
-
-	for (uint4 index = 0; ; ++index)
-	{
-		const utf8_string indexPostfix =  lean::int_to_string(index);
-
-		LightEffectBinder::LightGroup lightGroup;
-		lightGroup.pConstants = pEffect->GetConstantBufferByName( ("Light" + indexPostfix).c_str() );
-
-		// Stop on first missing index
-		if (!lightGroup.pConstants->IsValid())
-			break;
-
-		lightGroup.pShadowMaps = MaybeGetResourceVariable( pEffect, ("ShadowMaps" + indexPostfix).c_str() );
-		lightGroup.pLightMaps = MaybeGetResourceVariable( pEffect, ("LightMaps" + indexPostfix).c_str() );
-
-		lightGroups.push_back(lightGroup);
-	}
-
-	return lightGroups;
 }
 
 /// Gets the given pass from the given technique.
@@ -77,20 +45,20 @@ LightEffectBinder::Pass GetPass(ID3DX11EffectTechnique *pTechnique, UINT passID)
 {
 	LightEffectBinder::Pass pass;
 
-	beGraphics::Any::API::EffectPass *pPass = pTechnique->GetPassByIndex(passID);
+	beGraphics::API::EffectPass *pPass = pTechnique->GetPassByIndex(passID);
 
 	if (!pPass->IsValid())
 		LEAN_THROW_ERROR_MSG("ID3DX11Technique::GetPassByIndex()");
 
-	pass.lightTypeID = beCore::Identifiers::InvalidID;
-	
+
 	const char *lightTypeName = "";
 	pPass->GetAnnotationByName("LightType")->AsString()->GetString(&lightTypeName);
 	
+	pass.lightTypeID = beCore::Identifiers::InvalidID;
 	if (!lean::char_traits<char>::empty(lightTypeName))
 		pass.lightTypeID = GetLightTypes().GetID(lightTypeName);
 
-	pass.shadowed = dontcare;
+
 	beGraphics::Any::API::EffectScalar *pShadowed = pPass->GetAnnotationByName("Shadowed")->AsScalar();
 
 	if (pShadowed->IsValid())
@@ -99,6 +67,13 @@ LightEffectBinder::Pass GetPass(ID3DX11EffectTechnique *pTechnique, UINT passID)
 		pShadowed->GetBool(&bShadowed);
 		pass.shadowed = (bShadowed != FALSE) ? caretrue : carefalse;
 	}
+	else
+		pass.shadowed = dontcare;
+
+
+	BOOL bAllowMultiple = FALSE;
+	pPass->GetAnnotationByName("AllowMultiple")->AsScalar()->GetBool(&bAllowMultiple);
+	pass.bAllowMultiple = (bAllowMultiple != FALSE);
 
 	return pass;
 }
@@ -133,13 +108,13 @@ LightEffectBinder::pass_vector GetPasses(ID3DX11EffectTechnique *pTechnique, uin
 // Constructor.
 LightEffectBinder::LightEffectBinder(const beGraphics::Any::Technique &technique, uint4 passID)
 	: m_technique( technique ),
-	m_lightGroups( GetLightGroups(*m_technique.GetEffect()) ),
-	m_passes( (!m_lightGroups.empty()) ? GetPasses(m_technique, passID) : pass_vector() ),
-
-	m_pLightCount( MaybeGetScalarVariable(*m_technique.GetEffect(), "LightCount") )
+	m_pLightData( MaybeGetConstantVariable(m_technique.GetEffect()->Get(), "LightData") ),
+	m_pShadowData( MaybeGetConstantVariable(m_technique.GetEffect()->Get(), "ShadowData") ),
+	m_pShadowMaps( MaybeGetResourceVariable(m_technique.GetEffect()->Get(), "ShadowMaps") ),
+	m_passes( (m_pLightData) ? GetPasses(m_technique, passID) : pass_vector() )
 {
 	// ASSERT: No light groups => no (lit) passes
-	LEAN_ASSERT(!m_lightGroups.empty() || m_passes.empty());
+	LEAN_ASSERT(m_pLightData || m_passes.empty());
 }
 
 // Destructor.
@@ -148,8 +123,7 @@ LightEffectBinder::~LightEffectBinder()
 }
 
 // Applies the n-th step of the given pass.
-bool LightEffectBinder::Apply(uint4 &nextPassID, const LightJob *lights, const LightJob *lightsEnd,
-		LightBinderState &lightState, beGraphics::Any::API::DeviceContext *pContext) const
+bool LightEffectBinder::Apply(uint4 &nextPassID, const LightEffectData &light, beGraphics::Any::API::DeviceContext *pContext) const
 {
 	uint4 passID = nextPassID++;
 
@@ -160,72 +134,24 @@ bool LightEffectBinder::Apply(uint4 &nextPassID, const LightJob *lights, const L
 	const Pass &pass = m_passes[passID];
 
 	// Ignore un-lit passes
-	if (pass.lightTypeID == LightTypes::InvalidID)
+	if (pass.lightTypeID != light.TypeID)
 		return true;
 
-	// Mask out all lights failing shadowing requirements
-	uint4 lightFlagMask = (pass.shadowed != dontcare) ? LightFlags::Shadowed : 0;
-	uint4 lightFlagResult = (pass.shadowed == caretrue) ? LightFlags::Shadowed : 0;
+	beg::api::ShaderResourceView *pLightData = ToImpl(light.Lights);
+	beg::api::ShaderResourceView *pShadowData = ToImpl(light.Shadows);
 
-	const size_t maxLightCount = m_lightGroups.size();
-	uint4 lightCount = 0;
+	// NOTE: dontcare checked implicitly! (shadowed of type tristate)
+	if (pass.shadowed == caretrue && !pShadowData || pass.shadowed == carefalse && pShadowData)
+		// Skip pass
+		return false;
 
-	// ASSERT: No light groups => no (lit) passes (see constructor)
-	LEAN_ASSERT(maxLightCount > 0);
+	LEAN_ASSERT_NOT_NULL(m_pLightData)->SetTextureBuffer(pLightData);
+	if (m_pShadowData)
+		m_pShadowData->SetTextureBuffer(pShadowData);
+	if (m_pShadowMaps)
+		m_pShadowMaps->SetResourceArray(const_cast<beg::api::ShaderResourceView**>(&ToImpl(light.ShadowMaps[0]).Get()), 0, light.ShadowMapCount);
 
-	for (const LightJob *it = lights + lightState.LightOffset; it < lightsEnd; ++it)
-	{
-		const LightJob &lightJob = *it;
-
-		if (lightJob.Light->GetLightTypeID() == pass.lightTypeID &&
-			(lightJob.Light->GetLightFlags() & lightFlagMask) == lightFlagResult)
-		{
-			if (lightCount < maxLightCount)
-			{
-				const LightGroup &lightGroup = m_lightGroups[lightCount];
-
-				lightGroup.pConstants->SetConstantBuffer( ToImpl(lightJob.Light->GetConstants()) );
-				
-				// TODO: Shadows / textures
-
-				if (lightGroup.pShadowMaps && pass.shadowed != carefalse)
-				{
-					uint4 shadowMapCount = 0;
-					const beGraphics::TextureViewHandle *pShadowMaps = lightJob.Light->GetShadowMaps(lightJob.Data, shadowMapCount);
-
-					ID3D11ShaderResourceView* shadowMaps[16];
-
-					// Clamp to array size
-					shadowMapCount = min<uint4>(shadowMapCount, static_cast<uint4>(lean::arraylen(shadowMaps)));
-
-					for (uint4 i = 0; i < shadowMapCount; ++i)
-						shadowMaps[i] = ToImpl(pShadowMaps[i]);
-					
-					lightGroup.pShadowMaps->SetResourceArray(shadowMaps, 0, shadowMapCount);
-				}
-
-				++lightCount;
-			}
-			else
-			{
-				// More lights of the current type, repeat this pass.
-				--nextPassID;
-				lightState.LightOffset = static_cast<uint4>(it - lights);
-				break;
-			}
-		}
-	}
-
-	// Reset light offset for next pass
-	if (nextPassID != passID)
-		lightState.LightOffset = 0;
-
-	// Update light count
-	if (m_pLightCount)
-		m_pLightCount->SetInt(lightCount);
-
-	// Allow for skipping of zero-light-passes
-	return (lightCount != 0);
+	return true;
 }
 
 } // namespace

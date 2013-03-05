@@ -10,9 +10,12 @@
 
 #include "DeviceManager.h"
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
+#include <beEntitySystem/beWorldControllers.h>
 #include "Interaction/Widgets.h"
 #include "Interaction/Math.h"
+
+#include "Operations/EntityOperations.h"
 
 #include <beMath/beVector.h>
 #include <beMath/beMatrix.h>
@@ -20,8 +23,6 @@
 #include "Utility/Checked.h"
 
 #include <lean/logging/errors.h>
-
-static const uint4 TranslateAxisWidgetIDs[3] = { reserveWidgetID(), reserveWidgetID(), reserveWidgetID() };
 
 // Constructor.
 TranslateInteraction::TranslateInteraction(SceneDocument *pDocument, QObject *pParent)
@@ -31,12 +32,15 @@ TranslateInteraction::TranslateInteraction(SceneDocument *pDocument, QObject *pP
 	m_axisID( InvalidAxisID )
 {
 	// TODO: NO HARD-CODED PATHS
-	m_axes[0] = createWidgetMesh(TranslateAxisWidgetIDs[0], "Static/UI/TranslateWidget.mesh", beMath::vec(1.0f, 0.0f, 0.0f, 0.7f),
-		m_pDocument->scene(), *m_pDocument->deviceManager()->graphicsResources(), *m_pDocument->renderer());
-	m_axes[1] = createWidgetMesh(TranslateAxisWidgetIDs[1], "Static/UI/TranslateWidget.mesh", beMath::vec(0.0f, 1.0f, 0.0f, 0.7f),
-		m_pDocument->scene(), *m_pDocument->deviceManager()->graphicsResources(), *m_pDocument->renderer());
-	m_axes[2] = createWidgetMesh(TranslateAxisWidgetIDs[2], "Static/UI/TranslateWidget.mesh", beMath::vec(0.0f, 0.0f, 1.0f, 0.7f),
-		m_pDocument->scene(), *m_pDocument->deviceManager()->graphicsResources(), *m_pDocument->renderer());
+	m_axes[0] = createWidgetMesh("Static/UI/TranslateWidget.mesh", beMath::vec(0.7f, 0.0f, 0.0f, 0.5f), "",
+		*m_pDocument->world()->Entities(), *m_pDocument->world()->Controllers().GetController<besc::MeshControllers>(),
+		*m_pDocument->graphicsResources(), *m_pDocument->renderer());
+	m_axes[1] = createWidgetMesh("Static/UI/TranslateWidget.mesh", beMath::vec(0.0f, 0.7f, 0.0f, 0.5f), "",
+		*m_pDocument->world()->Entities(), *m_pDocument->world()->Controllers().GetController<besc::MeshControllers>(),
+		*m_pDocument->graphicsResources(), *m_pDocument->renderer());
+	m_axes[2] = createWidgetMesh("Static/UI/TranslateWidget.mesh", beMath::vec(0.0f, 0.0f, 0.7f, 0.5f), "",
+		*m_pDocument->world()->Entities(), *m_pDocument->world()->Controllers().GetController<besc::MeshControllers>(),
+		*m_pDocument->graphicsResources(), *m_pDocument->renderer());
 }
 
 // Destructor.
@@ -49,7 +53,7 @@ void TranslateInteraction::step(float timeStep, InputProvider &input, const beSc
 {
 	using namespace beMath;
 
-	// TODO: Change-based update?
+	// NOTE: Make sure widgets are up to date *before* editing has started
 	updateWidgets();
 
 	uint4 axisID = InvalidAxisID;
@@ -65,8 +69,15 @@ void TranslateInteraction::step(float timeStep, InputProvider &input, const beSc
 			uint4 objectID = objectIDUnderCursor(*m_pDocument->renderer(), *m_pDocument->scene(), input.relativePosition(), perspective);
 
 			for (int i = 0; i < 3; ++i)
-				if (objectID == TranslateAxisWidgetIDs[i])
+				if (objectID == m_axes[i]->GetCustomID())
 					axisID = i;
+
+			if (axisID != InvalidAxisID && input.keyPressed(Qt::Key_Control))
+			{
+				// IMPORTANT: Clone selection, will change on duplication!
+				entity_vector selection = m_selection;
+				DuplicateEntities(&selection[0], (uint4) selection.size(), m_pDocument);
+			}
 		}
 
 		// Moving
@@ -78,12 +89,8 @@ void TranslateInteraction::step(float timeStep, InputProvider &input, const beSc
 
 	if (axisID < 3)
 	{
-		// NOTE: Make sure widgets are up to date *before* editing has started
-		if (m_axisID == InvalidAxisID)
-			updateWidgets();
-
-		fvec3 axisOrig = m_axes[axisID]->GetPosition();
-		fvec3 axisDir = m_axes[axisID]->GetOrientation()[2];
+		fvec3 axisOrig = (m_axisID != InvalidAxisID) ? m_axisStop : m_axes[axisID]->GetPosition();
+		fvec3 axisDir = (m_axisID != InvalidAxisID) ? m_axisDir : m_axes[axisID]->GetOrientation()[2];
 
 		fvec3 rayOrig, rayDir;
 		camRayDirUnderCursor(rayOrig, rayDir, toQt(input.relativePosition()), perspective.ViewProjMat);
@@ -103,10 +110,9 @@ void TranslateInteraction::step(float timeStep, InputProvider &input, const beSc
 			for (entity_vector::const_iterator itEntity = m_selection.begin(); itEntity != m_selection.end(); ++itEntity)
 			{
 				(*itEntity)->SetPosition( (*itEntity)->GetPosition() + moveDelta );
-				(*itEntity)->Synchronize();
+				(*itEntity)->NeedSync();
 			}
 			
-			m_axisStop = nextAxisStop;
 			m_pCommand->capture();
 			updateWidgets();
 		}
@@ -116,9 +122,11 @@ void TranslateInteraction::step(float timeStep, InputProvider &input, const beSc
 			m_pCommand = new TranslateEntityCommand(m_selection);
 			m_pDocument->undoStack()->push(m_pCommand);
 
-			m_axisStop = nextAxisStop;
 			m_axisID = axisID;
 		}
+
+		m_axisStop = nextAxisStop;
+		m_axisDir = axisDir;
 	}
 }
 

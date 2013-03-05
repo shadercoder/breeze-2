@@ -16,9 +16,8 @@ class FileTreeBinder : public QObject, public lean::noncopyable, protected beCor
 	Q_OBJECT
 
 private:
-	QTreeWidget *m_pTree;
-
-	QTreeWidgetItem *m_pParentItem;
+	QTreeWidget *m_tree;
+	QTreeWidgetItem *m_parentItem;
 
 	QString m_location;
 	QStringList m_masks;
@@ -32,7 +31,7 @@ protected:
 public:
 	/// Constructor.
 	FileTreeBinder(const QString &location, const QStringList &masks, const QIcon &icon,
-		QTreeWidget *pTree, QTreeWidgetItem *pParentItem, QObject *pParent = nullptr);
+		QTreeWidget *tree, QTreeWidgetItem *pParentItem, QObject *pParent = nullptr);
 	/// Destructor.
 	virtual ~FileTreeBinder();
 

@@ -2,6 +2,7 @@
 /* breeze Framework Resource Compiler Lib  (c) Tobias Zirr 2011 */
 /****************************************************************/
 
+#pragma once
 #ifndef BE_RESOURCECOMPILER_SERIALIZATION
 #define BE_RESOURCECOMPILER_SERIALIZATION
 
@@ -11,7 +12,7 @@ namespace beResourceCompiler
 {
 
 /// Mesh writing flags.
-namespace MeshWriteFlags
+struct MeshWriteFlags
 {
 	// Enumeration.
 	enum T
@@ -28,7 +29,8 @@ namespace MeshWriteFlags
 
 		SubsetNames = 1 << 17		///< Include subset names.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(MeshWriteFlags)
+};
 
 // Prototypes
 class Mesh;

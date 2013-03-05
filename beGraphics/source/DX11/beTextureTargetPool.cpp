@@ -547,15 +547,7 @@ bool TextureTargetPool::ReadBack(const ColorTextureTarget *pTarget, void *memory
 		return false;
 	}
 */
-	MappedTexture<ID3D11Resource> mappedStageTarget(pStageTarget->GetResource(), ToImpl(context), 0, D3D11_MAP_READ, 0);
-
-	if (!mappedStageTarget.Data().pData)
-		return false;
-
-	// TODO: Row pitch?
-	memcpy(memory, mappedStageTarget.Data().pData, size);
-
-	return true;
+	return ReadTextureData(ToImpl(context), pStageTarget->GetResource(), memory, size / stageDesc.Height, stageDesc.Height, 1, 0);
 }
 
 } // namespace

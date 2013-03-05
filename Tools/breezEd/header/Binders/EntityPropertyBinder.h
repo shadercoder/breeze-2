@@ -4,7 +4,7 @@
 #include <QtCore/QObject>
 #include <lean/tags/noncopyable.h>
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 
 class QTreeView;
 class QStandardItem;
@@ -17,7 +17,7 @@ class EntityPropertyBinder : public QObject, public lean::noncopyable
 	Q_OBJECT
 
 private:
-	lean::resource_ptr<beEntitySystem::Entity> m_pEntity;
+	beEntitySystem::Entity *m_pEntity;
 
 public:
 	/// Constructor.

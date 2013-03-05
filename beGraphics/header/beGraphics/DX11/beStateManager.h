@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_STATE_MANAGER_DX11
 #define BE_GRAPHICS_STATE_MANAGER_DX11
 
@@ -9,7 +10,6 @@
 #include "../beStateManager.h"
 #include <D3D11.h>
 #include <lean/smart/com_ptr.h>
-#include <lean/memory/object_pool.h>
 #include <vector>
 
 namespace beGraphics
@@ -19,7 +19,7 @@ namespace DX11
 {
 
 /// State mask enumeration.
-namespace StateMasks
+struct StateMasks
 {
 	/// Enumeration.
 	enum T
@@ -42,7 +42,8 @@ namespace StateMasks
 
 		AllStates = PipelineStates | ShaderStates
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(StateMasks)
+};
 
 /// Shader stage state setup.
 struct ShaderStageStateSetup
@@ -124,7 +125,8 @@ struct StateSetup : public beGraphics::StateSetup
 		DSState(),
 		GSState(),
 		PSState(),
-		CSState() { }
+		CSState(),
+		RenderTargetCount(0) { }
 
 	/// Gets the implementation identifier.
 	ImplementationID GetImplementationID() const { return DX11Implementation; };
@@ -579,6 +581,8 @@ public:
 	BE_GRAPHICS_DX11_API void RecordOverridden();
 	/// Clears the given states.
 	BE_GRAPHICS_DX11_API void Clear(uint4 stateMask = StateMasks::AllStates);
+	/// Clears the given states.
+	BE_GRAPHICS_DX11_API void ClearBindings() LEAN_OVERRIDE { Clear(); };
 
 	/// Invalidates the given states.
 	LEAN_INLINE void Invalidate(uint4 stateMask = StateMasks::AllStates) { m_invalidMask |= stateMask; }

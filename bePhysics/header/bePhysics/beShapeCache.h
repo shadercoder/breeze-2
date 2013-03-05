@@ -2,62 +2,58 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_SHAPECACHE
 #define BE_PHYSICS_SHAPECACHE
 
 #include "bePhysics.h"
 #include <beCore/beShared.h>
+#include <beCore/beResourceManagerImpl.h>
 #include <lean/tags/noncopyable.h>
+#include <beCore/beComponentMonitor.h>
 #include <lean/smart/resource_ptr.h>
-#include "beShapes.h"
+#include "beAssembledShape.h"
 #include <beCore/bePathResolver.h>
 #include <beCore/beContentProvider.h>
-#include <beCore/beDependencies.h>
 
 namespace bePhysics
 {
 
+class Device;
+
 /// Shape cache interface.
-class ShapeCache : public lean::noncopyable, public beCore::Resource, public Implementation
+class ShapeCache : public lean::noncopyable, public beCore::FiledResourceManagerImpl<AssembledShape, ShapeCache>
 {
+	friend ResourceManagerImpl;
+	friend FiledResourceManagerImpl;
+	
 public:
-	virtual ~ShapeCache() throw() { }
+	struct M;
 
-	/// Sets the default material.
-	virtual void SetDefaultMaterial(const bePhysics::Material *pMaterial) = 0;
-	/// Sets the default material.
-	virtual const bePhysics::Material* GetDefaultMaterial() const = 0;
+private:
+	lean::pimpl_ptr<M> m;
 
-	/// Sets the given name for the given shape.
-	virtual ShapeCompound* Set(bePhysics::ShapeCompound *shapes, const utf8_ntri &name) = 0;
-	/// Sets the given name for the given shape, unsetting the old name.
-	virtual void Rename(const bePhysics::ShapeCompound *shapes, const utf8_ntri &name) = 0;
-	/// Gets a shape by name.
-	virtual ShapeCompound* GetByName(const utf8_ntri &name, bool bThrow = false) const = 0;
+public:
+	/// Constructor.
+	BE_PHYSICS_API ShapeCache(Device *device, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider);
+	/// Destructor.
+	BE_PHYSICS_API ~ShapeCache();
 
 	/// Gets a shape by file.
-	virtual ShapeCompound* GetByFile(const utf8_ntri &file) = 0;
-	/// Sets the given file for the given shape, overriding the old file.
-	virtual void Refile(const bePhysics::ShapeCompound *shapes, const utf8_ntri &file) = 0;
+	BE_PHYSICS_API AssembledShape* GetByFile(const utf8_ntri &file);
 
-	/// Unsets the given shape.
-//	virtual void Unset(const bePhysics::ShapeCompound *shapes) = 0;
+	/// Commits / reacts to changes.
+	BE_PHYSICS_API void Commit();
 
-	/// Gets the main name associated with the given shape.
-	virtual utf8_ntr GetName(const bePhysics::ShapeCompound *shapes) const = 0;
-	/// Gets the file associated with the given shape.
-	virtual utf8_ntr GetFile(const bePhysics::ShapeCompound *shapes) const = 0;
-
-	/// Notifies dependent listeners about dependency changes.
-	virtual void NotifyDependents() = 0;
-	/// Gets the dependencies registered for the given shape.
-	virtual beCore::Dependency<bePhysics::ShapeCompound*>* GetDependency(const bePhysics::ShapeCompound *shapes) = 0;
+	/// Sets the component monitor.
+	BE_PHYSICS_API void SetComponentMonitor(beCore::ComponentMonitor *componentMonitor);
+	/// Gets the component monitor.
+	BE_PHYSICS_API beCore::ComponentMonitor* GetComponentMonitor() const;
 
 	/// Gets the path resolver.
-	virtual const beCore::PathResolver& GetPathResolver() const = 0;
-
+	BE_PHYSICS_API const beCore::PathResolver& GetPathResolver() const;
 	/// Gets the device.
-	virtual Device* GetDevice() const = 0;
+	BE_PHYSICS_API Device* GetDevice() const;
 };
 
 /// Creates a physics shape cache.

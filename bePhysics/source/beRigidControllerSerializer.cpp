@@ -4,19 +4,22 @@
 
 #include "bePhysicsInternal/stdafx.h"
 #include "bePhysics/beRigidControllerSerializer.h"
-#include "bePhysics/beRigidStaticController.h"
-#include "bePhysics/beRigidDynamicController.h"
+#include "bePhysics/beRigidStaticControllers.h"
+#include "bePhysics/beRigidDynamicControllers.h"
 
-#include <bePhysics/beRigidActors.h>
-
-#include <beEntitySystem/beControllerSerialization.h>
+#include <beEntitySystem/beSerialization.h>
 
 #include <beEntitySystem/beSerializationParameters.h>
 #include "bePhysics/beSerializationParameters.h"
+
+#include <beEntitySystem/beWorld.h>
+
 #include <beCore/beParameterSet.h>
+#include <beCore/beParameters.h>
 #include <beCore/beExchangeContainers.h>
 
 #include "bePhysics/beInlineMaterialSerialization.h"
+#include "bePhysics/beInlineShapeSerialization.h"
 
 #include "bePhysics/beResourceManager.h"
 #include "bePhysics/beMaterialCache.h"
@@ -24,6 +27,7 @@
 
 #include "bePhysics/beMaterial.h"
 #include "bePhysics/beShapes.h"
+#include "bePhysics/beRigidShape.h"
 
 #include "bePhysics/beSceneController.h"
 
@@ -59,31 +63,90 @@ struct ActorFactory;
 template <>
 struct ActorFactory<RigidStaticController>
 {
-	typedef RigidStatic Actor;
+	typedef RigidStaticControllers Controllers;
 
-	static lean::resource_ptr<RigidStatic, true> CreateActor(Device &device, const ShapeCompound &shape)
+	static lean::scoped_ptr<Controllers, lean::critical_ref> CreateControllers(beCore::PersistentIDs *persistentIDs, Device *device, Scene *scene)
 	{
-		return CreateStaticFromShape(device, shape);
+		return CreateRigidStaticControllers(persistentIDs, device, scene);
 	}
+
+	static void LinkControllers(Controllers *ctrl, SceneController &sceneCtrl) { }
 };
 
 template <>
 struct ActorFactory<RigidDynamicController>
 {
-	typedef RigidStatic Actor;
-
-	static lean::resource_ptr<RigidDynamic, true> CreateActor(Device &device, const ShapeCompound &shape)
+	typedef RigidDynamicControllers Controllers;
+	
+	static lean::scoped_ptr<Controllers, lean::critical_ref> CreateControllers(beCore::PersistentIDs *persistentIDs, Device *device, Scene *scene)
 	{
-		return CreateDynamicFromShape(device, shape, -100.0f);
+		return CreateRigidDynamicControllers(persistentIDs, device, scene);
+	}
+
+	static void LinkControllers(Controllers *ctrl, SceneController &sceneCtrl)
+	{
+		sceneCtrl.AddSynchronized(ctrl, bees::SynchronizedFlags::All);
 	}
 };
+
+template <class ControllerType>
+typename ActorFactory<ControllerType>::Controllers* CreateRigidControllers(const beCore::ParameterSet &parameters)
+{
+	typedef typename ActorFactory<ControllerType>::Controllers Controllers;
+
+	bees::EntitySystemParameters entityParameters = bees::GetEntitySystemParameters(parameters);
+	bees::World *world = LEAN_THROW_NULL(entityParameters.World);
+
+	Controllers *pControllers = static_cast<Controllers*>(
+			world->Controllers().GetController(Controllers::GetComponentType())
+		);
+	
+	if (!pControllers)
+	{
+		PhysicsParameters sceneParameters = GetPhysicsParameters(parameters);
+		SceneController *sceneCtrl = LEAN_THROW_NULL(sceneParameters.SceneController);
+
+		pControllers = ActorFactory<ControllerType>::CreateControllers(
+				&world->PersistentIDs(),
+				sceneParameters.Device,
+				sceneParameters.Scene
+			).detach();
+		pControllers->SetComponentMonitor(sceneParameters.ResourceManager->Monitor());
+		world->Controllers().AddControllerKeep(pControllers);
+		ActorFactory<ControllerType>::LinkControllers(pControllers, *sceneCtrl);
+	}
+
+	return pControllers;
+}
+
+// Gets the serialization parameter IDs.
+template <class ControllerType>
+typename ActorFactory<ControllerType>::Controllers* GetRigidControllers(const beCore::ParameterSet &parameters, bool bMutable = false)
+{
+	typedef typename ActorFactory<ControllerType>::Controllers Controllers;
+
+	static uint4 controllerParameterID = bees::GetSerializationParameters().Add("bePhysics." + utf8_string(Controllers::GetComponentType()->Name));
+
+	const beCore::ParameterLayout &layout = bees::GetSerializationParameters();
+	Controllers *pControllers = parameters.GetValueDefault< Controllers* >(layout, controllerParameterID);
+
+	if (!pControllers)
+	{
+		pControllers = CreateRigidControllers<ControllerType>(parameters);
+		if (bMutable)
+			const_cast<beCore::ParameterSet&>(parameters).SetValue< Controllers* >(layout, controllerParameterID, pControllers);
+	}
+
+	return pControllers;
+}
+
 
 } // namesoace
 
 // Constructor.
 template <class RigidController>
 RigidControllerSerializer<RigidController>::RigidControllerSerializer()
-	: ControllerSerializer(RigidController::GetControllerType())
+	: ControllerSerializer(RigidController::GetComponentType()->Name)
 {
 }
 
@@ -95,191 +158,97 @@ RigidControllerSerializer<RigidController>::~RigidControllerSerializer()
 
 // Gets a list of creation parameters.
 template <class RigidController>
-typename RigidControllerSerializer<RigidController>::SerializationParameters RigidControllerSerializer<RigidController>::GetCreationParameters() const
+beCore::ComponentParameters RigidControllerSerializer<RigidController>::GetCreationParameters() const
 {
-	static const beEntitySystem::CreationParameter parameters[] = {
-			beEntitySystem::CreationParameter( utf8_ntr("Shape"), utf8_ntr("PhysicsShape") ),
-			beEntitySystem::CreationParameter( utf8_ntr("Material"), utf8_ntr("PhysicsMaterial"), true )
+	static const beCore::ComponentParameter parameters[] = {
+			beCore::ComponentParameter( utf8_ntr("Shape"), RigidShape::GetComponentType() ),
 		};
 
-	return SerializationParameters(parameters, parameters + lean::arraylen(parameters));
+	return beCore::ComponentParameters(parameters, parameters + lean::arraylen(parameters));
 }
 
 // Creates a serializable object from the given parameters.
 template <class RigidController>
-lean::resource_ptr<beEntitySystem::Controller, true> RigidControllerSerializer<RigidController>::Create(
+lean::scoped_ptr<beEntitySystem::Controller, lean::critical_ref> RigidControllerSerializer<RigidController>::Create(
 	const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const
 {
-	beEntitySystem::EntitySystemParameters entityParameters = beEntitySystem::GetEntitySystemParameters(parameters);
 	PhysicsParameters physicsParameters = GetPhysicsParameters(parameters);
+	typename ActorFactory<RigidController>::Controllers* rigidControllers = GetRigidControllers<RigidController>(parameters);
 
-	// Get mesh
-	const ShapeCompound *shape = creationParameters.GetValueChecked<const ShapeCompound*>("Shape");
+	RigidShape *shape = creationParameters.GetValueChecked<RigidShape*>("Shape");
 
-	// (Optionally) get material
-	const Material *pMaterial = creationParameters.GetValueDefault<const Material*>("Material");
+	lean::scoped_ptr<RigidController> controller( rigidControllers->AddController() );
+	controller->SetShape(shape);
 
-	// Default material, if none specified
-	if (!pMaterial)
-		pMaterial = GetDefaultMaterial<RigidController>(*physicsParameters.ResourceManager);
-	
-	lean::resource_ptr<RigidController> pController = lean::new_resource<RigidController>(
-			entityParameters.Entity, physicsParameters.SceneController,
-			ActorFactory<RigidController>::CreateActor(*physicsParameters.Device, *shape).get(),
-			shape, pMaterial
-		);
-
-	return pController.transfer();
+	return controller.transfer();
 }
-
-namespace
-{
-
-/// Gets a shape from the given cache.
-inline ShapeCompound* GetShape(const rapidxml::xml_node<lean::utf8_t> &node, ShapeCache &cache)
-{
-	utf8_ntr file = lean::get_attribute(node, "shape");
-
-	if (!file.empty())
-		return cache.GetByFile(file);
-	else
-	{
-		utf8_ntr name = lean::get_attribute(node, "shapeName");
-
-		if (!name.empty())
-			return cache.GetByName(name, true);
-	}
-
-	return nullptr;
-}
-
-/// Gets a material from the given cache.
-inline Material* GetMaterial(const rapidxml::xml_node<lean::utf8_t> &node, MaterialCache &cache)
-{
-	utf8_ntr file = lean::get_attribute(node, "material");
-
-	if (!file.empty())
-		return cache.GetByFile(file);
-	else
-	{
-		utf8_ntr name = lean::get_attribute(node, "materialName");
-
-		if (!name.empty())
-			return cache.GetByName(name, true);
-	}
-
-	return nullptr;
-}
-
-} // namespace
 
 // Loads a mesh controller from the given xml node.
 template <class RigidController>
-lean::resource_ptr<beEntitySystem::Controller, true> RigidControllerSerializer<RigidController>::Load(const rapidxml::xml_node<lean::utf8_t> &node,
-	beCore::ParameterSet &parameters, beEntitySystem::SerializationQueue<beEntitySystem::LoadJob> &queue) const
+lean::scoped_ptr<beEntitySystem::Controller, lean::critical_ref> RigidControllerSerializer<RigidController>::Load(const rapidxml::xml_node<lean::utf8_t> &node,
+	beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const
 {
 	beEntitySystem::EntitySystemParameters entityParameters = beEntitySystem::GetEntitySystemParameters(parameters);
 	PhysicsParameters physicsParameters = GetPhysicsParameters(parameters);
+	typename ActorFactory<RigidController>::Controllers* rigidControllers = GetRigidControllers<RigidController>(parameters);
 	
-	// Load shape & material
-	ShapeCompound *pMainShape = GetShape(node, *physicsParameters.ResourceManager->ShapeCache());
-	Material *pMainMaterial = GetMaterial(node, *physicsParameters.ResourceManager->MaterialCache());
+	lean::resource_ptr<RigidShape> shape;
 
-	// Shape required
-	if (!pMainShape)
-		LEAN_THROW_ERROR_MSG("RigidController does not specify a shape");
+	// Check for legacy file format
+	utf8_ntr mainMaterialName = lean::get_attribute(node, "materialName");
 
-	// Default material, if none specified
-	if (!pMainMaterial)
-		pMainMaterial = GetDefaultMaterial<RigidController>(*physicsParameters.ResourceManager);
-
-	lean::resource_ptr<RigidController> pController = lean::new_resource<RigidController>(
-			entityParameters.Entity, physicsParameters.SceneController,
-			ActorFactory<RigidController>::CreateActor(*physicsParameters.Device, *pMainShape).get(),
-			pMainShape, pMainMaterial
-		);
-
-	ControllerSerializer::Load(pController, node, parameters, queue);
-
-	return pController.transfer();
-}
-
-namespace
-{
-
-/// Gets the file, if available.
-template <class Resource, class ResourceCache>
-LEAN_INLINE beCore::Exchange::utf8_string MaybeGetFile(const Resource *pResource, const ResourceCache *pCache, bool &bIsFile)
-{
-	beCore::Exchange::utf8_string result;
-	
-	if (pCache)
+	if (mainMaterialName.empty())
 	{
-		utf8_ntr fileOrName = pCache->GetFile(pResource);
-		bIsFile = !fileOrName.empty();
-
-		if (bIsFile)
-			result = pCache->GetPathResolver().Shorten(fileOrName);
-		else
-		{
-			fileOrName = pCache->GetName(pResource);
-			result.assign(fileOrName.begin(), fileOrName.end());
-		}
-	}
-
-	return result;
-}
-/// Gets the file, if available.
-template <class Resource>
-LEAN_INLINE beCore::Exchange::utf8_string MaybeGetFile(const Resource *pResource, bool &bIsFile)
-{
-	return MaybeGetFile(pResource, (pResource) ? pResource->GetCache() : nullptr, bIsFile);
-}
-
-// Saves the given resource in one of the given attributes. Returns true, if saved by name, false otherwise.
-template <class Resource>
-inline bool AppendResourceAttribute(rapidxml::xml_node<lean::utf8_t> &node, const utf8_ntri &fileAtt, const utf8_ntri &nameAtt, const Resource *pResource)
-{
-	bool bFile = false;
-	beCore::Exchange::utf8_string file = MaybeGetFile(pResource, bFile);
-
-	if (bFile)
-	{
-		lean::append_attribute(*node.document(), node, fileAtt, file);
-		return false;
-	}
-	else if (!file.empty())
-	{
-		lean::append_attribute(*node.document(), node, nameAtt, file);
-		return true;
+		shape = physicsParameters.ResourceManager->RigidShapeCache->GetByName( lean::get_attribute(node, "shape"), true );
+		// Fill new/unconfigured subsets with default material
+		FillRigidShape( *shape, GetDefaultMaterial<RigidController>(*physicsParameters.ResourceManager) );
 	}
 	else
-		// TODO: Also print persistent ID
-		LEAN_LOG_ERROR("Could not identify RigidController #TODO resource '" << fileAtt.c_str() << "', will be lost");
+	{
+		// Load shape & material
+		AssembledShape *mainShape = physicsParameters.ResourceManager->ShapeCache->GetByFile(lean::get_attribute(node, "shape"));
+		
+		Material *mainMaterial = physicsParameters.ResourceManager->MaterialCache->GetByName(mainMaterialName);
+		// Default material, if none specified
+		if (!mainMaterial)
+			mainMaterial = GetDefaultMaterial<RigidController>(*physicsParameters.ResourceManager);
 
-	return false;
+		shape = ToRigidShape(*mainShape, mainMaterial, true);
+		physicsParameters.ResourceManager->RigidShapeCache->SetName(
+				shape,
+				physicsParameters.ResourceManager->RigidShapeCache->GetUniqueName( bec::GetCachedName<utf8_ntr>(mainShape) )
+			);
+	}
+
+	lean::scoped_ptr<RigidController> controller( rigidControllers->AddController() );
+	controller->SetShape(shape);
+	ControllerSerializer::Load(controller.get(), node, parameters, queue);
+
+	return controller.transfer();
 }
-
-} // namespace
 
 // Saves the given mesh controller to the given XML node.
 template <class RigidController>
 void RigidControllerSerializer<RigidController>::Save(const beEntitySystem::Controller *pSerializable, rapidxml::xml_node<lean::utf8_t> &node,
-	beCore::ParameterSet &parameters, beEntitySystem::SerializationQueue<beEntitySystem::SaveJob> &queue) const
+	beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue) const
 {
 	ControllerSerializer::Save(pSerializable, node, parameters, queue);
 
 	const RigidController &controller = static_cast<const RigidController&>(*pSerializable);
 	
-	const ShapeCompound *pMainShape = controller.GetShape();
-	const Material *pMainMaterial = controller.GetMaterial();
-	
-	AppendResourceAttribute(node, "shape", "shapeName", pMainShape);
-	if (AppendResourceAttribute(node, "material", "materialName", pMainMaterial))
-		SaveMaterial(pMainMaterial, parameters, queue);
+	if (const RigidShape *shape = controller.GetShape())
+	{
+		utf8_ntr name = bec::GetCachedName<utf8_ntr>(shape);
+		if (!name.empty())
+			lean::append_attribute( *node.document(), node, "shape", name );
+		else
+			LEAN_LOG_ERROR_MSG("Could not identify RigidController shape, information will be lost");
+
+		SaveShape(shape, parameters, queue);
+	}
 }
 
-const beEntitySystem::ControllerSerializationPlugin<RigidStaticControllerSerializer> RigidStaticControllerSerialization;
-const beEntitySystem::ControllerSerializationPlugin<RigidDynamicControllerSerializer> RigidDynamicControllerSerialization;
+const beEntitySystem::EntityControllerSerializationPlugin<RigidStaticControllerSerializer> RigidStaticControllerSerialization;
+const beEntitySystem::EntityControllerSerializationPlugin<RigidDynamicControllerSerializer> RigidDynamicControllerSerialization;
 
 } // namespace

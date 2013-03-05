@@ -2,6 +2,7 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_EXCHANGE_CONTAINERS
 #define BE_CORE_EXCHANGE_CONTAINERS
 

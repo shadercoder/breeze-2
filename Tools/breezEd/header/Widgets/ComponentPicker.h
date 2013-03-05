@@ -1,7 +1,7 @@
 #ifndef COMPONENTPICKER_H
 #define COMPONENTPICKER_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 
 #include <beCore/beComponentReflector.h>
 
@@ -25,7 +25,7 @@ protected:
 
 public:
 	/// Constructor.
-	ComponentPicker(QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	ComponentPicker(QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~ComponentPicker();
 

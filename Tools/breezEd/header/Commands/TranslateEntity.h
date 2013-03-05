@@ -1,9 +1,9 @@
 #ifndef TRANSLATEENTITYCOMMAND_H
 #define TRANSLATEENTITYCOMMAND_H
 
-#include <QtGui/QUndoCommand>
+#include <QtWidgets/QUndoCommand>
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 #include <vector>
 
 class SceneDocument;
@@ -47,10 +47,6 @@ public:
 private:
 	entity_vector m_entities;
 
-protected:
-	TranslateEntityCommand(const TranslateEntityCommand&) { }
-	TranslateEntityCommand& operator =(const TranslateEntityCommand&) { return *this; }
-
 public:
 	/// Constructor.
 	TranslateEntityCommand(const QVector<beEntitySystem::Entity*> &entities, QUndoCommand *pParent = nullptr);
@@ -63,7 +59,7 @@ public:
 	/// Resets the entities' transformation.
 	void undo();
 	/// Applies entities' the new transformation.
-    void redo();
+	void redo();
 };
 
 #endif

@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_RENDERINGPIPELINE
 #define BE_SCENE_RENDERINGPIPELINE
 
@@ -9,7 +10,6 @@
 #include <beCore/beShared.h>
 #include <lean/pimpl/pimpl_ptr.h>
 #include "beRenderingLimits.h"
-#include "bePerspectiveScheduler.h"
 #include "bePipelinePerspective.h"
 #include "beQueueSetup.h"
 #include <lean/smart/resource_ptr.h>
@@ -18,8 +18,6 @@ namespace beScene
 {
 	
 // Prototypes
-class Scenery;
-class PerspectiveModifier;
 class Pipe;
 class RenderContext;
 class PipelineProcessor;
@@ -59,7 +57,7 @@ struct RenderQueueDesc
 };
 
 /// Rendering Pipeline.
-class RenderingPipeline : public beCore::Resource, public PerspectiveScheduler
+class RenderingPipeline : public beCore::Resource
 {
 private:
 	utf8_string m_name;
@@ -73,33 +71,27 @@ public:
 	/// Destructor.
 	BE_SCENE_API ~RenderingPipeline();
 
-	/// Adds a perspective.
-	BE_SCENE_API PipelinePerspective* AddPerspective(const PerspectiveDesc &desc, Pipe *pPipe,
-		PipelineProcessor *pProcessor = nullptr, PipelineStageMask stageMask = 0, bool bNormalOnly = false);
-	/// Clears all perspectives.
-	BE_SCENE_API void ClearPerspectives();
-
-	/// Releases shared references held.
-	BE_SCENE_API void Release();
-
-	/// Sets a perspective modifier (nullptr to unset), returning any previous perspective modifier.
-	BE_SCENE_API PerspectiveModifier* SetPerspectiveModifier(PerspectiveModifier *pModifier);
-
-	/// Includes all visible objects in the given scenery.
-	BE_SCENE_API void AddScenery(const Scenery &scenery);
-	
 	/// Prepares rendering of all stages and queues.
-	BE_SCENE_API void Prepare();
-	/// Prepares rendering of the given stage.
-	BE_SCENE_API void Prepare(uint2 stageID);
-
-	/// Renders all stages and queues.
-	BE_SCENE_API void Render(const RenderContext &context) const;
-	/// Renders the given stage and render queue.
-	BE_SCENE_API void Render(uint2 stageID, const RenderContext &context) const;
-
-	/// Renders all stages and queues including the given scenery.
-	BE_SCENE_API void Render(const Scenery &scenery, const RenderContext &context);
+	BE_SCENE_API void Prepare(PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+		PipelineStageMask overrideStageMask = 0, bool bNoChildren = false) const;
+	/// Optimizes the given stage and queue.
+	BE_SCENE_API void Optimize(PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+		PipelineStageMask overrideStageMask = 0, bool bNoChildren = false) const;
+	/// Renders child perspectives & prepares rendering for the given perspective.
+	BE_SCENE_API void PreRender(const PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+		const RenderContext &context, bool bNoChildren = false) const;
+	/// Renders the given stage and queue.
+	BE_SCENE_API void RenderStages(const PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+		const RenderContext &context, PipelineStageMask overrideStageMask = 0) const;
+	/// Finalizes rendering for the given perspective.
+	BE_SCENE_API void PostRender(const PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+		const RenderContext &context, bool bFinalProcessing = true) const;
+	/// Renders the given stage and queue.
+	BE_SCENE_API void Render(const PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+		const RenderContext &context, PipelineStageMask overrideStageMask = 0, bool bNoChildren = false, bool bFinalProcessing = true) const;
+	/// Releases temporary rendering resources.
+	BE_SCENE_API void ReleaseIntermediate(PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+		bool bReleasePerspective = true) const;
 
 	/// Adds a pipeline stage according to the given description.
 	BE_SCENE_API uint2 AddStage(const utf8_ntri &stageName, const PipelineStageDesc &desc);
@@ -144,10 +136,8 @@ public:
 	/// Gets the ID of the default pipeline stage.
 	BE_SCENE_API uint2 GetDefaultQueueID(uint2 stageID) const;
 
-	/// Sets the maximum number of active perspectives.
-	BE_SCENE_API void SetMaxPerspectiveCount(uint4 count);
-	/// Gets the maximum number of active perspectives.
-	BE_SCENE_API uint4 GetMaxPerspectiveCount() const;
+	/// Gets the mask of normal pipeline stages.
+	BE_SCENE_API PipelineStageMask GetNormalStages() const;
 
 	/// Sets the name.
 	BE_SCENE_API void SetName(const utf8_ntri &name);

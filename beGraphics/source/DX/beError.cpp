@@ -13,9 +13,9 @@ namespace DX
 {
 
 // Gets an error message describing the given DirectX error.
-const utf16_t* GetDXError(HRESULT error)
+const utf8_t* GetDXError(HRESULT error)
 {
-	return ::DXGetErrorStringW(error);
+	return ::DXGetErrorStringA(error);
 }
 
 } // namespace

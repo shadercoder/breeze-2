@@ -2,12 +2,11 @@
 /* breeze Engine Math Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_MATH_TUPLE_EXPRESSIONS
 #define BE_MATH_TUPLE_EXPRESSIONS
 
 #include "beMath.h"
-#include <lean/meta/enable_if.h>
-#include <lean/meta/conditional.h>
 #include <lean/meta/strip.h>
 
 namespace beMath

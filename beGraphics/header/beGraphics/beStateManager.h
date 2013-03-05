@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_STATE_MANAGER
 #define BE_GRAPHICS_STATE_MANAGER
 
@@ -29,6 +30,9 @@ public:
 	virtual void Set(const StateSetup& setup) = 0;
 	/// Gets all stored states.
 	virtual const StateSetup& Get() const = 0;
+
+	/// Clears the given states.
+	virtual void ClearBindings() = 0;
 };
 
 } // namespace

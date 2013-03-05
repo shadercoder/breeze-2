@@ -5,6 +5,7 @@
 #include "bePhysicsInternal/stdafx.h"
 #include "bePhysics/PX3/beShapes.h"
 #include "bePhysics/PX3/beDevice.h"
+
 #include <lean/logging/errors.h>
 
 namespace bePhysics
@@ -12,75 +13,6 @@ namespace bePhysics
 
 namespace PX3
 {
-
-// Constructor.
-ShapeCompound::ShapeCompound(ShapeCache *pShapeCache)
-	: m_pShapeCache(pShapeCache)
-{
-}
-
-// Destructor.
-ShapeCompound::~ShapeCompound()
-{
-}
-
-// Adds the given box.
-void ShapeCompound::AddShape(const physx::PxBoxGeometry &shape, const physx::PxMaterial *pMaterial, const physx::PxTransform &pose)
-{
-	m_boxes.push_back( box_shape(shape, pMaterial, pose) );
-	RebuildGeometry();
-}
-
-// Adds the given sphere.
-void ShapeCompound::AddShape(const physx::PxSphereGeometry &shape, const physx::PxMaterial *pMaterial, const physx::PxTransform &pose)
-{
-	m_spheres.push_back( sphere_shape(shape, pMaterial, pose) );
-	RebuildGeometry();
-}
-
-// Adds the given convex mesh.
-void ShapeCompound::AddShape(const physx::PxConvexMeshGeometry &shape, const physx::PxMaterial *pMaterial, const physx::PxTransform &pose)
-{
-	m_convexes.push_back( convex_shape(shape, pMaterial, pose) );
-	RebuildGeometry();
-}
-
-// Adds the given triangle mesh.
-void ShapeCompound::AddShape(const physx::PxTriangleMeshGeometry &shape, const physx::PxMaterial *pMaterial, const physx::PxTransform &pose)
-{
-	m_meshes.push_back( mesh_shape(shape, pMaterial, pose) );
-	RebuildGeometry();
-}
-
-namespace
-{
-
-/// Appens pointers to the elements in the given range.
-template <class Geometry, class Materials, class Poses, class Iterator>
-void AddShapePointers(Geometry &geometry, Materials &materials, Poses &poses, Iterator begin, Iterator end)
-{
-	for (Iterator it = begin; it < end; ++it)
-	{
-		geometry.push_back( &it->geom );
-		materials.push_back( it->mat );
-		poses.push_back( it->pose );
-	}
-}
-
-}
-
-// Rebuilds the geometry vector.
-void ShapeCompound::RebuildGeometry()
-{
-	m_geometry.clear();
-	m_materials.clear();
-	m_poses.clear();
-
-	AddShapePointers(m_geometry, m_materials, m_poses, m_boxes.begin(), m_boxes.end());
-	AddShapePointers(m_geometry, m_materials, m_poses, m_spheres.begin(), m_spheres.end());
-	AddShapePointers(m_geometry, m_materials, m_poses, m_convexes.begin(), m_convexes.end());
-	AddShapePointers(m_geometry, m_materials, m_poses, m_meshes.begin(), m_meshes.end());
-}
 
 // Scales the given shape as precisely as possible.
 void Scale(physx::PxShape &shape, const physx::PxVec3 &scaling)

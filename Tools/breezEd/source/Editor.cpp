@@ -19,6 +19,7 @@ Editor::Editor()
 
 	// ORDER: Create window after plugins have been initialized
 	m_pMainWindow = new MainWindow(this);
+	m_pMainWindow->setAttribute(Qt::WA_QuitOnClose);
 
 	// ORDER: Create devices after window has been initialized
 	try

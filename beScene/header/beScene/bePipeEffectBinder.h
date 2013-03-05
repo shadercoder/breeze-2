@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_PIPE_EFFECT_BINDER
 #define BE_SCENE_PIPE_EFFECT_BINDER
 
@@ -23,14 +24,15 @@ namespace DX11
 }
 
 /// Pipe effect binder flags enumeration.
-namespace PipeEffectBinderFlags
+struct PipeEffectBinderFlags
 {
 	/// Enumeration.
 	enum T
 	{
 		NoDefaultMS = 0x1	///< Default multisamplg to off.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(PipeEffectBinderFlags)
+};
 
 /// Pipe effect binder.
 class PipeEffectBinder : public EffectBinder

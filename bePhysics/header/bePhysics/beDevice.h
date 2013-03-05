@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_DEVICE
 #define BE_PHYSICS_DEVICE
 

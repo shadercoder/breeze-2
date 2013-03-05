@@ -3,18 +3,21 @@
 /****************************************************/
 
 #include "beSceneInternal/stdafx.h"
-#include "beScene/beMaterial.h"
+#include <beGraphics/beMaterial.h>
 #include "beScene/beRenderableMaterial.h"
+#include "beScene/beLightMaterial.h"
 
 #include <beCore/beComponentReflector.h>
 #include <beCore/beComponentTypes.h>
+#include <beCore/beReflectionTypes.h>
 
 #include "beScene/beSerializationParameters.h"
 #include "beScene/beResourceManager.h"
 #include "beScene/beEffectDrivenRenderer.h"
 
-#include "beScene/beMaterialCache.h"
+#include <beGraphics/beMaterialCache.h>
 #include "beScene/beRenderableMaterialCache.h"
+#include "beScene/beLightMaterialCache.h"
 
 #include <beGraphics/beEffectCache.h>
 
@@ -24,142 +27,297 @@
 namespace beScene
 {
 
-/// Reflects materials for use in component-based editing environments.
-class RenderableMaterialReflector : public beCore::ComponentReflector
+extern const beCore::ComponentType RenderableMaterialType;
+extern const beCore::ComponentType LightMaterialType;
+
+namespace
 {
-	/// Returns true, if the component can be created.
-	bool CanBeCreated() const
+
+template <class BoundMaterial>
+BoundMaterial* GetBinding(const SceneParameters &sceneParameters, beg::Material *material);
+
+/// Gets a renderable binding for the given material.
+template <>
+RenderableMaterial* GetBinding(const SceneParameters &sceneParameters, beg::Material *material)
+{
+	return sceneParameters.Renderer->RenderableMaterials()->GetMaterial(material);
+}
+
+/// Gets a light binding for the given material.
+template <>
+LightMaterial* GetBinding(const SceneParameters &sceneParameters, beg::Material *material)
+{
+	return sceneParameters.Renderer->LightMaterials()->GetMaterial(material);
+}
+
+} // namespace
+
+/// Reflects materials for use in component-based editing environments.
+template <class BoundMaterial>
+class BoundMaterialReflector : public beCore::ComponentReflector
+{
+	/// Gets principal component flags.
+	uint4 GetComponentFlags() const LEAN_OVERRIDE
 	{
-		return true;
+		return bec::ComponentFlags::Creatable | bec::ComponentFlags::Cloneable; // bec::ComponentFlags::Filed | 
 	}
+	/// Gets specific component flags.
+	uint4 GetComponentFlags(const lean::any &component) const LEAN_OVERRIDE
+	{
+		return bec::ComponentFlags::NameMutable; // | bec::ComponentFlags::FileMutable
+	}
+
+	/// Gets information on the components currently available.
+	bec::ComponentInfoVector GetComponentInfo(const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
+	{
+		return GetSceneParameters(parameters).ResourceManager->MaterialCache()->GetInfo();
+	}
+	
+	/// Gets the component info.
+	bec::ComponentInfo GetInfo(const lean::any &component) const LEAN_OVERRIDE
+	{
+		bec::ComponentInfo result;
+
+		if (const BoundMaterial *material = any_cast_default<BoundMaterial*>(component))
+			if (const beg::MaterialCache *cache = material->GetMaterial()->GetCache())
+				result = cache->GetInfo(material->GetMaterial());
+
+		return result;
+	}
+
 	/// Gets a list of creation parameters.
-	beCore::ComponentParameters GetCreationParameters() const
+	beCore::ComponentParameters GetCreationParameters() const LEAN_OVERRIDE
 	{
 		static const beCore::ComponentParameter parameters[] = {
-				beCore::ComponentParameter(utf8_ntr("Effect"), utf8_ntr("Effect"), true),
-				beCore::ComponentParameter(utf8_ntr("Name"), utf8_ntr("String"))
+				beCore::ComponentParameter(utf8_ntr("Effect"), beg::Effect::GetComponentType(), bec::ComponentParameterFlags::Deducible),
+				beCore::ComponentParameter(utf8_ntr("Configuration"), beg::MaterialConfig::GetComponentType(), bec::ComponentParameterFlags::Array)
 			};
 
 		return beCore::ComponentParameters(parameters, parameters + lean::arraylen(parameters));
 	}
 	/// Creates a component from the given parameters.
-	lean::cloneable_obj<lean::any, true> CreateComponent(const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters, const lean::any *pPrototype) const
+	lean::cloneable_obj<lean::any, true> CreateComponent(const utf8_ntri &name, const beCore::Parameters &creationParameters,
+		const beCore::ParameterSet &parameters, const lean::any *pPrototype, const lean::any *pReplace) const LEAN_OVERRIDE
 	{
 		SceneParameters sceneParameters = GetSceneParameters(parameters);
 
-		RenderableMaterial *pPrototypeRenderableMaterial = lean::any_cast_default<RenderableMaterial*>(pPrototype);
-		Material *pPrototypeMaterial = (pPrototypeRenderableMaterial) ? pPrototypeRenderableMaterial->GetMaterial() : nullptr;
+		BoundMaterial *pPrototypeBoundMaterial = lean::any_cast_default<BoundMaterial*>(pPrototype);
+		beg::Material *pPrototypeMaterial = (pPrototypeBoundMaterial) ? pPrototypeBoundMaterial->GetMaterial() : nullptr;
 
-		const beGraphics::Effect *effect = (pPrototypeMaterial)
-			? creationParameters.GetValueDefault<beGraphics::Effect*>( "Effect", const_cast<beGraphics::Effect*>(pPrototypeMaterial->GetEffect()) )
-			: creationParameters.GetValueChecked<beGraphics::Effect*>( "Effect" );
+		lean::resource_ptr<beg::Material> material;
+		{
+			beg::Material::Effects effects;
+			const beGraphics::Effect *pSpecifiedEffect = creationParameters.GetValueDefault<beGraphics::Effect*>("Effect");
+			
+			if (!pSpecifiedEffect && pPrototypeMaterial)
+				effects = pPrototypeMaterial->GetEffects();
+			else
+			{
+				LEAN_THROW_NULL(pSpecifiedEffect);
+				effects = bec::MakeRangeN(&pSpecifiedEffect, 1);
+			}
 
-		lean::resource_ptr<Material> material = lean::new_resource<Material>(
-				effect,
-				*sceneParameters.ResourceManager->EffectCache(),
-				*sceneParameters.ResourceManager->TextureCache(),
-				sceneParameters.ResourceManager->MaterialCache()
-			);
+			material = beg::CreateMaterial(
+					effects.Begin, Size4(effects),
+					*sceneParameters.ResourceManager->EffectCache()
+				);
+		}
 
-		if (pPrototypeMaterial)
-			Transfer(*material, *pPrototypeMaterial);
+		{
+			std::vector<beg::MaterialConfig*> configs;
 
-		sceneParameters.ResourceManager->MaterialCache()->SetMaterialName(
-				creationParameters.GetValueChecked<beCore::Exchange::utf8_string>("Name"),
-				material
-			);
+			if (const lean::any *pConfiguration = creationParameters.GetAnyValue(creationParameters.GetID("Configuration")))
+			{
+				configs.resize(pConfiguration->size());
 
-		return lean::any_value<RenderableMaterial*>(
-				sceneParameters.Renderer->RenderableMaterials()->GetMaterial(material)
+				for (uint4 configIdx = 0, configCount = (uint4) pConfiguration->size(); configIdx < configCount; ++configIdx)
+					configs[configIdx] = LEAN_THROW_NULL(
+							any_cast<beGraphics::MaterialConfig*>( any_cast_checked<const lean::any&>(pConfiguration, configIdx) )
+						);
+			}
+/*			else if (pPrototypeMaterial)
+			{
+				beg::Material::Configurations configRange = pPrototypeMaterial->GetConfigurations();
+				configs.assign(configRange.Begin, configRange.End);
+				material->SetConfigurations(configs.data(), (uint4) configs.size());
+			}
+*/
+			material->SetConfigurations(configs.data(), (uint4) configs.size());
+		}
+
+		// TODO?
+//		if (pPrototypeMaterial)
+//			Transfer(*material, *pPrototypeMaterial);
+
+		if (BoundMaterial *pToBeReplaced = lean::any_cast_default<BoundMaterial*>(pReplace))
+			sceneParameters.ResourceManager->MaterialCache()->Replace(pToBeReplaced->GetMaterial(), material);
+		else
+			sceneParameters.ResourceManager->MaterialCache()->SetName(material, name);
+
+
+		return bec::any_resource_t<BoundMaterial>::t(
+				GetBinding<BoundMaterial>( sceneParameters, material )
 			);
 	}
 
-	/// Returns true, if the component can be named.
-	bool HasName() const
+	/// Sets the component name.
+	void SetName(const lean::any &component, const utf8_ntri &name) const LEAN_OVERRIDE
 	{
-		return true;
+		if (BoundMaterial *material = any_cast_default<BoundMaterial*>(component))
+			if (beg::MaterialCache *cache = material->GetMaterial()->GetCache())
+			{
+				cache->SetName(material->GetMaterial(), name);
+				return;
+			}
+
+		LEAN_THROW_ERROR_CTX("Unknown material cannot be renamed", name.c_str());
 	}
-	/// Returns true, if the component can be named.
-	bool CanBeNamed() const
+
+	// Gets a list of creation parameters.
+	void GetCreationInfo(const lean::any &component, bec::Parameters &creationParameters, bec::ComponentInfo *pInfo = nullptr) const LEAN_OVERRIDE
 	{
-		return true;
+		if (const BoundMaterial *material = any_cast_default<BoundMaterial*>(component))
+			if (const beg::MaterialCache *cache = material->GetMaterial()->GetCache())
+			{
+				if (pInfo)
+					*pInfo = cache->GetInfo(material->GetMaterial());
+
+				creationParameters.SetValue<const beGraphics::Effect*>("Effect", *material->GetMaterial()->GetEffects().Begin);
+
+				beg::Material::Configurations configRange = material->GetMaterial()->GetConfigurations();
+				typedef std::vector< bec::any_resource_t<beg::MaterialConfig>::t > config_vector;
+				creationParameters.SetAnyValue(
+						creationParameters.Add("Configuration"),
+						lean::any_vector< config_vector, lean::var_default<lean::any> >( config_vector(configRange.Begin, configRange.End) )
+					);
+			}
 	}
+
 	/// Gets a component by name.
-	lean::cloneable_obj<lean::any, true> GetComponentByName(const utf8_ntri &name, const beCore::ParameterSet &parameters) const
+	lean::cloneable_obj<lean::any, true> GetComponentByName(const utf8_ntri &name, const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
 	{
 		SceneParameters sceneParameters = GetSceneParameters(parameters);
 
-		return lean::any_value<RenderableMaterial*>(
-				sceneParameters.Renderer->RenderableMaterials()->GetMaterial(
-					sceneParameters.ResourceManager->MaterialCache()->GetMaterialByName(name)
+		return bec::any_resource_t<BoundMaterial>::t(
+				GetBinding<BoundMaterial>( sceneParameters, 
+					sceneParameters.ResourceManager->MaterialCache()->GetByName(name)
 				)
 			);
 	}
 
-	/// Returns true, if the component can be loaded from a file.
-	bool CanBeLoaded() const
-	{
-		return true;
-	}
 	/// Gets a fitting file extension, if available.
-	utf8_ntr GetFileExtension() const
+	utf8_ntr GetFileExtension() const LEAN_OVERRIDE
 	{
 		return utf8_ntr("material.xml");
 	}
 	/// Gets a component from the given file.
-	lean::cloneable_obj<lean::any, true> GetComponent(const utf8_ntri &file, const beCore::ParameterSet &parameters) const
+	lean::cloneable_obj<lean::any, true> GetComponentByFile(const utf8_ntri &file,
+		const beCore::Parameters &fileParameters, const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
 	{
 		SceneParameters sceneParameters = GetSceneParameters(parameters);
 
-		return lean::any_value<RenderableMaterial*>(
-				sceneParameters.Renderer->RenderableMaterials()->GetMaterial(
-					sceneParameters.ResourceManager->MaterialCache()->GetMaterial(file)
+		// TODO: Not what it is intended for!
+		return bec::any_resource_t<BoundMaterial>::t(
+				GetBinding<BoundMaterial>( sceneParameters, 
+					sceneParameters.ResourceManager->MaterialCache()->NewByFile(file)
 				)
 			);
 	}
 
-	/// Gets the name or file of the given component.
-	beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, beCore::ComponentState::T *pState) const
+	/// Gets the component type reflected.
+	const beCore::ComponentType* GetType() const LEAN_OVERRIDE
 	{
-		beCore::Exchange::utf8_string result;
+		return BoundMaterial::GetComponentType(); 
+	}
+};
 
-		const RenderableMaterial *pMaterial = any_cast<RenderableMaterial*>(component);
+static const beCore::ComponentReflectorPlugin< BoundMaterialReflector<RenderableMaterial> > RenderableMaterialReflectorPlugin(&RenderableMaterialType);
+static const beCore::ComponentReflectorPlugin< BoundMaterialReflector<LightMaterial> > LightMaterialReflectorPlugin(&LightMaterialType);
 
-		if (pMaterial)
-		{
-			const MaterialCache *pCache = pMaterial->GetMaterial()->GetCache();
-			
-			if (pCache)
-			{
-				bool bFile = false;
-				result = pCache->GetFile(pMaterial->GetMaterial(), &bFile).to<beCore::Exchange::utf8_string>();
+/// Material configurations for use in component-based editing environments.
+class MaterialConfigReflector : public beCore::ComponentReflector
+{
+	/// Gets principal component flags.
+	uint4 GetComponentFlags() const LEAN_OVERRIDE
+	{
+		return bec::ComponentFlags::Creatable | bec::ComponentFlags::Cloneable; // bec::ComponentFlags::Filed | 
+	}
+	/// Gets specific component flags.
+	uint4 GetComponentFlags(const lean::any &component) const LEAN_OVERRIDE
+	{
+		return bec::ComponentFlags::NameMutable; // | bec::ComponentFlags::FileMutable
+	}
 
-				if (pState)
-				{
-					if (bFile)
-						*pState = beCore::ComponentState::Filed;
-					else if (!result.empty())
-						*pState = beCore::ComponentState::Named;
-					else
-						*pState = beCore::ComponentState::Unknown;
-				}
-			}
-			else if (pState)
-				*pState = beCore::ComponentState::Unknown;
-		}
-		else if (pState)
-			*pState = beCore::ComponentState::NotSet;
+	/// Gets information on the components currently available.
+	bec::ComponentInfoVector GetComponentInfo(const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
+	{
+		return GetSceneParameters(parameters).ResourceManager->MaterialConfigCache()->GetInfo();
+	}
+	
+	/// Gets the component info.
+	bec::ComponentInfo GetInfo(const lean::any &component) const LEAN_OVERRIDE
+	{
+		bec::ComponentInfo result;
+
+		if (const beg::MaterialConfig *material = any_cast_default<beg::MaterialConfig*>(component))
+			if (const beg::MaterialConfigCache *cache = material->GetCache())
+				result = cache->GetInfo(material);
 
 		return result;
 	}
 
-	/// Gets the component type reflected.
-	utf8_ntr GetType() const
+	/// Creates a component from the given parameters.
+	lean::cloneable_obj<lean::any, true> CreateComponent(const utf8_ntri &name, const beCore::Parameters &creationParameters,
+		const beCore::ParameterSet &parameters, const lean::any *pPrototype, const lean::any *pReplace) const LEAN_OVERRIDE
 	{
-		return utf8_ntr("RenderableMaterial"); 
+		SceneParameters sceneParameters = GetSceneParameters(parameters);
+
+		lean::resource_ptr<beg::MaterialConfig> materialConfig = beg::CreateMaterialConfig();
+
+		if (beg::MaterialConfig *pToBeReplaced = lean::any_cast_default<beg::MaterialConfig*>(pReplace))
+			sceneParameters.ResourceManager->MaterialConfigCache()->Replace(pToBeReplaced, materialConfig);
+		else
+			sceneParameters.ResourceManager->MaterialConfigCache()->SetName(materialConfig, name);
+
+		return bec::any_resource_t<beg::MaterialConfig>::t(materialConfig);
+	}
+
+	/// Sets the component name.
+	void SetName(const lean::any &component, const utf8_ntri &name) const LEAN_OVERRIDE
+	{
+		if (beg::MaterialConfig *material = any_cast_default<beg::MaterialConfig*>(component))
+			if (beg::MaterialConfigCache *cache = material->GetCache())
+			{
+				cache->SetName(material, name);
+				return;
+			}
+
+		LEAN_THROW_ERROR_CTX("Unknown material config cannot be renamed", name.c_str());
+	}
+
+	/// Gets a component by name.
+	lean::cloneable_obj<lean::any, true> GetComponentByName(const utf8_ntri &name, const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
+	{
+		SceneParameters sceneParameters = GetSceneParameters(parameters);
+
+		return bec::any_resource_t<beg::MaterialConfig>::t(
+				sceneParameters.ResourceManager->MaterialConfigCache()->GetByName(name)
+			);
+	}
+
+	/// Gets a fitting file extension, if available.
+	utf8_ntr GetFileExtension() const LEAN_OVERRIDE
+	{
+		return utf8_ntr("materialconfig.xml");
+	}
+
+	/// Gets the component type reflected.
+	const beCore::ComponentType* GetType() const LEAN_OVERRIDE
+	{
+		return beg::MaterialConfig::GetComponentType(); 
 	}
 };
 
-static const beCore::ComponentTypePlugin<RenderableMaterialReflector> RenderableMaterialReflectorPlugin;
+static const beCore::ComponentReflectorPlugin<MaterialConfigReflector> MaterialConfigReflectorPlugin(beg::MaterialConfig::GetComponentType());
 
 } // namespace

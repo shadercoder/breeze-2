@@ -1,16 +1,18 @@
 #ifndef CHANGEPROPERTYCOMMAND_H
 #define CHANGEPROPERTYCOMMAND_H
 
-#include <QtGui/QUndoCommand>
+#include <QtWidgets/QUndoCommand>
 
 #include <beCore/bePropertyProvider.h>
 #include <lean/properties/property.h>
+
+#include <lean/smart/com_ptr.h>
 
 /// Change property command class.
 class ChangePropertyCommand : public QUndoCommand
 {
 private:
-	beCore::PropertyProvider *m_pPropertyProvider;
+	lean::com_ptr<beCore::PropertyProvider> m_pPropertyProvider;
 	uint4 m_propertyID;
 
 	lean::scoped_property_data<> m_previousData;

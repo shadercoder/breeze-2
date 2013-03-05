@@ -22,7 +22,7 @@ private:
 
 public:
 	/// Constructor.
-	EntityBuilderWidget(Editor *pEditor, QWidget *pParent = nullptr , Qt::WFlags flags = 0);
+	EntityBuilderWidget(Editor *pEditor, QWidget *pParent = nullptr , Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~EntityBuilderWidget();
 

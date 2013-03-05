@@ -2,11 +2,12 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_CHARACTERCONTROLLER
 #define BE_PHYSICS_CHARACTERCONTROLLER
 
 #include "bePhysics.h"
-#include "beEntityController.h"
+#include <beEntitySystem/beEntityController.h>
 #include <beEntitySystem/beSynchronized.h>
 #include <lean/smart/resource_ptr.h>
 #include <beMath/beVectorDef.h>
@@ -20,17 +21,16 @@ class Character;
 class Material;
 
 /// Character controller class.
-class CharacterController : public beEntitySystem::EntityController, public beEntitySystem::Synchronized
+class CharacterController : public beEntitySystem::SingularEntityController, public beEntitySystem::Synchronized
 {
 private:
-	bool m_bAttached;
 	bool m_bDynamic;
 
 	beMath::fvec3 m_lastScaling;
 
 protected:
 	/// Scene.
-	const lean::resource_ptr<CharacterSceneController> m_pScene;
+	CharacterSceneController *const m_pScene;
 
 	/// Material
 	lean::resource_ptr<const Material> m_pMaterial;
@@ -38,9 +38,12 @@ protected:
 	/// Actor.
 	lean::resource_ptr<Character> m_pActor;
 
+	/// Entity.
+	beEntitySystem::Entity *m_pEntity;
+
 public:
 	/// Constructor.
-	BE_PHYSICS_API CharacterController(beEntitySystem::Entity *pEntity, CharacterSceneController *pScene, Character *pActor,
+	BE_PHYSICS_API CharacterController(CharacterSceneController *pScene, Character *pActor,
 		const Material *pMaterial = nullptr);
 	/// Destructor.
 	BE_PHYSICS_API ~CharacterController();
@@ -58,17 +61,16 @@ public:
 	BE_PHYSICS_API float GetMass() const;
 
 	/// Forces this controller into synchronization with the simulation.
-	BE_PHYSICS_API void Synchronize();
-
+	BE_PHYSICS_API void Synchronize(beEntitySystem::EntityHandle entity);
 	/// Synchronizes this controller with the simulation.
-	BE_PHYSICS_API void Flush();
+	BE_PHYSICS_API void Flush(const beEntitySystem::EntityHandle entity);
 	/// Synchronizes the simulation with this controller.
 	BE_PHYSICS_API void Fetch();
 
 	/// Attaches this controller to the scene.
-	BE_PHYSICS_API void Attach();
+	BE_PHYSICS_API void Attach(beEntitySystem::Entity *entity);
 	/// Detaches this controller from the scene.
-	BE_PHYSICS_API void Detach();
+	BE_PHYSICS_API void Detach(beEntitySystem::Entity *entity);
 
 	/// Converts the controlled actor between non-kinematic and kinematic.
 	BE_PHYSICS_API void SetDynamic(bool bDynamic);
@@ -79,9 +81,9 @@ public:
 	LEAN_INLINE Character* GetCharacter() const { return m_pActor; }
 
 	/// Gets the controller type.
-	BE_PHYSICS_API static utf8_ntr GetControllerType();
+	BE_PHYSICS_API static const beCore::ComponentType* GetComponentType();
 	/// Gets the controller type.
-	utf8_ntr GetType() const { return GetControllerType(); }
+	BE_PHYSICS_API const beCore::ComponentType* GetType() const;
 };
 
 } // namespace

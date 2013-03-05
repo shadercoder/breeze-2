@@ -1,10 +1,12 @@
 #ifndef SETCOMPONENTCOMMAND_H
 #define SETCOMPONENTCOMMAND_H
 
-#include <QtGui/QUndoCommand>
+#include <QtWidgets/QUndoCommand>
 
 #include <beCore/beReflectedComponent.h>
+#include <beCore/beComponentMonitor.h>
 
+#include <lean/smart/com_ptr.h>
 #include <lean/smart/cloneable_obj.h>
 #include <lean/containers/any.h>
 
@@ -12,18 +14,18 @@
 class SetComponentCommand : public QUndoCommand
 {
 private:
-	beCore::ReflectedComponent *m_pReflectedComponent;
+	lean::com_ptr<beCore::ReflectedComponent> m_pReflectedComponent;
 	uint4 m_componentIdx;
 
 	lean::cloneable_obj<lean::any> m_previousComponent;
 	lean::cloneable_obj<lean::any> m_component;
 
-	bool m_bIgnoreOnce;
+	beCore::ComponentMonitor *m_pComponentMonitor;
 
 public:
 	/// Constructor.
 	SetComponentCommand(beCore::ReflectedComponent *pReflectedComponent, uint4 componentIdx,
-		const lean::any &component, QUndoCommand *pParent = nullptr);
+		const lean::any &component, beCore::ComponentMonitor *pComponentMonitor, QUndoCommand *pParent = nullptr);
 	/// Destructor.
 	virtual ~SetComponentCommand();
 

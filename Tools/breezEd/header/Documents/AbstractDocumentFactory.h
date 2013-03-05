@@ -10,7 +10,7 @@ class Mode;
 class QWidget;
 
 /// File match enumeration.
-namespace FileMatch
+struct FileMatch
 {
 	/// Enumeration
 	enum T
@@ -19,7 +19,8 @@ namespace FileMatch
 		Mismatch,
 		Any
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(FileMatch)
+};
 
 /// Abstract document factory class
 class AbstractDocumentFactory : public QObject
@@ -43,7 +44,7 @@ public:
 	virtual FileMatch::T matchFile(const QString &file) const = 0;
 	/// Creates a default mdi document view.
 	virtual QWidget* createDocumentView(AbstractDocument *pDocument, Mode *pDocumentMode, Editor *pEditor,
-		QWidget *pParent = nullptr, Qt::WFlags flags = 0) = 0;
+		QWidget *pParent = nullptr, Qt::WindowFlags flags = 0) = 0;
 	/// Creates a document mode.
 	virtual Mode* createDocumentMode(AbstractDocument *pDocument, Editor *pEditor, 
 		Mode *pParent = nullptr) = 0;

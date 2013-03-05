@@ -4,7 +4,7 @@
 
 #include "beEntitySystemInternal/stdafx.h"
 #include "beEntitySystem/beEntityGroup.h"
-#include "beEntitySystem/beEntity.h"
+#include "beEntitySystem/beEntities.h"
 
 #include <lean/functional/algorithm.h>
 
@@ -54,7 +54,7 @@ void EntityGroup::AddEntity(Entity *pEntity)
 // Removes the given entity from this group.
 bool EntityGroup::RemoveEntity(Entity *pEntity)
 {
-	return lean::remove_ordered(m_entities, pEntity);
+	return lean::remove(m_entities, pEntity);
 }
 
 // Attaches all entities to their simulations.

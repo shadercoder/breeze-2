@@ -2,6 +2,7 @@
 /* breeze Engine Entity System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM_SYNCHRONIZEDHOST
 #define BE_ENTITYSYSTEM_SYNCHRONIZEDHOST
 
@@ -32,9 +33,9 @@ public:
 	BE_ENTITYSYSTEM_API void Fetch();
 
 	/// Adds a synchronized controller.
-	BE_ENTITYSYSTEM_API void AddSynchronized(Synchronized *pSynchronized, uint4 flags);
+	BE_ENTITYSYSTEM_API void AddSynchronized(Synchronized *synchronized, uint4 flags);
 	/// Removes a synchronized controller.
-	BE_ENTITYSYSTEM_API void RemoveSynchronized(Synchronized *pSynchronized, uint4 flags);
+	BE_ENTITYSYSTEM_API void RemoveSynchronized(Synchronized *synchronized, uint4 flags);
 };
 
 } // namespace

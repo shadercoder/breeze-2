@@ -3,7 +3,7 @@
 
 #include "breezEd.h"
 
-#include <QtGui/QPlainTextEdit>
+#include <QtWidgets/QPlainTextEdit>
 #include "Utility/Checked.h"
 
 LEAN_INLINE bool isBreak(QChar ch)

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <QtUiCompileRulesPath>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</QtUiCompileRulesPath>
+    <!-- Set to high to enable, low to disable debug messages -->
+    <QtUiCompileDebugPriority>low</QtUiCompileDebugPriority>
+    <!-- Set to true to enable verbose debug messages, false otherwise -->
+    <QtUiCompileDebugVerbose>false</QtUiCompileDebugVerbose>
+    <!-- Set to true to disable command line echo -->
+    <QtUiCompileNoEcho>true</QtUiCompileNoEcho>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Include item type & build tool properties / build rule -->
+    <PropertyPageSchema Include="$(QtUiCompileRulesPath)" />
+    <!-- Make build tool / item type available & link to QtUiCompile build step / target -->
+    <AvailableItemName Include="QtUiCompile">
+      <Targets>QtUiCompile</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+
+  <!-- Construct command line task from build rule (provides automated command line construction from build rule properties) -->
+  <UsingTask TaskName="QtUiCompile" TaskFactory="XamlTaskFactory" AssemblyName="Microsoft.Build.Tasks.v4.0">
+    <Task>$(QtUiCompileRulesPath)</Task>
+  </UsingTask>
+
+  <!-- Indirection + DependsOnTargets allows _QtUiCompile to check for @(_QtUiCompileFiltered) rather than unfiltered @(QtUiCompile) -->
+  <Target Name="QtUiCompile" Condition="'@(QtUiCompile)' != ''"
+          DependsOnTargets="_QtUiCompileFilter;_QtUiCompile" BeforeTargets="ClCompile" />
+
+  <!-- Filter QtUi files stored in list '@(QtUiCompile)', removing unselected and excluded files -->
+  <Target Name="_QtUiCompileFilter" Condition="'@(QtUiCompile)' != ''"
+          DependsOnTargets="_SelectedFiles">
+
+    <Message Text="QtUiCompileFilter ..." Importance="$(QtUiCompileDebugPriority)" />
+
+    <!-- Debug messages printing a list of files to be compiled and files to be selected -->
+    <Message Text="QtUiCompileFilter has '@(QtUiCompile)'" Importance="$(QtUiCompileDebugPriority)" Condition="$(QtUiCompileDebugVerbose)" />
+    <Message Text="QtUiCompileFilter selects '@(SelectedFiles)'" Importance="$(QtUiCompileDebugPriority)" Condition="$(QtUiCompileDebugVerbose)" />
+
+    <!-- Remove all files that have been excluded -->
+    <ItemGroup>
+      <_QtUiCompileFiltered Include="@(QtUiCompile)" Condition="'%(QtUiCompile.ExcludedFromBuild)' != 'true'" />
+    </ItemGroup>
+    <!-- Remove all files that have not been selected, _iff any selected_ -->
+    <ItemGroup Condition="'@(SelectedFiles)' != ''">
+      <!-- WARNING: Only works in this EXACT form, using unqualified '%(Identity)' reference -->
+      <!-- Actually, cross products are not supported at all, for whatever happens here ... -->
+      <_QtUiCompileFiltered Remove="@(_QtUiCompileFiltered)" Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+
+    <!-- Debug message printing files to be compiled after filtering  -->
+    <Message Text="QtUiCompileFilter now has '@(_QtUiCompileFiltered)'" Importance="$(QtUiCompileDebugPriority)" Condition="$(QtUiCompileDebugVerbose)" />
+  </Target>
+
+  <!-- Execute QtUi compiler for all QtUi files to be compiled -->
+  <Target Name="_QtUiCompile"
+          DependsOnTargets="_QtUiCompileFilter"
+          Inputs="@(_QtUiCompileFiltered);$(MSBuildProjectFile)"
+          Outputs="@(_QtUiCompileFiltered->'%(CompilerOutput)')">
+
+    <!-- Compile QtUi files -->
+    <Message Text="QtUiCompile ..." Importance="$(QtUiCompileDebugPriority)" />
+
+    <!-- Notify that compilation is starting -->
+    <Message Text="Compiling: %(_QtUiCompileFiltered.Filename)%(_QtUiCompileFiltered.Extension) using UIC" Importance="high" />
+
+    <!-- Call imported build-rule-based command line task -->
+    <!-- CommandLineTemplate supports [AllOptions], command line construction follows the build rule property specifications -->
+    <QtUiCompile
+      CommandLineTemplate="&quot;%(_QtUiCompileFiltered.UICPath)&quot; [AllOptions] [AdditionalOptions] &quot;%(_QtUiCompileFiltered.FullPath)&quot;"
+      CompilerOutput="%(_QtUiCompileFiltered.CompilerOutput)"
+      AdditionalOptions="%(_QtUiCompileFiltered.AdditionalOptions)"
+      StandardOutputImportance="High"
+      StandardErrorImportance="High"
+      EchoOff="$(QtUiCompileNoEcho)" />
+    <!-- / Compile QtUi files -->
+  </Target>
+
+  <Target Name="QtUiClean" AfterTargets="Clean">
+    <Delete Files="@(QtUiCompile->'%(CompilerOutput)')" />
+  </Target>
+
+</Project>

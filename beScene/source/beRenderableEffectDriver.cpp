@@ -30,74 +30,44 @@ RenderableEffectDriver::~RenderableEffectDriver()
 {
 }
 
-// Applies the given renderable & perspective data to the effect bound by this effect driver.
-bool RenderableEffectDriver::Apply(const RenderableEffectData *pRenderableData, const Perspective &perspective,
-		AbstractRenderableDriverState &abstractState, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
+// Draws the given pass.
+void RenderableEffectDriver::Render(const QueuedPass *pass_, const RenderableEffectData *pRenderableData, const Perspective &perspective,
+		lean::vcallable<DrawJobSignature> &drawJob, beGraphics::StateManager &stateManager_, const beGraphics::DeviceContext &context) const
 {
-	// Initialize state
-	new (abstractState.Data) RenderableDriverState();
+	const PipelineEffectBinderPass* pass = static_cast<const PipelineEffectBinderPass*>(pass_);
+	beGraphics::Any::StateManager &stateManager = ToImpl(stateManager_);
+	ID3D11DeviceContext *contextDX = ToImpl(context);
 
-	return m_renderableBinder.Apply(pRenderableData, perspective, ToImpl(stateManager), ToImpl(context));
-}
+	// Prepare
+	m_renderableBinder.Apply(pRenderableData, perspective, stateManager, contextDX);
 
-// Applies the given pass to the effect bound by this effect driver.
-bool RenderableEffectDriver::ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
-		const RenderableEffectData *pRenderableData, const Perspective &perspective,
-		const LightJob *lights, const LightJob *lightsEnd,
-		AbstractRenderableDriverState &abstractState,
-		beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
-{
-	const PipelineEffectBinderPass* pPipelinePass = static_cast<const PipelineEffectBinderPass*>(pPass);
-	RenderableDriverState &state = ToRenderableDriverState<RenderableDriverState>(abstractState);
-	beGraphics::Any::StateManager &stateManagerDX11 = ToImpl(stateManager);
-	ID3D11DeviceContext *pContextDX = ToImpl(context);
+	LightingBinderState lightState;
 
-	uint4 step;
-	const StateEffectBinderPass *pStatePass;
-
-	while (step = nextStep++, pStatePass = pPipelinePass->GetPass(step))
+	// Render passes
+	for (uint4 step = 0, nextStep; const StateEffectBinderPass *statePass = statePass = pass->GetPass(step); step = nextStep)
 	{
-		uint4 passID = pStatePass->GetPassID(), nextPassID = passID;
+		nextStep = step + 1;
+
+		uint4 passID = statePass->GetPassID();
+		uint4 nextPassID = passID;
 
 		// Skip invalid light passes
-		if (m_lightBinder.Apply(nextPassID, lights, lightsEnd, state.Light, pContextDX))
+		if (m_lightBinder.Apply(nextPassID, nullptr, nullptr, lightState, contextDX))
 		{
 			// Repeat this step, if suggested by the light effect binder
 			if (nextPassID == passID)
-				--nextStep;
+				nextStep = step;
 
-			state.PassID = passID;
-			return pPipelinePass->Apply(step, stateManagerDX11, pContextDX);
+			if (statePass->Apply(stateManager, contextDX))
+				drawJob(passID, stateManager, context);
 		}
 	}
-
-	return false;
-}
-
-// Draws the given number of primitives.
-void RenderableEffectDriver::DrawIndexed(uint4 indexCount, uint4 startIndex, int4 baseVertex,
-		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
-{
-	ToImpl(context)->DrawIndexed(indexCount, startIndex, baseVertex);
-}
-
-// Draws the given number of primitives and instances.
-void RenderableEffectDriver::DrawIndexedInstanced(uint4 indexCount, uint4 instanceCount, uint4 startIndex, uint4 startInstance, int4 baseVertex,
-		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const
-{
-	ToImpl(context)->DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance);
-}
-
-// Gets the number of passes.
-uint4 RenderableEffectDriver::GetPassCount() const
-{
-	return m_pipelineBinder.GetPassCount();
 }
 
 // Gets the pass identified by the given ID.
-const PipelineEffectBinderPass* RenderableEffectDriver::GetPass(uint4 passID) const
+RenderableEffectDriver::PassRange RenderableEffectDriver::GetPasses() const
 {
-	return m_pipelineBinder.GetPass(passID);
+	return lean::static_range_cast<RenderableEffectDriver::PassRange>( ToSTD(m_pipelineBinder.GetPasses()) );
 }
 
 } // namespace

@@ -2,7 +2,7 @@
 #include "Widgets/ComponentPicker.h"
 
 // Constructor.
-ComponentPicker::ComponentPicker(QWidget *pParent, Qt::WFlags flags)
+ComponentPicker::ComponentPicker(QWidget *pParent, Qt::WindowFlags flags)
 	: QWidget(pParent, flags)
 {
 }

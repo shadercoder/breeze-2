@@ -21,7 +21,7 @@ class beCore::Job::Impl : private beCore::Task
 {
 private:
 	Job *m_pJob;
-	JobType::t m_type;
+	JobType::T m_type;
 	
 	Impl *m_pParent;
 	Impl *m_pNextSibling;
@@ -64,7 +64,7 @@ private:
 
 public:
 	/// Initializes synchronization primitives.
-	Impl(Job *pJob, JobType::t type);
+	Impl(Job *pJob, JobType::T type);
 
 	/// Adds a child job. This method is thread-safe.
 	bool AddJob(Job *pJob);
@@ -75,11 +75,11 @@ public:
 	/// Gets the current thread pool.
 	LEAN_INLINE ThreadPool* GetThreadPool() const { return m_pPool; }
 	/// Gets the job type.
-	LEAN_INLINE JobType::t GetType() const { return m_type; }
+	LEAN_INLINE JobType::T GetType() const { return m_type; }
 };
 
 // Constructs an empty job.
-beCore::Job::Job(JobType::t type)
+beCore::Job::Job(JobType::T type)
 	: m_impl( new Impl(this, type) )
 {
 }
@@ -102,13 +102,13 @@ bool beCore::Job::AddJob(Job *pJob)
 }
 
 // Gets the job type.
-beCore::JobType::t beCore::Job::GetType() const
+beCore::JobType::T beCore::Job::GetType() const
 {
 	return m_impl->GetType();
 }
 
 // Initializes synchronization primitives.
-beCore::Job::Impl::Impl(Job *pJob, JobType::t type)
+beCore::Job::Impl::Impl(Job *pJob, JobType::T type)
 		: m_pJob(pJob),
 		m_type(type),
 		
@@ -227,7 +227,7 @@ LEAN_INLINE bool beCore::Job::Impl::AddChild(Impl *pJobImpl)
 
 	{
 		// Hold the lock until the parent relation has been set
-		lean::scoped_sl_lock runLockGuard(pJobImpl->m_runLock, lean::scoped_sl_lock::adopt_lock);
+		lean::scoped_sl_lock runLockGuard(pJobImpl->m_runLock, lean::smart::adopt_lock);
 
 		// Atomic, might erroneously be added to several jobs concurrently otherwise
 		if (!lean::atomic_test_and_set(pJobImpl->m_pParent, nullptr, this))

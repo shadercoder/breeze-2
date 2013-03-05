@@ -28,21 +28,21 @@ void AnimatedHost::Step(float timeStep)
 }
 
 // Adds an animated controller.
-void AnimatedHost::AddAnimated(Animated *pAnimated)
+void AnimatedHost::AddAnimated(Animated *animated)
 {
-	if (!pAnimated)
+	if (!animated)
 	{
-		LEAN_LOG_ERROR_MSG("pAnimated may not be nullptr");
+		LEAN_LOG_ERROR_MSG("animated may not be nullptr");
 		return;
 	}
 
-	m_animate.push_back(pAnimated);
+	lean::push_unique(m_animate, animated);
 }
 
 // Removes an animated controller.
-void AnimatedHost::RemoveAnimated(Animated *pAnimated)
+void AnimatedHost::RemoveAnimated(Animated *animated)
 {
-	lean::remove(m_animate, pAnimated);
+	lean::remove(m_animate, animated);
 }
 
 } // namespace

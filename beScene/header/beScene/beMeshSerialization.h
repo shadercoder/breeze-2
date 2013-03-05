@@ -2,11 +2,12 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_MESH_SERIALIZATION
 #define BE_SCENE_MESH_SERIALIZATION
 
 #include "beScene.h"
-#include "beMeshCompound.h"
+#include "beAssembledMesh.h"
 #include <lean/smart/resource_ptr.h>
 #include <beGraphics/beDevice.h>
 
@@ -14,7 +15,7 @@ namespace beScene
 {
 
 /// Mesh chunk IDs.
-namespace MeshDataChunk
+struct MeshDataChunk
 {
 	/// Enumeration.
 	enum T
@@ -31,7 +32,8 @@ namespace MeshDataChunk
 		Vertices = 0xD1D1,	///< Vertex data.
 		Indices = 0xD2D2	///< Index data.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(MeshDataChunk)
+};
 
 /// Mesh data chunk.
 struct MeshDataChunkHeader
@@ -49,7 +51,7 @@ struct MeshDataChunkHeader
 };
 
 /// Mesh vertex attributes.
-namespace MeshVertexAttributes
+struct MeshVertexAttributes
 {
 	/// Enumeration
 	enum T
@@ -69,7 +71,8 @@ namespace MeshVertexAttributes
 		BiTangentFrame = Normal | BiTangent | Handedness,	///< Normal-bi-tangent frame.
 		FullFrame = Normal | Tangent | BiTangent			///< Full normal-tangent-bi-tangent frame.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(MeshVertexAttributes)
+};
 
 /// Vertex element description.
 struct MeshDataVertexElementDesc
@@ -88,14 +91,15 @@ struct MeshDataVertexElementDesc
 };
 
 /// Mesh index flags.
-namespace MeshIndexFlags
+struct MeshIndexFlags
 {
 	/// Enumeration
 	enum T
 	{
 		WideIndex= 1 << 0	///< Wide indices.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(MeshIndexFlags)
+};
 
 /// Index description.
 struct MesDataIndexDesc
@@ -104,9 +108,9 @@ struct MesDataIndexDesc
 };
 
 /// Loads a mesh compound from the given file.
-BE_SCENE_API lean::resource_ptr<MeshCompound, true> LoadMeshes(const utf8_ntri &file, const beGraphics::Device &device, MeshCache *pCache = nullptr);
+BE_SCENE_API lean::resource_ptr<AssembledMesh, true> LoadMeshes(const utf8_ntri &file, beGraphics::Device &device);
 /// Loads a mesh compound from the given memory.
-BE_SCENE_API lean::resource_ptr<MeshCompound, true> LoadMeshes(const char *data, uint8 dataLength, const beGraphics::Device &device, MeshCache *pCache = nullptr);
+BE_SCENE_API lean::resource_ptr<AssembledMesh, true> LoadMeshes(const char *data, uint8 dataLength, beGraphics::Device &device);
 
 } // namespace
 

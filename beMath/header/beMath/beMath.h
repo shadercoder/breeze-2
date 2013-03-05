@@ -2,6 +2,7 @@
 /* breeze Engine Math Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_MATH
 #define BE_MATH
 
@@ -74,10 +75,6 @@ namespace beMath
 	using namespace lean::types;
 	LEAN_REIMPORT_NUMERIC_TYPES;
 
-	// Import important functions
-	using lean::min;
-	using lean::max;
-
 	/// Allows for the creation of uninitialized objects.
 	enum uninitialized_t
 	{
@@ -91,8 +88,13 @@ namespace beMath
 /// Shorthand namespace.
 namespace breeze
 {
-	/// Math namespace alias.
+#ifndef DOXYGEN_READ_THIS
+	/// beMath namespace alias.
 	namespace bem = ::beMath;
+#else
+	/// beMath namespace alias.
+	namespace bem { using namespace ::beMath; }
+#endif
 }
 
 /// @}

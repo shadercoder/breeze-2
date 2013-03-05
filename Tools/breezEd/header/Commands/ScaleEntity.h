@@ -1,9 +1,9 @@
 #ifndef SCALEENTITYCOMMAND_H
 #define SCALEENTITYCOMMAND_H
 
-#include <QtGui/QUndoCommand>
+#include <QtWidgets/QUndoCommand>
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 #include <vector>
 
 class SceneDocument;
@@ -54,10 +54,6 @@ public:
 private:
 	entity_vector m_entities;
 
-protected:
-	ScaleEntityCommand(const ScaleEntityCommand&) { }
-	ScaleEntityCommand& operator =(const ScaleEntityCommand&) { return *this; }
-
 public:
 	/// Constructor.
 	ScaleEntityCommand(const QVector<beEntitySystem::Entity*> &entities, QUndoCommand *pParent = nullptr);
@@ -70,7 +66,7 @@ public:
 	/// Resets the entities' transformation.
 	void undo();
 	/// Applies entities' the new transformation.
-    void redo();
+	void redo();
 };
 
 #endif

@@ -71,7 +71,7 @@ struct PipeEffectBinder::Pass
 };
 
 /// Target type enumeration.
-namespace TargetType
+struct TargetType
 {
 	/// Enumeration
 	enum T
@@ -82,7 +82,8 @@ namespace TargetType
 		Permanent,	///< (Frame-)Permanent target.
 		Persistent	///< Persistent target.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(TargetType)
+};
 
 /// Target.
 struct PipeEffectBinder::Target

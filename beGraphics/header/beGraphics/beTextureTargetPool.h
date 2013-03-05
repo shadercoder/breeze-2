@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_TEXTURE_TARGET_POOL
 #define BE_GRAPHICS_TEXTURE_TARGET_POOL
 
@@ -16,13 +17,14 @@ namespace beGraphics
 {
 
 /// Texture target flags enumeration.
-namespace TextureTargetFlags
+struct TextureTargetFlags
 {
 	enum T
 	{
 		AutoGenMipMaps = (uint4(1) << 31)	///< Use built-in mip map generation.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(TextureTargetFlags)
+};
 
 /// Texture target description.
 struct TextureTargetDesc

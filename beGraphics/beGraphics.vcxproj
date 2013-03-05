@@ -62,6 +62,7 @@
     <Import Project="..\global\DirectX.Effects11.Cpp.Win32.user.props" />
     <Import Project="..\global\Boost.Cpp.Win32.user.props" />
     <Import Project="..\global\DirectX.Tex.Cpp.Win32.user.props" />
+    <Import Project="..\global\DirectX.Effects11Lite.Cpp.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -72,6 +73,7 @@
     <Import Project="..\global\DirectX.Effects11.Cpp.Win32.user.props" />
     <Import Project="..\global\Boost.Cpp.Win32.user.props" />
     <Import Project="..\global\DirectX.Tex.Cpp.Win32.user.props" />
+    <Import Project="..\global\DirectX.Effects11Lite.Cpp.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -82,6 +84,7 @@
     <Import Project="..\global\DirectX.Effects11.Cpp.Win32.user.props" />
     <Import Project="..\global\Boost.Cpp.Win32.user.props" />
     <Import Project="..\global\DirectX.Tex.Cpp.Win32.user.props" />
+    <Import Project="..\global\DirectX.Effects11Lite.Cpp.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -92,6 +95,7 @@
     <Import Project="..\global\DirectX.Effects11.Cpp.Win32.user.props" />
     <Import Project="..\global\Boost.Cpp.Win32.user.props" />
     <Import Project="..\global\DirectX.Tex.Cpp.Win32.user.props" />
+    <Import Project="..\global\DirectX.Effects11Lite.Cpp.Win32.user.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -117,11 +121,13 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BEGRAPHICS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>beGraphicsInternal/StdAfx.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Effects11_d.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex_d.lib;beCore_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Effects11Lite_d.lib;Effects11_d.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex_d.lib;beCore_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
@@ -140,7 +146,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Effects11_x64.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex_x64d.lib;beCore_x64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Effects11Lite_x64d.lib;Effects11_x64.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex_x64d.lib;beCore_x64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
@@ -163,7 +169,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Effects11.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex.lib;beCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Effects11Lite.lib;Effects11.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex.lib;beCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
@@ -186,7 +192,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Effects11_x64.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex_x64.lib;beCore_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Effects11Lite_x64.lib;Effects11_x64.lib;d3dcompiler.lib;dxgi.lib;d3d11.lib;DirectXTex_x64.lib;beCore_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"
@@ -209,10 +215,11 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beGraphics\Any\beGraphics.h" />
     <ClInclude Include="header\beGraphics\Any\beQuery.h" />
     <ClInclude Include="header\beGraphics\Any\beResourceViews.h" />
-    <ClInclude Include="header\beGraphics\Any\beSetup.h" />
+    <ClInclude Include="header\beGraphics\Any\beMaterial.h" />
     <ClInclude Include="header\beGraphics\Any\beState.h" />
     <ClInclude Include="header\beGraphics\Any\beStateManager.h" />
     <ClInclude Include="header\beGraphics\Any\beTexture.h" />
+    <ClInclude Include="header\beGraphics\Any\beTextureCache.h" />
     <ClInclude Include="header\beGraphics\Any\beTextureTargetPool.h" />
     <ClInclude Include="header\beGraphics\beBuffer.h" />
     <ClInclude Include="header\beGraphics\beDevice.h" />
@@ -222,11 +229,14 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beGraphics\beAdapters.h" />
     <ClInclude Include="header\beGraphics\beFormat.h" />
     <ClInclude Include="header\beGraphics\beGraphics.h" />
+    <ClInclude Include="header\beGraphics\beMaterial.h" />
+    <ClInclude Include="header\beGraphics\beMaterialCache.h" />
+    <ClInclude Include="header\beGraphics\beMaterialConfig.h" />
+    <ClInclude Include="header\beGraphics\beMaterialConfigCache.h" />
+    <ClInclude Include="header\beGraphics\beMaterialSerialization.h" />
     <ClInclude Include="header\beGraphics\beMemory.h" />
     <ClInclude Include="header\beGraphicsInternal\stdafx.h" />
     <ClInclude Include="header\beGraphicsInternal\targetver.h" />
-    <ClInclude Include="header\beGraphics\beSetup.h" />
-    <ClInclude Include="header\beGraphics\beSetupSerialization.h" />
     <ClInclude Include="header\beGraphics\beStateManager.h" />
     <ClInclude Include="header\beGraphics\beTexture.h" />
     <ClInclude Include="header\beGraphics\beTextureCache.h" />
@@ -240,11 +250,15 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beGraphics\DX11\beDevice.h" />
     <ClInclude Include="header\beGraphics\DX11\beEffectCache.h" />
     <ClInclude Include="header\beGraphics\DX11\beEffect.h" />
+    <ClInclude Include="header\beGraphics\DX11\beEffectConfig.h" />
     <ClInclude Include="header\beGraphics\DX11\beFormat.h" />
     <ClInclude Include="header\beGraphics\DX11\beGraphics.h" />
+    <ClInclude Include="header\beGraphics\DX11\beMaterial.h" />
+    <ClInclude Include="header\beGraphics\DX11\beMaterialCache.h" />
+    <ClInclude Include="header\beGraphics\DX11\beMaterialConfig.h" />
+    <ClInclude Include="header\beGraphics\DX11\beMaterialConfigCache.h" />
     <ClInclude Include="header\beGraphics\DX11\beQuery.h" />
     <ClInclude Include="header\beGraphics\DX11\beResourceViews.h" />
-    <ClInclude Include="header\beGraphics\DX11\beSetup.h" />
     <ClInclude Include="header\beGraphics\DX11\beState.h" />
     <ClInclude Include="header\beGraphics\DX11\beStateManager.h" />
     <ClInclude Include="header\beGraphics\DX11\beTextureCache.h" />
@@ -263,8 +277,8 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClCompile Include="source\beAdapters.cpp" />
     <ClCompile Include="source\beEffectCache.cpp" />
     <ClCompile Include="source\beGraphics.cpp" />
-    <ClCompile Include="source\beSetup.cpp" />
-    <ClCompile Include="source\beSetupSerialization.cpp" />
+    <ClCompile Include="source\beMaterial.cpp" />
+    <ClCompile Include="source\beMaterialSerialization.cpp" />
     <ClCompile Include="source\beTextureProvider.cpp" />
     <ClCompile Include="source\dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -286,9 +300,13 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClCompile Include="source\DX11\beDeviceContext.cpp" />
     <ClCompile Include="source\DX11\beEffectCache.cpp" />
     <ClCompile Include="source\DX11\beEffect.cpp" />
+    <ClCompile Include="source\DX11\beEffectConfig.cpp" />
+    <ClCompile Include="source\DX11\beMaterial.cpp" />
+    <ClCompile Include="source\DX11\beMaterialCache.cpp" />
+    <ClCompile Include="source\DX11\beMaterialConfig.cpp" />
+    <ClCompile Include="source\DX11\beMaterialConfigCache.cpp" />
     <ClCompile Include="source\DX11\beQuery.cpp" />
     <ClCompile Include="source\DX11\beResourceViews.cpp" />
-    <ClCompile Include="source\DX11\beSetup.cpp" />
     <ClCompile Include="source\DX11\beState.cpp" />
     <ClCompile Include="source\DX11\beStateManager.cpp" />
     <ClCompile Include="source\DX11\beTextureCache.cpp" />

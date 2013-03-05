@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_SCENE_PX
 #define BE_PHYSICS_SCENE_PX
 
@@ -31,6 +32,7 @@ inline physx::PxSceneDesc ToAPI(const SceneDesc &desc, const physx::PxTolerances
 	physx::pxtask::GpuDispatcher *pDefaultGPUDispatcher = nullptr)
 {
 	physx::PxSceneDesc descPX(scale);
+	descPX.flags |= physx::PxSceneFlag::eENABLE_ACTIVETRANSFORMS;
 	descPX.gravity = ToAPI(desc.Gravity);
 	descPX.bounceThresholdVelocity = desc.BounceThresholdSpeed;
 	descPX.contactCorrelationDistance = desc.ContactCorrelationDist;

@@ -5,9 +5,11 @@
 #include "beEntitySystemInternal/stdafx.h"
 #include "beEntitySystem/beEntityGroup.h"
 #include "beEntitySystem/beAsset.h"
+#include "beEntitySystem/beEntities.h"
 
-#include "beEntitySystem/beEntitySerialization.h"
+#include "beEntitySystem/beSerialization.h"
 #include "beEntitySystem/beSerializationTasks.h"
+#include "beEntitySystem/beEntitySerialization.h"
 
 #include <lean/xml/xml_file.h>
 #include <lean/xml/utility.h>
@@ -58,7 +60,7 @@ void LoadResources(const rapidxml::xml_node<lean::utf8_t> &parentNode, beCore::P
 }
 
 // Loads entities and resources from the given xml node.
-void LoadAsset(EntityGroup &group, const rapidxml::xml_node<lean::utf8_t> &parentNode, beCore::ParameterSet &parameters)
+void LoadAsset(Entities *entities, EntityGroup &group, const rapidxml::xml_node<lean::utf8_t> &parentNode, beCore::ParameterSet &parameters)
 {
 	// Load resources first
 	LoadResources(parentNode, parameters);
@@ -70,25 +72,25 @@ void LoadAsset(EntityGroup &group, const rapidxml::xml_node<lean::utf8_t> &paren
 		GroupInserter(EntityGroup &group)
 			: group(&group) { }
 		
-		void GrowEntities(uint4 count) { }
+		void Reserve(uint4 count) { }
 
-		void AddEntity(Entity *pEntity)
+		void Add(Entity *pEntity)
 		{
 			group->AddEntity(pEntity);
 		}
 	} inserter(group);
 
-	LoadEntities(inserter, parentNode, parameters);
+	LoadEntities(entities, parentNode, parameters, nullptr, &inserter);
 }
 
 // Loads entities and resources from the given xml node.
-void LoadAsset(EntityGroup &group, const utf8_ntri &file, beCore::ParameterSet &parameters)
+void LoadAsset(Entities *entities, EntityGroup &group, const utf8_ntri &file, beCore::ParameterSet &parameters)
 {
 	lean::xml_file<lean::utf8_t> xml(file);
 	rapidxml::xml_node<lean::utf8_t> *root = xml.document().first_node();
 
 	if (root)
-		LoadAsset(group, *root, parameters);
+		LoadAsset(entities, group, *root, parameters);
 	else
 		LEAN_THROW_ERROR_CTX("No asset root found", file.c_str());
 }

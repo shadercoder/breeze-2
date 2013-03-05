@@ -4,6 +4,7 @@
 #include <Engine/Renderable.fx>
 #include <Engine/SpotLight.fx>
 #include <Pipelines/LPR/Scene.fx>
+#include <Pipelines/LPR/Geometry.fx>
 
 cbuffer Light0
 {
@@ -54,8 +55,12 @@ float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 {
 	float2 texCoord = p.ScreenSpace.xy / p.ScreenSpace.w;
 
-	float4 eyeGeometry = SceneGeometryTexture.SampleLevel(DefaultSampler, texCoord, 0);
-	float4 diffuseColor = SceneDiffuseTexture.SampleLevel(DefaultSampler, texCoord, 0);
+	float4 eyeGeometry = SceneGeometryTexture[p.Position.xy];
+	GBufferDiffuse gbDiffuse = ExtractDiffuse( SceneDiffuseTexture[p.Position.xy] );
+	GBufferSpecular gbSpecular = ExtractSpecular( SceneSpecularTexture[p.Position.xy] );
+	
+	float3 diffuseColor = gbDiffuse.Color;
+	float3 specularColor = gbSpecular.Color;
 
 	float3 world = Perspective.CamPos.xyz + p.CamDir * eyeGeometry.x / dot(p.CamDir, Perspective.CamDir.xyz);
 

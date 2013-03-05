@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_TEXTURE_PROVIDER
 #define BE_GRAPHICS_TEXTURE_PROVIDER
 

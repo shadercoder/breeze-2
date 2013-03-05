@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_RIGIDACTORS_PX
 #define BE_PHYSICS_RIGIDACTORS_PX
 
@@ -28,6 +29,8 @@ BE_PHYSICS_PX_API physx::PxRigidStatic* CreateRigidStatic(physx::PxPhysics &phys
 /// Adds the given shape.
 BE_PHYSICS_PX_API void AddShape(physx::PxRigidActor &actor,
 	const physx::PxGeometry &shape, const physx::PxMaterial *material, const physx::PxTransform &transform);
+// Clears all shapes, returning the remaining shape if all cannot be cleared.
+BE_PHYSICS_PX_API physx::PxShape* ClearShapes(physx::PxRigidActor &actor);
 
 /// Sets the given mass.
 BE_PHYSICS_PX_API void SetMass(physx::PxRigidBody &actor, float mass);
@@ -114,11 +117,6 @@ public:
 };
 
 template <> struct ToImplementationPX<bePhysics::RigidStatic> { typedef RigidStatic Type; };
-
-class ShapeCompound;
-
-/// Adds all shapes in the given shape compound to the given actor.
-BE_PHYSICS_PX_API void CreateShapesFromCompound(physx::PxRigidActor &actor, const ShapeCompound &compound);
 
 } // namespace
 

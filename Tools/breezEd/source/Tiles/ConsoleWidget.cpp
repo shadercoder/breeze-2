@@ -2,11 +2,15 @@
 #include "Tiles/ConsoleWidget.h"
 
 #include "Windows/MainWindow.h"
+#include "Docking/DockContainer.h"
 
+#include <lean/smart/scoped_ptr.h>
+
+#include "Utility/IconDockStyle.h"
 #include "Utility/Checked.h"
 
 // Constructor.
-ConsoleWidget::ConsoleWidget(Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+ConsoleWidget::ConsoleWidget(Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: QWidget(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) )
 {
@@ -39,20 +43,27 @@ void ConsoleWidget::writeLine(const QString &msg)
 }
 
 // Adds the console widget to the given main window.
-ConsoleWidget* addConsoleWidget(MainWindow &mainWindow, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+ConsoleWidget* addConsoleWidget(MainWindow &mainWindow, Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 {
-	QDockWidget *pDock = new QDockWidget(&mainWindow);
-	pDock->setObjectName("ConsoleWidget");
+/*	lean::scoped_ptr<QDockWidget> dock( new QDockWidget(&mainWindow) );
+	dock->setObjectName("ConsoleWidget");
+	dock->setStyle( new IconDockStyle(dock, dock->style()) );
+*/
+	lean::scoped_ptr<ConsoleWidget> widget( new ConsoleWidget(pEditor, pParent, flags) );
 	
-	ConsoleWidget *pConsole = new ConsoleWidget(pEditor, (pParent) ? pParent : pDock, flags);
-	pDock->setWidget(pConsole);
-	pDock->setWindowTitle(pConsole->windowTitle());
-	pDock->setWindowIcon(pDock->widget()->windowIcon());
-	
+/*	dock->setWidget(pConsole);
+	dock->setWindowTitle(pConsole->windowTitle());
+	dock->setWindowIcon(dock->widget()->windowIcon());
+*/	
 	// Visible by default
-	mainWindow.addDockWidget(Qt::BottomDockWidgetArea, pDock);
+//	mainWindow.addDockWidget(Qt::BottomDockWidgetArea, dock);
+	if (!pParent)
+	{
+		lean::scoped_ptr<DockWidget> dock( DockWidget::wrap(widget) );
+		mainWindow.dock()->addDock(dock, DockPlacement::Emplace, DockOrientation::Vertical);
+		QObject::connect(mainWindow.widgets().actionConsole, &QAction::triggered, dock, &DockWidget::showAndRaise);
+		dock.detach();
+	}
 
-	checkedConnect(mainWindow.widgets().actionConsole, SIGNAL(triggered()), pDock, SLOT(show()));
-
-	return pConsole;
+	return widget.detach();
 }

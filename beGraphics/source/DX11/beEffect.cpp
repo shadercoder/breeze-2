@@ -4,10 +4,17 @@
 
 #include "beGraphicsInternal/stdafx.h"
 #include "beGraphics/DX11/beEffect.h"
-#include <D3DCompiler.h>
+#include "beGraphics/DX11/beEffectConfig.h"
+#include "beGraphics/DX11/beTextureCache.h"
+
 #include "beGraphics/DX/beEffect.h"
 #include "beGraphics/DX/beIncludeManager.h"
 #include "beGraphics/DX/beError.h"
+
+#include "beGraphics/DX11/beEffectConfig.h"
+
+#include <D3DCompiler.h>
+
 #include <lean/logging/log.h>
 
 namespace beGraphics
@@ -244,30 +251,23 @@ lean::com_ptr<ID3DX11Effect, true> CreateEffect(const char *data, uint4 dataLeng
 }
 
 // Constructor.
-Effect::Effect(const char *data, uint4 dataLength, ID3D11Device *pDevice, beGraphics::EffectCache *pCache)
-	: m_pEffect( CreateEffect(data, dataLength, pDevice) ),
-	m_pCache(pCache)
+Effect::Effect(ID3DX11Effect *effect, beGraphics::TextureCache *pTextureCache)
+	: m_pEffect( effect )
 {
-}
+	LEAN_ASSERT(effect != nullptr);
 
-// Constructor.
-Effect::Effect(ID3DBlob *pBlob, ID3D11Device *pDevice, beGraphics::EffectCache *pCache)
-	: m_pEffect( CreateEffect(pBlob, pDevice) ),
-	m_pCache(pCache)
-{
-}
-
-// Constructor.
-Effect::Effect(ID3DX11Effect *pEffect, beGraphics::EffectCache *pCache)
-	: m_pEffect(pEffect),
-	m_pCache(pCache)
-{
-	LEAN_ASSERT(m_pEffect != nullptr);
+	m_pConfig = new_resource EffectConfig(this, ToImpl(pTextureCache));
 }
 
 // Destructor.
 Effect::~Effect()
 {
+}
+
+// Sets the default configuration.
+void Effect::SetConfig(EffectConfig *config)
+{
+	m_pConfig = config;
 }
 
 } // namespace

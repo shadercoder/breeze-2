@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_TEXTURE_DX11
 #define BE_GRAPHICS_TEXTURE_DX11
 
@@ -13,11 +14,15 @@
 #include <lean/tags/noncopyable.h>
 #include <lean/smart/resource_ptr.h>
 
+BE_CORE_DEFINE_QUALIFIED_HANDLE(beGraphics::TextureView, ID3D11ShaderResourceView, beCore::IntransitiveWrapper);
+
 namespace beGraphics
 {
 
 namespace DX11
 {
+
+class Texture;
 
 /// Creates a texture from the given description.
 BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Texture1D, true> CreateTexture(const D3D11_TEXTURE1D_DESC &desc,
@@ -70,7 +75,7 @@ BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Resource, true> LoadTexture(ID3D11Devic
 BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11Resource, true> LoadTexture(ID3D11Device *device, const char *data, uint4 dataLength, const TextureDesc *pDesc = nullptr, bool bSRGB = false);
 
 /// Creates a texture from the given texture resource.
-BE_GRAPHICS_DX11_API lean::resource_ptr<Texture, true> CreateTexture(ID3D11Resource *pTextureResource, beGraphics::TextureCache *pCache = nullptr);
+BE_GRAPHICS_DX11_API lean::resource_ptr<Texture, true> CreateTexture(ID3D11Resource *pTextureResource);
 
 /// Gets a description of the given texture.
 BE_GRAPHICS_DX11_API TextureDesc GetDesc(ID3D11Texture1D *pTexture);
@@ -92,24 +97,13 @@ BE_GRAPHICS_DX11_API bool DebugFetchTextureData(ID3D11DeviceContext *context, ID
 BE_GRAPHICS_DX11_API bool DebugFetchTextureData(ID3D11DeviceContext *context, ID3D11Texture3D *texture, void *bytes, uint4 rowByteCount, uint4 rowCount, uint4 sliceCount, uint4 subResource = 0);
 
 /// Texture implementation.
-class Texture : public beGraphics::Texture
+class LEAN_INTERFACE Texture : public beGraphics::Texture
 {
-private:
-	beGraphics::TextureCache *m_pCache;
-
-protected:
-	LEAN_INLINE Texture& operator =(const Texture&) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(Texture)
 
 public:
-	/// Constructor.
-	Texture(beGraphics::TextureCache *pCache)
-		: m_pCache(pCache) { }
-
 	/// Gets the stored texture's resource interface.
 	virtual ID3D11Resource* GetResource() const = 0;
-
-	/// Gets the texture cache.
-	LEAN_INLINE beGraphics::TextureCache* GetCache() const { return m_pCache; }
 
 	/// Gets the implementation identifier.
 	LEAN_INLINE ImplementationID GetImplementationID() const { return DX11Implementation; }
@@ -166,9 +160,9 @@ private:
 
 public:
 	/// Constructor.
-	BE_GRAPHICS_DX11_API TypedTexture(const DescType &desc, const D3D11_SUBRESOURCE_DATA *pInitialData, ID3D11Device *pDevice, beGraphics::TextureCache *pCache = nullptr);
+	BE_GRAPHICS_DX11_API TypedTexture(const DescType &desc, const D3D11_SUBRESOURCE_DATA *pInitialData, ID3D11Device *pDevice);
 	/// Constructor.
-	BE_GRAPHICS_DX11_API TypedTexture(InterfaceType *pBuffer, beGraphics::TextureCache *pCache = nullptr);
+	BE_GRAPHICS_DX11_API TypedTexture(InterfaceType *pBuffer);
 	/// Destructor.
 	BE_GRAPHICS_DX11_API ~TypedTexture();
 
@@ -219,13 +213,11 @@ class TextureView
 private:
 	lean::com_ptr<ID3D11ShaderResourceView> m_pTexture;
 
-	beGraphics::TextureCache *m_pCache;
-
 public:
 	/// Constructor.
-	BE_GRAPHICS_DX11_API TextureView(ID3D11Resource *pTexture, const D3D11_SHADER_RESOURCE_VIEW_DESC *pDesc, ID3D11Device *pDevice, beGraphics::TextureCache *pCache = nullptr);
+	BE_GRAPHICS_DX11_API TextureView(ID3D11Resource *pTexture, const D3D11_SHADER_RESOURCE_VIEW_DESC *pDesc, ID3D11Device *pDevice);
 	/// Constructor.
-	BE_GRAPHICS_DX11_API TextureView(ID3D11ShaderResourceView *pView, beGraphics::TextureCache *pCache = nullptr);
+	BE_GRAPHICS_DX11_API TextureView(ID3D11ShaderResourceView *pView);
 	/// Destructor.
 	BE_GRAPHICS_DX11_API ~TextureView();
 
@@ -247,9 +239,6 @@ public:
 	LEAN_INLINE ID3D11ShaderResourceView*const& GetInterface() const { return m_pTexture.get(); }
 	/// Gets the D3D texture.
 	LEAN_INLINE ID3D11ShaderResourceView*const& GetView() const { return m_pTexture.get(); }
-
-	/// Gets the texture cache.
-	LEAN_INLINE beGraphics::TextureCache* GetCache() const { return m_pCache; }
 
 	/// Gets the implementation identifier.
 	LEAN_INLINE ImplementationID GetImplementationID() const { return DX11Implementation; }
@@ -339,12 +328,10 @@ LEAN_INLINE typename lean::strip_modifiers<Tex>::template undo< TypedTexture<Typ
 }
 
 /// Texture view handle.
-typedef beCore::QualifiedHandle<beGraphics::TextureView> QualifiedTextureViewHandle;
+typedef beCore::QualifiedHandle<beGraphics::TextureView> TextureViewHandle;
 
 } // namespace
 
 } // namespace
-
-BE_CORE_DEFINE_QUALIFIED_HANDLE(beGraphics::TextureView, ID3D11ShaderResourceView, beCore::IntransitiveWrapper);
 
 #endif

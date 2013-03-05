@@ -1,4 +1,4 @@
 #define NOCOLORMAP
 #define NORMALMAP
 
-#include "Materials/Textured.fx"
+#hookincl "Materials/Textured.fx" ...

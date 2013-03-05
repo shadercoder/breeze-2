@@ -77,8 +77,6 @@ public:
 
 	/// Adds the given observer to be called when the given file has been modified.
 	bool AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver);
-	/// Adds the given observer, iff it hasn't been added yet.
-	bool AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver);
 	/// Removes the given observer, no longer to be called when the given file is modified.
 	void RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObserver);
 
@@ -230,15 +228,6 @@ bool FileWatch::AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver
 	return GetDirectory(*m, directory)->second->AddObserver(canonicalFile, pObserver);
 }
 
-// Adds the given observer, iff it hasn't been added yet.
-bool FileWatch::AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
-{
-	lean::utf8_string canonicalFile = lean::absolute_path<lean::utf8_string>(file);
-	lean::utf8_string directory = lean::get_directory<lean::utf8_string>(canonicalFile);
-
-	return GetDirectory(*m, directory)->second->AddOrKeepObserver(canonicalFile, pObserver);
-}
-
 // Removes the given observer no longer to be called when the given file is modified.
 void FileWatch::RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
 {
@@ -348,6 +337,9 @@ void ObservationThread(FileWatch::M &m)
 
 				LEAN_ASSERT(directory);
 
+				// MONITOR: HACK: TODO: Ugly way to avoid write conflicts ...
+				Sleep(500);
+
 				// Update files or directories
 				if (events[dwSignal - WAIT_OBJECT_0] == directory->GetFileChangeNotification())
 					directory->FilesChanged();
@@ -391,35 +383,23 @@ bool Directory::AddObserver(const lean::utf8_ntri &file, FileObserver *pObserver
 		return false;
 	}
 
-	// Do not modify observers while processing changed notifications
-	lean::scoped_cs_lock lock(m_observerLock);
-
-	m_fileObservers.insert( file_observer_map::value_type(
-		lean::get_filename<lean::utf8_string>(file),
-		FileObserverInfo(file, GetRevision(file), pObserver) ) );
-
-	FileObserverAdded();
-	return true;
-}
-
-// Adds the given observer, iff it hasn't been added yet.
-bool Directory::AddOrKeepObserver(const lean::utf8_ntri &file, FileObserver *pObserver)
-{
 	lean::utf8_string fileName = lean::get_filename<lean::utf8_string>(file);
 
 	// Do not modify observers while processing changed notifications
 	lean::scoped_cs_lock lock(m_observerLock);
 
-	const file_observer_map::iterator itObserverInfoEnd = m_fileObservers.upper_bound(fileName);
-
-	for (file_observer_map::iterator itObserverInfo = m_fileObservers.lower_bound(fileName);
-		itObserverInfo != itObserverInfoEnd; ++itObserverInfo)
+	for (file_observer_map::iterator it = m_fileObservers.lower_bound(fileName), itEnd = m_fileObservers.upper_bound(fileName); it != itEnd; ++it)
 		// Keep matching observer
-		if (itObserverInfo->second.pObserver == pObserver)
+		if (it->second.pObserver == pObserver)
 			return true; 
 
-	// Add observer, if not found
-	return AddObserver(file, pObserver);
+	m_fileObservers.insert( file_observer_map::value_type(
+			fileName,
+			FileObserverInfo(file, GetRevision(file), pObserver)
+		) );
+
+	FileObserverAdded();
+	return true;
 }
 
 // Removes the given observer no longer to be called when the given file is modified.
@@ -432,11 +412,10 @@ void Directory::RemoveObserver(const lean::utf8_ntri &file, FileObserver *pObser
 
 	const file_observer_map::iterator itObserverInfoEnd = m_fileObservers.upper_bound(fileName);
 
-	for (file_observer_map::iterator itObserverInfo = m_fileObservers.lower_bound(fileName);
-		itObserverInfo != itObserverInfoEnd; ++itObserverInfo)
+	for (file_observer_map::iterator it = m_fileObservers.lower_bound(fileName), itEnd = m_fileObservers.upper_bound(fileName); it != itEnd; ++it)
 		// Erase ALL matching observation entries
-		if (itObserverInfo->second.pObserver == pObserver)
-			m_fileObservers.erase(itObserverInfo);
+		if (it->second.pObserver == pObserver)
+			m_fileObservers.erase(it);
 }
 
 // Adds the given observer to be called when this directory has been modified.

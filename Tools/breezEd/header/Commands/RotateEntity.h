@@ -1,9 +1,9 @@
 #ifndef ROTATEENTITYCOMMAND_H
 #define ROTATEENTITYCOMMAND_H
 
-#include <QtGui/QUndoCommand>
+#include <QtWidgets/QUndoCommand>
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 #include <vector>
 
 class SceneDocument;
@@ -54,10 +54,6 @@ public:
 
 private:
 	entity_vector m_entities;
-
-protected:
-	RotateEntityCommand(const RotateEntityCommand&) { }
-	RotateEntityCommand& operator =(const RotateEntityCommand&) { return *this; }
 
 public:
 	/// Constructor.

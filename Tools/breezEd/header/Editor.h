@@ -34,24 +34,24 @@ public:
 	void newLine();
 
 	/// Gets the settings.
-	LEAN_INLINE QSettings* settings() { return m_pSettings; };
+	LEAN_INLINE QSettings* settings() { return m_pSettings.get(); };
 	/// Gets the settings.
-	LEAN_INLINE const QSettings* settings() const { return m_pSettings; };
+	LEAN_INLINE const QSettings* settings() const { return m_pSettings.get(); };
 	
 	/// Gets the document manager.
-	LEAN_INLINE DocumentManager* documentManager() { return m_pDocumentManager; };
+	LEAN_INLINE DocumentManager* documentManager() { return m_pDocumentManager.get(); };
 	/// Gets the document manager.
-	LEAN_INLINE const DocumentManager* documentManager() const { return m_pDocumentManager; };
+	LEAN_INLINE const DocumentManager* documentManager() const { return m_pDocumentManager.get(); };
 
 	/// Gets the main window.
-	LEAN_INLINE MainWindow* mainWindow() { return m_pMainWindow; };
+	LEAN_INLINE MainWindow* mainWindow() { return m_pMainWindow.get(); };
 	/// Gets the main window.
-	LEAN_INLINE const MainWindow* mainWindow() const { return m_pMainWindow; };
+	LEAN_INLINE const MainWindow* mainWindow() const { return m_pMainWindow.get(); };
 
 	/// Gets the main window.
-	LEAN_INLINE DeviceManager* deviceManager() { return m_pDeviceManager; };
+	LEAN_INLINE DeviceManager* deviceManager() { return m_pDeviceManager.get(); };
 	/// Gets the main window.
-	LEAN_INLINE const DeviceManager* deviceManager() const { return m_pDeviceManager; };
+	LEAN_INLINE const DeviceManager* deviceManager() const { return m_pDeviceManager.get(); };
 };
 
 template <class Parameter>

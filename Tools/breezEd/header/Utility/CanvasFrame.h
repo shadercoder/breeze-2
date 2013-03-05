@@ -2,7 +2,7 @@
 #define CANVASFRAME_H
 
 #include "breezEd.h"
-#include <QtGui/QFrame>
+#include <QtWidgets/QFrame>
 #include <QtGui/QPainter>
 
 /// Square frame.
@@ -45,7 +45,7 @@ protected:
 		if (event->button() == Qt::LeftButton)
 		{
 			m_bMousePressed = true;
-			emitTouched(event->posF(), QEvent::MouseButtonPress);
+			emitTouched(event->pos(), QEvent::MouseButtonPress);
 		}
 	}
 
@@ -55,7 +55,7 @@ protected:
 		QFrame::mouseMoveEvent(event);
 
 		if (event->buttons() & Qt::LeftButton)
-			emitTouched(event->posF(), QEvent::MouseMove);
+			emitTouched(event->pos(), QEvent::MouseMove);
 	}
 
 	/// Intercepts mouse events.
@@ -66,7 +66,7 @@ protected:
 		if (event->button() == Qt::LeftButton)
 		{
 			m_bMousePressed = false;
-			emitTouched(event->posF(), QEvent::MouseButtonRelease);
+			emitTouched(event->pos(), QEvent::MouseButtonRelease);
 		}
 	}
 

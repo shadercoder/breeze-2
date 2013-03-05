@@ -1,7 +1,7 @@
 #ifndef NEWDOCUMENTDIALOG_H
 #define NEWDOCUMENTDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_NewDocumentDialog.h"
 
 #include "Documents/DocumentManager.h"
@@ -23,7 +23,7 @@ private:
 
 public:
 	/// Constructor.
-	NewDocumentDialog(Editor *pEditor, QWidget *pParent = nullptr , Qt::WFlags flags = 0);
+	NewDocumentDialog(Editor *pEditor, QWidget *pParent = nullptr , Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~NewDocumentDialog();
 

@@ -9,14 +9,16 @@ namespace
 {
 
 /// Creates a device from the given settings.
-lean::resource_ptr<beGraphics::Device, true> createGraphicsDevice(void *pWindowHandle, QSettings &settings, bool *pVSync)
+lean::resource_ptr<beGraphics::Device, true> createGraphicsDevice(WId windowHandle, QSettings &settings, bool *pVSync)
 {
 	uint4 adapterID = settings.value("graphicsDevice/adapterID", 0).toUInt();
 
 	if (pVSync)
 		*pVSync = settings.value("graphicsDevice/vSync", true).toBool();
 
-	return beGraphics::GetGraphics()->CreateDevice(beGraphics::DeviceDesc(pWindowHandle), nullptr, adapterID);
+	beGraphics::DeviceDesc desc((HWND) windowHandle);
+//	desc.Debug = true;
+	return beGraphics::GetGraphics()->CreateDevice(desc, nullptr, adapterID);
 }
 
 /// Creates a device from the given settings.
@@ -32,13 +34,10 @@ lean::resource_ptr<bePhysics::Device, true> createPhysicsDevice(QSettings &setti
 } // namespace
 
 // Constructor.
-DeviceManager::DeviceManager(void *pWindowHandle, QSettings &settings)
+DeviceManager::DeviceManager(WId windowHandle, QSettings &settings)
 	: m_bVSync(true),
-	m_pGraphicsDevice( createGraphicsDevice(pWindowHandle, settings, &m_bVSync) ),
-	m_pGraphicsResources( beScene::CreateResourceManager(m_pGraphicsDevice, "EffectCache", "Effects", "Textures", "Materials", "Meshes") ),
-
-	m_pPhysicsDevice( createPhysicsDevice(settings) ),
-	m_pPhysicsResources( bePhysics::CreateResourceManager(m_pPhysicsDevice, "PhysicsMaterials", "PhysicsShapes") )
+	m_pGraphicsDevice( createGraphicsDevice(windowHandle, settings, &m_bVSync) ),
+	m_pPhysicsDevice( createPhysicsDevice(settings) )
 {
 }
 

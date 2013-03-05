@@ -9,37 +9,37 @@
 #include "bePhysics/PX3/beCharacterScene.h"
 #include "bePhysics/PX3/beScene.h"
 
+#include <lean/logging/errors.h>
+
 namespace bePhysics
 {
 
+BE_CORE_PUBLISH_COMPONENT(CharacterSceneController)
+
 // Constructor.
-CharacterSceneController::CharacterSceneController(beEntitySystem::Simulation *pSimulation, SceneController *pScene, CharacterScene *pCharacters)
-	: SimulationController( pSimulation ),
-	m_pScene( LEAN_ASSERT_NOT_NULL(pScene) ),
-	m_pCharacterScene( LEAN_ASSERT_NOT_NULL(pCharacters) ),
-	m_bActive(false)
+CharacterSceneController::CharacterSceneController(SceneController *pScene, CharacterScene *pCharacters)
+	: m_scene( LEAN_ASSERT_NOT_NULL(pScene) ),
+	m_characterScene( LEAN_ASSERT_NOT_NULL(pCharacters) ),
+	m_pAttachedTo()
 {
 }
 
 // Constructor.
-CharacterSceneController::CharacterSceneController(beEntitySystem::Simulation *pSimulation, SceneController *pScene)
-	: SimulationController( pSimulation ),
-	m_pScene(pScene),
-	m_pCharacterScene(
+CharacterSceneController::CharacterSceneController(SceneController *pScene)
+	: m_scene( LEAN_ASSERT_NOT_NULL(pScene) ),
+	m_characterScene(
 			lean::bind_resource(
 				new PX3::CharacterScene(
 					PX3::CreateCharacterScene(&ToImpl(*pScene->GetScene())->getPhysics())
 				)
 			)
 		),
-	m_bActive(false)
+	m_pAttachedTo()
 {
 }
 
 CharacterSceneController::~CharacterSceneController()
 {
-	// WARNING: Never forget, will crash otherwise
-	Detach();
 }
 
 // Synchronizes this controller with the simulation.
@@ -51,7 +51,7 @@ void CharacterSceneController::Flush()
 // Synchronizes the simulation with this controller.
 void CharacterSceneController::Fetch()
 {
-	m_pCharacterScene->Update();
+	m_characterScene->Update();
 
 	SynchronizedHost::Fetch();
 }
@@ -63,49 +63,47 @@ void CharacterSceneController::Step(float timeStep)
 }
 
 // Attaches this controller to its simulation(s) / data source(s).
-void CharacterSceneController::Attach()
+void CharacterSceneController::Attach(beEntitySystem::Simulation *simulation)
 {
-	if (m_bActive)
+	if (m_pAttachedTo)
+	{
+		LEAN_LOG_ERROR_MSG("character scene controller already attached to simulation");
 		return;
+	}
 
 	// ORDER: Active as soon as SOMETHING MIGHT have been attached
-	m_bActive = true;
+	m_pAttachedTo = LEAN_ASSERT_NOT_NULL(simulation);
 
-	m_pScene->AddSynchronized(this, beEntitySystem::SynchronizedFlags::All);
-	if (m_pSimulation.check())
-		m_pSimulation->AddAnimated(this);
+	m_scene->AddSynchronized(this, beEntitySystem::SynchronizedFlags::All);
+	simulation->AddAnimated(this);
 }
 
 // Detaches this controller from its simulation(s) / data source(s).
-void CharacterSceneController::Detach()
+void CharacterSceneController::Detach(beEntitySystem::Simulation *simulation)
 {
-	if (!m_bActive)
+	if (LEAN_ASSERT_NOT_NULL(simulation) != m_pAttachedTo)
+	{
+		LEAN_LOG_ERROR_MSG("scene controller was never attached to simulation");
 		return;
+	}
 
-	m_pScene->RemoveSynchronized(this, beEntitySystem::SynchronizedFlags::All);
-	if (m_pSimulation.check())
-		m_pSimulation->RemoveAnimated(this);
+	m_scene->RemoveSynchronized(this, beEntitySystem::SynchronizedFlags::All);
+	simulation->RemoveAnimated(this);
 
 	// ORDER: Active as long as ANYTHING MIGHT be attached
-	m_bActive = false;
+	m_pAttachedTo = nullptr;
 }
 
 // Gets the physics scene.
 CharacterScene* CharacterSceneController::GetScene()
 {
-	return m_pCharacterScene;
+	return m_characterScene;
 }
 
 // Gets the physics scene.
 const CharacterScene* CharacterSceneController::GetScene() const
 {
-	return m_pCharacterScene;
-}
-
-// Gets the controller type.
-utf8_ntr CharacterSceneController::GetControllerType()
-{
-	return utf8_ntr("PhysicsCharacterSceneController");
+	return m_characterScene;
 }
 
 } // namespace

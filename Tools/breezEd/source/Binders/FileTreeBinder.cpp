@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Binders/FileTreeBinder.h"
 
-#include <QtGui/QTreeView>
+#include <QtWidgets/QTreeView>
 
 #include <QtCore/QFileSystemWatcher>
 
@@ -126,9 +126,9 @@ void updateDirectory(const QStringList &masks, const QIcon &icon, QTreeWidgetIte
 
 // Constructor.
 FileTreeBinder::FileTreeBinder(const QString &location, const QStringList &masks, const QIcon &icon,
-		QTreeWidget *pTree, QTreeWidgetItem *pParentItem, QObject *pParent)
+		QTreeWidget *tree, QTreeWidgetItem *pParentItem, QObject *pParent)
 	: QObject(pParent),
-	m_pTree( LEAN_ASSERT_NOT_NULL(pTree) ),
+	m_tree( LEAN_ASSERT_NOT_NULL(tree) ),
 	m_location(location),
 	m_masks(masks),
 	m_fileIcon(icon)
@@ -136,15 +136,15 @@ FileTreeBinder::FileTreeBinder(const QString &location, const QStringList &masks
 	// Create new empty model, if none to be extended
 	if (!pParentItem)
 	{
-		setupTree(*pTree);
-
-		pParentItem = pTree->invisibleRootItem();
+		setupTree(*m_tree);
+		pParentItem = m_tree->invisibleRootItem();
 	}
+	m_parentItem = pParentItem;
 
 	m_folderIcon.addFile(QString::fromUtf8(":/breezEd/icons/tree/folder"), QSize(), QIcon::Normal, QIcon::Off);
 	m_folderIcon.addFile(QString::fromUtf8(":/breezEd/icons/tree/openFolder"), QSize(), QIcon::Normal, QIcon::On);
 
-	addDirectory(m_location, m_masks, m_fileIcon, pParentItem, m_folderIcon);
+	addDirectory(m_location, m_masks, m_fileIcon, m_parentItem, m_folderIcon);
 
 	// Asynchronous
 	connect(this, SIGNAL(treeChanged()), this, SLOT(updateTree()), Qt::QueuedConnection);
@@ -172,7 +172,7 @@ void FileTreeBinder::setupTree(QTreeWidget &view)
 // Updates the file tree.
 void FileTreeBinder::updateTree()
 {
-	updateDirectory(m_masks, m_fileIcon, m_pTree->invisibleRootItem()->child(0), m_folderIcon);
+	updateDirectory(m_masks, m_fileIcon, m_parentItem->child(0), m_folderIcon);
 }
 
 // Called whenever an observed directory has changed.

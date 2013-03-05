@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_PX
 #define BE_PHYSICS_PX
 
@@ -85,8 +86,13 @@ using PX3::ToImpl;
 /// Shorthand namespace.
 namespace breeze
 {
-	/// Physics namespace alias.
+#ifndef DOXYGEN_READ_THIS
+	/// bePhysics::PX3 namespace alias.
 	namespace bepx3 = ::bePhysics::PX3;
+#else
+	/// bePhysics::PX3 namespace alias.
+	namespace bepx3 { using namespace ::bePhysics::PX3; }
+#endif
 }
 
 #endif

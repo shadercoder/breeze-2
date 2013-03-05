@@ -19,10 +19,10 @@ Texture2D SceneDiffuseTexture : BE_SCENE_PREBOUND_S(bindpoint_s(SceneDiffuseTarg
 >;
 
 /// Scene texture.
-Texture2D SceneSpecularTexture : BE_SCENE_PREBOUND_S(bindpoint_s(SceneSpecularTarget, t12))
+Texture2D<uint> SceneSpecularTexture : BE_SCENE_PREBOUND_S(bindpoint_s(SceneSpecularTarget, t12))
 <
 	string TargetType = "Permanent";
-	string Format = "R8G8B8A8U_SRGB";
+	string Format = "R32U";
 >;
 
 /// Depth buffer.

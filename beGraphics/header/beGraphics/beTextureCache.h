@@ -2,52 +2,49 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_TEXTURE_CACHE
 #define BE_GRAPHICS_TEXTURE_CACHE
 
 #include "beGraphics.h"
 #include <beCore/beShared.h>
+#include <beCore/beResourceManager.h>
 #include <lean/tags/noncopyable.h>
 #include "beTexture.h"
-#include <lean/smart/resource_ptr.h>
 #include <beCore/bePathResolver.h>
 #include <beCore/beContentProvider.h>
-#include <beCore/beDependencies.h>
+#include <beCore/beComponentMonitor.h>
+#include <lean/smart/resource_ptr.h>
 
 namespace beGraphics
 {
 
 /// Texture cache.
-class TextureCache : public lean::noncopyable, public beCore::Resource, public Implementation
+class LEAN_INTERFACE TextureCache : public lean::noncopyable, public beCore::FiledResourceManager<Texture>, public Implementation
 {
-protected:
-	LEAN_INLINE TextureCache& operator =(const TextureCache&) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(TextureCache)
 
 public:
-	virtual ~TextureCache() throw() { }
-
 	/// Gets a texture from the given file.
-	virtual Texture* GetTexture(const lean::utf8_ntri &file, bool bSRGB = false) = 0;
-	/// Gets a texture view for the given texture.
-	virtual TextureView* GetTextureView(const Texture &texture) = 0;
-
+	virtual Texture* GetByFile(const lean::utf8_ntri &file, bool bSRGB = false) = 0;
 	/// Gets a texture view from the given file.
-	LEAN_INLINE TextureView* GetTextureView(const lean::utf8_ntri &file, bool bSRGB = false)
+	LEAN_INLINE TextureView* GetViewByFile(const lean::utf8_ntri &file, bool bSRGB = false)
 	{
-		return GetTextureView( *GetTexture(file, bSRGB) ); 
+		return GetView( GetByFile(file, bSRGB) ); 
 	}
 
-	/// Gets the file (or name) of the given texture.
-	virtual utf8_ntr GetFile(const beGraphics::Texture &texture, bool *pIsFile = nullptr) const = 0;
-	/// Gets the file (or name) of the given texture.
-	virtual utf8_ntr GetFile(const beGraphics::TextureView &texture, bool *pIsFile = nullptr) const = 0;
+	/// Gets a texture for the given texture view.
+	virtual Texture* GetTexture(const TextureView *pTexture) const = 0;
+	/// Gets a texture view for the given texture.
+	virtual TextureView* GetView(const Texture *pTexture) = 0;
 
-	/// Notifies dependent listeners about dependency changes.
-	virtual void NotifyDependents() = 0;
-	/// Gets the dependencies registered for the given texture.
-	virtual beCore::Dependency<Texture*>* GetDependencies(const beGraphics::Texture &texture) = 0;
-	/// Gets the dependencies registered for the given texture.
-	virtual beCore::Dependency<Texture*>* GetDependencies(const beGraphics::TextureView &texture) = 0;
+	/// Gets whether the given texture is an srgb texture.
+	virtual bool IsSRGB(const Texture *pTexture) const = 0;
+
+	/// Sets the component monitor.
+	virtual void SetComponentMonitor(beCore::ComponentMonitor *componentMonitor) = 0;
+	/// Gets the component monitor.
+	virtual beCore::ComponentMonitor* GetComponentMonitor() const = 0;
 
 	/// Gets the path resolver.
 	virtual const beCore::PathResolver& GetPathResolver() const = 0;

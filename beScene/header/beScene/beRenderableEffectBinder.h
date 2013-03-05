@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_RENDERABLE_EFFECT_BINDER
 #define BE_SCENE_RENDERABLE_EFFECT_BINDER
 
@@ -45,7 +46,7 @@ public:
 	BE_SCENE_API ~RenderableEffectBinder();
 
 	/// Applies the given renderable & perspective data to the effect bound by this effect binder.
-	BE_SCENE_API bool Apply(const RenderableEffectData *pRenderableData, const Perspective &perspective,
+	BE_SCENE_API void Apply(const RenderableEffectData *pRenderableData, const Perspective &perspective,
 		beGraphics::Any::StateManager& stateManager, beGraphics::Any::API::DeviceContext *pContext) const;
 
 	/// Gets the effect.

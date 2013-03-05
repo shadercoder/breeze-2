@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_LIGHT
 #define BE_SCENE_LIGHT
 
@@ -16,12 +17,14 @@
 namespace beScene
 {
 
+// TODO: Remove legacy interfaces
+
 // Prototypes.
 class Perspective;
 class RenderContext;
 
 /// Light flags enumeration.
-namespace LightFlags
+struct LightFlags
 {
 	/// Enumeration
 	enum T
@@ -31,7 +34,8 @@ namespace LightFlags
 
 		Shadowed = 0x4				///< Indicates shadow maps are available.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(LightFlags)
+};
 
 /// Light base.
 class Light

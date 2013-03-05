@@ -2,6 +2,7 @@
 /* breeze Framework Resource Compiler Lib  (c) Tobias Zirr 2011 */
 /****************************************************************/
 
+#pragma once
 #ifndef BE_RESOURCECOMPILER_PHYSICSCOOKER
 #define BE_RESOURCECOMPILER_PHYSICSCOOKER
 

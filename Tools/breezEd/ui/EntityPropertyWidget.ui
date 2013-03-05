@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="../resource/breezEd.qrc">
-    <normaloff>:/breezEd/icons/specific/properties</normaloff>:/breezEd/icons/specific/properties</iconset>
+    <normaloff>:/breezEd/icons/tools/properties</normaloff>:/breezEd/icons/tools/properties</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="leftMargin">

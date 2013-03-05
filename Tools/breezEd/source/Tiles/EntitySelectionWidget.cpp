@@ -8,6 +8,7 @@
 #include <beEntitySystem/beEntityGroup.h>
 #include <beEntitySystem/beAsset.h>
 
+#include "Utility/IconDockStyle.h"
 #include "Utility/Strings.h"
 #include "Utility/Files.h"
 #include "Utility/Checked.h"
@@ -51,7 +52,7 @@ beEntitySystem::EntityGroup selectedEntities(Ui::EntitySelectionWidget &ui, cons
 } // namespace
 
 // Constructor.
-EntitySelectionWidget::EntitySelectionWidget(Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+EntitySelectionWidget::EntitySelectionWidget(Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: QWidget(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
 	m_pDocument()
@@ -166,6 +167,7 @@ void EntitySelectionWidget::selectionChanged()
 #include "Plugins/AbstractPlugin.h"
 #include "Plugins/PluginManager.h"
 #include "Windows/MainWindow.h"
+#include "Docking/DockContainer.h"
 
 namespace
 {
@@ -186,20 +188,29 @@ struct EntitySelectionWidgetPlugin : public AbstractPlugin<MainWindow*>
 	}
 
 	/// Initializes the plugin.
-	void initialize(MainWindow *pMainWindow) const
+	void initialize(MainWindow *mainWindow) const
 	{
-		QDockWidget *pDock = new QDockWidget(pMainWindow);
-		pDock->setObjectName("EntitySelectionWidget");
-		pDock->setWidget( new EntitySelectionWidget(pMainWindow->editor(), pDock) );
-		pDock->setWindowTitle(pDock->widget()->windowTitle());
-		pDock->setWindowIcon(pDock->widget()->windowIcon());
-		
-		// Invisible by default
-		pMainWindow->addDockWidget(Qt::RightDockWidgetArea, pDock);
-		pDock->hide();
+/*		lean::scoped_ptr<QDockWidget> dock( new QDockWidget(mainWindow) );
+		dock->setObjectName("EntitySelectionWidget");
+		dock->setStyle( new IconDockStyle(dock, dock->style()) );
 
-		checkedConnect(pMainWindow->widgets().actionEntity_Selection, SIGNAL(triggered()), pDock, SLOT(show()));
-		checkedConnect(pMainWindow, SIGNAL(documentChanged(AbstractDocument*)), pDock->widget(), SLOT(setDocument(AbstractDocument*)));
+		dock->setWidget( new EntitySelectionWidget(mainWindow->editor(), dock) );
+		dock->setWindowTitle(dock->widget()->windowTitle());
+		dock->setWindowIcon(dock->widget()->windowIcon());
+*/
+		lean::scoped_ptr<EntitySelectionWidget> widget( new EntitySelectionWidget(mainWindow->editor()) );
+		lean::scoped_ptr<DockWidget> dock( DockWidget::wrap(widget) );
+
+		// Invisible by default
+		dock->hide();
+//		pMainWindow->addDockWidget(Qt::RightDockWidgetArea, dock);
+		mainWindow->dock()->addDock(dock, DockPlacement::Emplace, DockOrientation::Horizontal);
+
+		checkedConnect(mainWindow->widgets().actionEntity_Selection, SIGNAL(triggered()), dock, SLOT(showAndRaise()));
+		checkedConnect(mainWindow, SIGNAL(documentChanged(AbstractDocument*)), widget, SLOT(setDocument(AbstractDocument*)));
+
+		widget.detach();
+		dock.detach();
 	}
 	/// Finalizes the plugin.
 	void finalize(MainWindow *pWindow) const { }

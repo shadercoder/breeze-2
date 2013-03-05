@@ -11,7 +11,7 @@ namespace
 lean::scoped_property_data<> createPropertyData(const beCore::PropertyProvider &provider, uint4 propertyID)
 {
 	beCore::PropertyDesc desc = provider.GetPropertyDesc(propertyID);
-	return lean::scoped_property_data<>(*desc.TypeInfo->property_type, desc.Count);
+	return lean::scoped_property_data<>(*desc.TypeDesc->Info.property_type, desc.Count);
 }
 
 } // namespace
@@ -25,8 +25,8 @@ ChangePropertyCommand::ChangePropertyCommand(beCore::PropertyProvider *pProperty
 		pParent ),
 	m_pPropertyProvider( LEAN_ASSERT_NOT_NULL(pPropertyProvider) ),
 	m_propertyID( propertyID ),
-	m_previousData( createPropertyData(*m_pPropertyProvider, m_propertyID), lean::scoped_property_data<>::consume ),
-	m_data( createPropertyData(*m_pPropertyProvider, m_propertyID), lean::scoped_property_data<>::consume ),
+	m_previousData( createPropertyData(*m_pPropertyProvider, m_propertyID), lean::consume ),
+	m_data( createPropertyData(*m_pPropertyProvider, m_propertyID), lean::consume ),
 	m_bIgnoreOnce(false)
 {
 	m_pPropertyProvider->GetProperty(m_propertyID, m_previousData.property_type().type_info().type, m_previousData.data(), m_previousData.count());

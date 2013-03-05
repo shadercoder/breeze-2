@@ -5,13 +5,15 @@
 #include "AbstractDocument.h"
 
 #include <beScene/beResourceManager.h>
+#include <bePhysics/beResourceManager.h>
+
 #include <beEntitySystem/beWorld.h>
 
 #include <beEntitySystem/beSimulation.h>
 
 #include <beScene/beEffectDrivenRenderer.h>
 #include <beScene/beRenderContext.h>
-#include <beScene/beSceneController.h>
+#include <beScene/beRenderingController.h>
 
 #include <bePhysics/beScene.h>
 #include <bePhysics/beSceneController.h>
@@ -39,20 +41,21 @@ public:
 private:
 	QUndoStack *m_pUndoStack;
 
-	lean::resource_ptr<beEntitySystem::World> m_pWorld;
-
-	lean::resource_ptr<beEntitySystem::Simulation> m_pSimulation;
+	lean::resource_ptr<beScene::ResourceManager> m_pGraphicsResources;
+	lean::resource_ptr<bePhysics::ResourceManager> m_pPhysicsResources;
 
 	lean::resource_ptr<beScene::EffectDrivenRenderer> m_pRenderer;
 	lean::resource_ptr<beScene::RenderContext> m_pRenderContext;
-	lean::resource_ptr<beScene::SceneController> m_pScene;
 
-	lean::resource_ptr<bePhysics::SceneController> m_pPhysics;
+	lean::resource_ptr<beEntitySystem::World> m_pWorld;
+	beScene::RenderingController *m_pScene;
+	bePhysics::SceneController *m_pPhysics;
+
+	lean::resource_ptr<beEntitySystem::Simulation> m_pSimulation;
 
 	QObject *m_pPrimaryView;
 
 	QVector<Interaction*> m_interactions;
-	DropInteraction *m_pDropInteraction;
 
 	EntityVector m_selection;
 
@@ -73,14 +76,10 @@ public:
 
 	/// Adds the given interaction.
 	void pushInteraction(Interaction *pInteraction);
-	/// Adds the given drop interaction.
-	void pushInteraction(DropInteraction *pDropInteraction);
 	/// Removes the given interaction.
 	void removeInteraction(Interaction *pInteraction);
 	/// Gets all interactions.
 	const QVector<Interaction*>& interactions() const { return m_interactions; }
-	/// Gets the current drop interaction, if set.
-	DropInteraction *dropInteraction() const { return m_pDropInteraction; }
 
 	/// Gets the selection.
 	const EntityVector& selection() const { return m_selection; }
@@ -107,6 +106,16 @@ public:
 	beEntitySystem::Simulation* simulation() { return m_pSimulation; }
 	/// Simulation.
 	const beEntitySystem::Simulation* simulation() const { return m_pSimulation; }
+	
+	/// Gets the graphics resource manager.
+	LEAN_INLINE beScene::ResourceManager* graphicsResources() { return m_pGraphicsResources; }
+	/// Gets the graphics resource manager.
+	LEAN_INLINE const beScene::ResourceManager* graphicsResources() const { return m_pGraphicsResources; }
+
+	/// Gets the physics resource manager.
+	LEAN_INLINE bePhysics::ResourceManager* physicsResources() { return m_pPhysicsResources; }
+	/// Gets the physics resource manager.
+	LEAN_INLINE const bePhysics::ResourceManager* physicsResources() const { return m_pPhysicsResources; }
 
 	/// Renderer.
 	beScene::EffectDrivenRenderer* renderer() { return m_pRenderer; }
@@ -114,9 +123,9 @@ public:
 	const beScene::EffectDrivenRenderer* renderer() const { return m_pRenderer; }
 	
 	/// Scene.
-	beScene::SceneController* scene() { return m_pScene; }
+	beScene::RenderingController* scene() { return m_pScene; }
 	/// Scene.
-	const beScene::SceneController* scene() const { return m_pScene; }
+	const beScene::RenderingController* scene() const { return m_pScene; }
 
 	/// Device manager.
 	DeviceManager* deviceManager() const;
@@ -137,9 +146,14 @@ public Q_SLOTS:
 	/// Sets the primary view.
 	void setPrimary(QObject *pView) { m_pPrimaryView = pView; }
 
+	/// Commits changes.
+	void commit();
+
 Q_SIGNALS:
 	/// Emitted whenever the selection has changed.
 	void selectionChanged(SceneDocument *pDocument);
+	/// Emitted when changes have been comitted.
+	void postCommit();
 };
 
 #endif

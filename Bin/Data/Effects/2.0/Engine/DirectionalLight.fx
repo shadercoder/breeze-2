@@ -1,6 +1,27 @@
 #ifndef BE_DIRECTIONAL_LIGHT_H
 #define BE_DIRECTIONAL_LIGHT_H
 
+/// Directional light constants.
+struct DirectionalLightLayout
+{
+	float3 Right;				///< Light right.
+	float _1;
+	float3 Up;					///< Light up.
+	float _2;
+	float3 Dir;					///< Light direction.
+	float _3;
+	float3 Pos;					///< Light position.
+	float _4;
+
+	float4 Color;				///< Light color.
+	float4 SkyColor;			///< Sky color.
+
+/*	float Attenuation;			///< Light attenuation.
+	float AttenuationOffset;	///< Light attenuation offset.
+	float Range;				///< Light range.
+	float _pad1;*/
+};
+
 /// Shadow split.
 struct DirectionalShadowSplit
 {
@@ -9,22 +30,9 @@ struct DirectionalShadowSplit
 	float2 PixelScale;	///< 1 / pixel extents.
 };
 
-/// Directional light constants.
-struct DirectionalLightLayout
+/// Directional shadow constants.
+struct DirectionalShadowLayout
 {
-	float3 Right;				///< Light right.
-	float3 Up;					///< Light up.
-	float3 Dir;					///< Light direction.
-	float3 Pos;					///< Light position.
-
-	float4 Color;				///< Light color.
-	float4 SkyColor;			///< Sky color.
-
-	float Attenuation;			///< Light attenuation.
-	float AttenuationOffset;	///< Light attenuation offset.
-	float Range;				///< Light range.
-	float _pad1;
-
 	float2 ShadowResolution;	///< Shadow resolution.
 	float2 ShadowPixel;			///< Shadow pixel (= 1 / resolution).
 

@@ -5,9 +5,12 @@
 #include "beSceneInternal/stdafx.h"
 #include "beScene/beEffectDrivenRenderer.h"
 #include "beScene/bePerspectiveEffectBinderPool.h"
-#include "beScene/beRenderableEffectDriverCache.h"
 #include "beScene/beProcessingEffectDriverCache.h"
+#include "beScene/beRenderableEffectDriverCache.h"
 #include "beScene/beRenderableMaterialCache.h"
+#include "beScene/beRenderableMeshCache.h"
+#include "beScene/beLightEffectDriverCache.h"
+#include "beScene/beLightMaterialCache.h"
 #include <beGraphics/Any/beDevice.h>
 
 namespace beScene
@@ -17,57 +20,44 @@ namespace
 {
 
 // Creates a perspective effect binder pool.
-lean::resource_ptr<PerspectiveEffectBinderPool, true> CreatePerspectivePool(const beGraphics::Device &device)
+lean::resource_ptr<PerspectiveEffectBinderPool, true> CreatePerspectiveEffectPool(const beGraphics::Device &device)
 {
-	return lean::bind_resource(
-		new PerspectiveEffectBinderPool(ToImpl(device)) );
-}
-
-// Creates a renderable effect driver cache.
-lean::resource_ptr<RenderableEffectDriverCache, true> CreateRenderableDriverCache(RenderingPipeline *pPipeline, PerspectiveEffectBinderPool *pPool)
-{
-	return lean::bind_resource(
-		new RenderableEffectDriverCache(pPipeline, pPool) );
-}
-
-// Creates a renderable effect driver cache.
-lean::resource_ptr<ProcessingEffectDriverCache, true> CreateProcessingDriverCache(RenderingPipeline *pPipeline, PerspectiveEffectBinderPool *pPool)
-{
-	return lean::bind_resource(
-		new ProcessingEffectDriverCache(pPipeline, pPool) );
-}
-
-// Creates a renderable material cache.
-lean::resource_ptr<RenderableMaterialCache, true> CreateRenderableMaterialCache(RenderableEffectDriverCache *pRenderableDrivers)
-{
-	return lean::bind_resource(
-		new RenderableMaterialCache(pRenderableDrivers) );
+	return new_resource PerspectiveEffectBinderPool(ToImpl(device));
 }
 
 } // namespace
 
 // Constructor.
-EffectDrivenRenderer::EffectDrivenRenderer(beGraphics::Device *pDevice, beGraphics::TextureTargetPool *pTargetPool, class PipePool *pPipePool,
-		beScene::RenderingPipeline *pPipeline,
-		PerspectiveEffectBinderPool *pPerspectivePool,
-		EffectBinderCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
-		EffectBinderCache<AbstractProcessingEffectDriver> *pProcessingDrivers,
-		RenderableMaterialCache *pRenderableMaterials)
-	: Renderer(pDevice, pTargetPool, pPipePool, pPipeline),
-	m_pPerspectivePool( LEAN_ASSERT_NOT_NULL(pPerspectivePool) ),
-	m_pRenderableDrivers( LEAN_ASSERT_NOT_NULL(pRenderableDrivers) ),
-	m_pProcessingDrivers( LEAN_ASSERT_NOT_NULL(pProcessingDrivers) ),
-	m_pRenderableMaterials( LEAN_ASSERT_NOT_NULL(pRenderableMaterials) )
+EffectDrivenRenderer::EffectDrivenRenderer(Renderer &base,
+										   class PerspectiveEffectBinderPool *perspectiveEffectPool,
+										   EffectDriverCache<AbstractProcessingEffectDriver> *processingDrivers,
+										   EffectDriverCache<AbstractRenderableEffectDriver> *renderableDrivers,
+										   RenderableMaterialCache *renderableMaterials,
+										   RenderableMeshCache *renderableMeshes,
+										   EffectDriverCache<AbstractLightEffectDriver> *lightDrivers,
+										   LightMaterialCache *lightMaterials)
+	: Renderer(base),
+	PerspectiveEffectBinderPool( LEAN_ASSERT_NOT_NULL(perspectiveEffectPool) ),
+	ProcessingDrivers( LEAN_ASSERT_NOT_NULL(processingDrivers) ),
+	RenderableDrivers( LEAN_ASSERT_NOT_NULL(renderableDrivers) ),
+	RenderableMaterials( LEAN_ASSERT_NOT_NULL(renderableMaterials) ),
+	RenderableMeshes( LEAN_ASSERT_NOT_NULL(renderableMeshes) ),
+	LightDrivers( LEAN_ASSERT_NOT_NULL(lightDrivers) ),
+	LightMaterials( LEAN_ASSERT_NOT_NULL(lightMaterials) )
 {
 }
 
 // Copy constructor.
 EffectDrivenRenderer::EffectDrivenRenderer(const EffectDrivenRenderer &right)
 	: Renderer(right),
-	m_pPerspectivePool( LEAN_ASSERT_NOT_NULL(right.m_pPerspectivePool) ),
-	m_pRenderableDrivers( LEAN_ASSERT_NOT_NULL(right.m_pRenderableDrivers) ),
-	m_pProcessingDrivers( LEAN_ASSERT_NOT_NULL(right.m_pProcessingDrivers) ),
-	m_pRenderableMaterials( LEAN_ASSERT_NOT_NULL(right.m_pRenderableMaterials) )
+	// MONITOR: REDUNDANT
+	PerspectiveEffectBinderPool( LEAN_ASSERT_NOT_NULL(right.PerspectiveEffectBinderPool) ),
+	ProcessingDrivers( LEAN_ASSERT_NOT_NULL(right.ProcessingDrivers) ),
+	RenderableDrivers( LEAN_ASSERT_NOT_NULL(right.RenderableDrivers) ),
+	RenderableMaterials( LEAN_ASSERT_NOT_NULL(right.RenderableMaterials) ),
+	RenderableMeshes( LEAN_ASSERT_NOT_NULL(right.RenderableMeshes) ),
+	LightDrivers( LEAN_ASSERT_NOT_NULL(right.LightDrivers) ),
+	LightMaterials( LEAN_ASSERT_NOT_NULL(right.LightMaterials) )
 {
 }
 
@@ -76,63 +66,96 @@ EffectDrivenRenderer::~EffectDrivenRenderer()
 {
 }
 
+// Commits / reacts to changes.
+void EffectDrivenRenderer::Commit()
+{
+	Renderer::Commit();
+
+	RenderableMaterials->Commit();
+	RenderableMeshes->Commit();
+	LightMaterials->Commit();
+}
+
 // Invalidates all caches.
 void EffectDrivenRenderer::InvalidateCaches()
 {
 	Renderer::InvalidateCaches();
-	m_pPerspectivePool->Invalidate();
+	PerspectiveEffectBinderPool->Invalidate();
 }
 
 // Creates a renderer from the given parameters.
-lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(beGraphics::Device *pDevice)
+lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(beGraphics::Device *device, beCore::ComponentMonitor *pMonitor)
 {
-	return CreateEffectDrivenRenderer( *CreateRenderer(pDevice) );
+	return CreateEffectDrivenRenderer( *CreateRenderer(device), pMonitor );
 }
 
 // Creates a renderer from the given parameters.
-lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer)
+lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer, beCore::ComponentMonitor *pMonitor)
 {
-	return CreateEffectDrivenRenderer(
-		renderer,
-		CreatePerspectivePool(*renderer.Device()).get() );
+	return CreateEffectDrivenRenderer(renderer, pMonitor, nullptr, nullptr, nullptr, nullptr);
 }
 
 // Creates a renderer from the given parameters.
-lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer,
-	PerspectiveEffectBinderPool *pPerspectivePool)
-{
-	return CreateEffectDrivenRenderer(
-		renderer,
-		pPerspectivePool,
-		CreateRenderableDriverCache(renderer.Pipeline(), pPerspectivePool).get(),
-		CreateProcessingDriverCache(renderer.Pipeline(), pPerspectivePool).get() );
-}
-
-// Creates a renderer from the given parameters.
-lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer,
+lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer, beCore::ComponentMonitor *pMonitor,
 	PerspectiveEffectBinderPool *pPerspectivePool, 
-	EffectBinderCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
-	EffectBinderCache<AbstractProcessingEffectDriver> *pProcessingDrivers)
+	EffectDriverCache<AbstractProcessingEffectDriver> *pProcessingDrivers,
+	EffectDriverCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
+	EffectDriverCache<AbstractLightEffectDriver> *pLightDrivers)
 {
-	return CreateEffectDrivenRenderer(
-		renderer,
-		pPerspectivePool,
-		pRenderableDrivers, pProcessingDrivers,
-		CreateRenderableMaterialCache(pRenderableDrivers).get() );
+	return CreateEffectDrivenRenderer( renderer, pMonitor, pPerspectivePool,
+		pProcessingDrivers,
+		pRenderableDrivers, nullptr, nullptr, pLightDrivers, nullptr);
 }
 
 // Creates a renderer from the given parameters.
-lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer,
-	PerspectiveEffectBinderPool *pPerspectivePool, 
-	EffectBinderCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
-	EffectBinderCache<AbstractProcessingEffectDriver> *pProcessingDrivers,
-	RenderableMaterialCache *pRenderableMaterials)
+lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer, beCore::ComponentMonitor *pMonitor,
+	PerspectiveEffectBinderPool *pPerspectiveEffectPool, 
+	EffectDriverCache<AbstractProcessingEffectDriver> *pProcessingDrivers,
+	EffectDriverCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
+	RenderableMaterialCache *pRenderableMaterials,
+	RenderableMeshCache *pRenderableMesh,
+	EffectDriverCache<AbstractLightEffectDriver> *pLightDrivers,
+	LightMaterialCache *pLightMaterials)
 {
-	return lean::new_resource<EffectDrivenRenderer>(
-		renderer.Device(), renderer.TargetPool(), renderer.PipePool(), renderer.Pipeline(),
-		pPerspectivePool,
-		pRenderableDrivers, pProcessingDrivers,
-		pRenderableMaterials );
+	lean::resource_ptr<PerspectiveEffectBinderPool> perspectiveEffectPool = (pPerspectiveEffectPool)
+		? lean::secure_resource(pPerspectiveEffectPool)
+		: CreatePerspectiveEffectPool(*renderer.Device());
+
+	lean::resource_ptr< EffectDriverCache<AbstractProcessingEffectDriver> > processingDrivers = (pProcessingDrivers)
+		? lean::secure_resource(pProcessingDrivers)
+		: new_resource ProcessingEffectDriverCache(renderer.Pipeline(), perspectiveEffectPool);
+
+	lean::resource_ptr< EffectDriverCache<AbstractRenderableEffectDriver> > renderableDrivers = (pRenderableDrivers)
+		? lean::secure_resource(pRenderableDrivers)
+		: new_resource RenderableEffectDriverCache(renderer.Pipeline(), perspectiveEffectPool);
+	lean::resource_ptr<RenderableMaterialCache> renderableMaterials = (pRenderableMaterials)
+		? lean::secure_resource(pRenderableMaterials)
+		: new_resource RenderableMaterialCache(renderableDrivers);
+	lean::resource_ptr<RenderableMeshCache> renderableMeshes = (pRenderableMesh)
+		? lean::secure_resource(pRenderableMesh)
+		: new_resource RenderableMeshCache(renderer.Device()); // TODO: renderableDrivers
+
+	lean::resource_ptr< EffectDriverCache<AbstractLightEffectDriver> > lightDrivers = (pLightDrivers)
+		? lean::secure_resource(pLightDrivers)
+		: new_resource LightEffectDriverCache(renderer.Pipeline(), perspectiveEffectPool);
+	lean::resource_ptr<LightMaterialCache> lightMaterials = (pLightMaterials)
+		? lean::secure_resource(pLightMaterials)
+		: new_resource LightMaterialCache(lightDrivers);
+
+	if (pMonitor)
+	{
+		renderableMaterials->SetComponentMonitor(pMonitor);
+		renderableMeshes->SetComponentMonitor(pMonitor);
+		lightMaterials->SetComponentMonitor(pMonitor);
+	}
+
+	return new_resource EffectDrivenRenderer(
+			renderer,
+			perspectiveEffectPool,
+			processingDrivers,
+			renderableDrivers, renderableMaterials, renderableMeshes,
+			lightDrivers, lightMaterials
+		);
 }
 
 } // namespace

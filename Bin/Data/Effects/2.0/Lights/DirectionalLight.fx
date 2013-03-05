@@ -3,14 +3,20 @@
 #include <Pipelines/LPR/Scene.fx>
 #include <Pipelines/LPR/Geometry.fx>
 
+#include <Utility/Math.fx>
+
 #include "Processing/BilateralAverage.fx"
 
-cbuffer Light0
+tbuffer LightData
 {
-	DirectionalLightLayout DirectionalLight;
+	DirectionalLightLayout DirectionalLight[16];
+}
+tbuffer ShadowData
+{
+	DirectionalShadowLayout DirectionalShadow[16];
 }
 
-Texture2DArray DirectionalLightShadowMaps : ShadowMaps0;
+Texture2DArray DirectionalLightShadowMaps : ShadowMaps;
 
 // TODO: Check if available?
 Texture2D AmbientTexture : AmbientTarget
@@ -33,28 +39,28 @@ Texture2D ShadowTexture : ShadowTarget
 
 float4 DestinationResolution : DestinationResolution;
 
-struct Vertex
-{
-	float4 Position	: Position;
-};
-
 struct Pixel
 {
-	float4 Position		: SV_Position;
-	float2 TexCoord		: TexCoord0;
-	float3 CamDir		: TexCoord1;
+	float4 Position						: SV_Position;
+	float2 TexCoord						: TexCoord0;
+	float3 CamDir						: TexCoord1;
+	nointerpolation uint LightIdx		: TexCoord2;
 };
 
-Pixel VSMain(Vertex v)
+Pixel VSMain(uint v : SV_VertexID, uint i : SV_InstanceID)
 {
 	Pixel o;
 	
-	o.Position = v.Position;
-	o.Position.z = 0.0f;
-	o.TexCoord = 0.5f + float2(0.5f, -0.5f) * v.Position.xy;
+	o.Position.x = (v & 1) ? 1.0f : -1.0f;
+	o.Position.y = (v < 2) ? 1.0f : -1.0f;
+	o.Position.zw = float2(0.0f, 1.0f);
+
+	o.TexCoord = 0.5f + float2(0.5f, -0.5f) * o.Position.xy;
 	
-	o.CamDir = v.Position.xyw * float3(Perspective.ProjInv[0][0], Perspective.ProjInv[1][1], 1.0f);
+	o.CamDir = o.Position.xyw * float3(Perspective.ProjInv[0][0], Perspective.ProjInv[1][1], 1.0f);
 	o.CamDir = mul(o.CamDir, (float3x3) Perspective.ViewInv);
+
+	o.LightIdx = i;
 
 	return o;
 }
@@ -125,22 +131,22 @@ static const float2 SignedPoissonKernel[PoissonKernelSize] = {
 
 float4 PSShadow(Pixel p) : SV_Target0
 {
-	float4 eyeGeometry = SceneGeometryTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
+	float4 eyeGeometry = SceneGeometryTexture[p.Position.xy];
 	float eyeDepth = ExtractDepth(eyeGeometry);
 	
-	int splitIndex = (int) dot(eyeDepth >= DirectionalLight.ShadowSplitPlanes, 1.0f);
+	int splitIndex = (int) dot(eyeDepth >= DirectionalShadow[p.LightIdx].ShadowSplitPlanes, 1.0f);
 
 	clip(3 - splitIndex);
 
 	float3 world = Perspective.CamPos.xyz + p.CamDir * eyeDepth;
 	float3 worldNormal = ExtractNormal(eyeGeometry);
 
-	float4 shadowCoord = mul(float4(world + 0.1f * worldNormal, 1.0f), DirectionalLight.ShadowSplits[splitIndex].Proj);
+	float4 shadowCoord = mul(float4(world + 0.1f * worldNormal, 1.0f), DirectionalShadow[p.LightIdx].ShadowSplits[splitIndex].Proj);
 	float2 shadowMapCoord = 0.5f + float2(0.5f, -0.5f) * shadowCoord.xy;
 
 	clip( float4(shadowMapCoord.xy, 1.0f - shadowMapCoord.xy) );
 
-	float shadowRange = DirectionalLight.ShadowSplits[splitIndex].NearFar.y - DirectionalLight.ShadowSplits[splitIndex].NearFar.x;
+	float shadowRange = DirectionalShadow[p.LightIdx].ShadowSplits[splitIndex].NearFar.y - DirectionalShadow[p.LightIdx].ShadowSplits[splitIndex].NearFar.x;
 
 	float shadowDepth = DirectionalLightShadowMaps.SampleLevel(ShadowSampler, float3(shadowMapCoord, splitIndex), 0.0f).r;
 	float shadowDeltaDepth = (shadowCoord.z - shadowDepth * shadowCoord.w) * shadowRange;
@@ -155,7 +161,7 @@ float4 PSShadow(Pixel p) : SV_Target0
 		/ (shadowMapCoordDDY.x * shadowMapCoordDDX.y - shadowMapCoordDDX.x * shadowMapCoordDDY.y);
 
 	float scaledRadius = 0.05f + 0.2f * clamp(0.2f * shadowDeltaDepth, 0.0f, 5.0f);
-	float2 scaledOffset = scaledRadius * DirectionalLight.ShadowSplits[splitIndex].PixelScale; // lerp( 2.0f, 0.25f, 1.0f / (1.0f + 0.02f * eyeDepth) )
+	float2 scaledOffset = scaledRadius * DirectionalShadow[p.LightIdx].ShadowSplits[splitIndex].PixelScale; // lerp( 2.0f, 0.25f, 1.0f / (1.0f + 0.02f * eyeDepth) )
 
 	float shadowMultiplier = 50.0f;
 
@@ -184,36 +190,162 @@ float4 PSShadow(Pixel p) : SV_Target0
 	return visibility;
 }
 
+#ifdef SMOOTH_MINMAX
+
+float smoothminmax(float a, float b, float dir)
+{
+	float m = 0.5f * (a + b);
+	float d = 0.5f * abs(a - b);
+	float dsq = d * d;
+	float f = dsq * rcp(0.002f + dsq);
+
+	return m + dir * d * f; // * smoothstep(0.0f, 0.2f, d);
+}
+
+float smoothmin(float a, float b) { return smoothminmax(a, b, -1.0f); }
+float smoothmax(float a, float b) { return smoothminmax(a, b, 1.0f); }
+
+#else
+
+float smoothmin(float a, float b) { return min(a, b); }
+float smoothmax(float a, float b) { return max(a, b); }
+
+#endif
+
+float OrenNayar(float3 camDir, float3 lightDir, float3 normal,
+				float roughness)
+{
+	float variance = sq(roughness * (PI / 2.0f));
+	float A = 1.0f - 0.5f * variance / (variance + 0.33f);
+	float B = 0.45f * variance / (variance + 0.09f);
+
+	float cosCam = dot(normal, camDir);
+	float cosLgt = dot(normal, lightDir);
+
+	float3 camDirP = normalize(camDir - normal * 0.9999f * cosCam);
+	float3 lightDirP = normalize(lightDir - normal * 0.9999f * cosLgt);
+	
+	float cosDelta = dot(camDirP, lightDirP);
+	if (isnan(cosDelta)) cosDelta = 1.0f;
+
+	float sinAlpha = pyt1( smoothmin(cosCam, cosLgt) );
+	float cosBeta = smoothmax(cosCam, cosLgt);
+	float tanBeta = pyt1(cosBeta) / (cosBeta);
+	
+	float r = saturate(cosLgt);
+#ifdef DIFFUSE_NORM
+	r *= (1.0f / PI);
+#endif
+	r *= A + B * saturate(0.5f + 0.5f * cosDelta) * sinAlpha * tanBeta; // max(0, cosDelta) // saturate(0.5f + 0.5f * cosDelta)
+	return r;
+}
+
+float KelemenKarlos(float3 camDir, float3 lightDir, float3 normal, 
+					float roughness)
+{
+	float variance = sq( max(roughness, 0.001f) * (PI / 2.0f));
+
+	float cosLgt = dot(normal, lightDir);
+
+	float3 halfVec = camDir + lightDir;
+	halfVec += step(lengthsq(halfVec), 0.01f) * normal;
+	float3 halfDir = normalize(halfVec);
+	float cosHalf = dot(halfDir, normal);
+	float cosHalfSq = cosHalf * cosHalf;
+	float tanHalfSq = saturate(1.0f - cosHalfSq) * rcp(cosHalfSq);
+
+	float ward = rcp(variance * PI * pow(cosHalf, 3)) * exp(-tanHalfSq * rcp(variance));
+
+	return saturate(cosLgt) * ward / ( lengthsq(halfVec) );
+}
+
 float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 {
-	float4 eyeGeometry = SceneGeometryTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
-	float4 diffuseColor = SceneDiffuseTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
-	float4 specularColor = SceneSpecularTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
+	float4 eyeGeometry = SceneGeometryTexture[p.Position.xy];
+	GBufferDiffuse gbDiffuse = ExtractDiffuse( SceneDiffuseTexture[p.Position.xy] );
+	GBufferSpecular gbSpecular = ExtractSpecular( SceneSpecularTexture[p.Position.xy] );
 	
+	float3 diffuseColor = gbDiffuse.Color;
+	float3 specularColor = gbSpecular.Color;
+
 //	return diffuseColor;
 
 	float3 worldNormal = normalize( ExtractNormal(eyeGeometry) );
 	float3 camDir = normalize(p.CamDir);
 
-	float4 intensity = 1.0f;
+	float3 intensity = 1.0f;
 
 	if (bShadowed)
-		intensity = ShadowTexture.SampleLevel(DefaultSampler, p.TexCoord, 0);
+		intensity = ShadowTexture.SampleLevel(DefaultSampler, p.TexCoord, 0).xyz;
+
+	float3 alternateLightDir = DirectionalLight[p.LightIdx].Dir;
+	float3 alternateIntensity = 0.0f;
+	float alternateRoughness = gbDiffuse.Roughness;
+	if (dot(worldNormal, alternateLightDir) > 0.0f)
+	{
+		alternateLightDir = -alternateLightDir;
+		alternateIntensity = 1.0f;
+		alternateRoughness += 3.0f * saturate(0.15f - alternateRoughness);
+	}
+
+	float orenNayar = OrenNayar(-camDir, -DirectionalLight[p.LightIdx].Dir, worldNormal, gbDiffuse.Roughness);
+	float kelemen = KelemenKarlos(-camDir, -alternateLightDir, worldNormal, alternateRoughness);
+
+	float cosAngle = dot(worldNormal, -DirectionalLight[p.LightIdx].Dir);
+	float cosAlternateAngle = dot(worldNormal, -alternateLightDir);
+	float cosCamAngle = dot(worldNormal, -camDir);
+
+	float reflectanceFresnel = pow(1.0f - saturate(cosAlternateAngle), 5);
+	float3 specular = lerp(specularColor.xyz, 1.0f, reflectanceFresnel);
+	float3 alternateSpecular = kelemen * specular * rcp(1.0f + dot(specular, 27.0f)) * alternateIntensity * (1.0f - intensity) * gbSpecular.Shininess;
+	specular *= kelemen * intensity * (1.0f - alternateIntensity);
+
+//	return float4(alternateSpecular, 1.0f);
+//	return float4(kelemen * specular * rcp(1.0f + dot(specular, 27.0f)), 1.0f);
+//	return float4(specular * rcp(0.001f + dot(specular, 27.0f)) * kelemen * DirectionalLight[p.LightIdx].SkyColor.xyz * gbSpecular.Shininess, 1.0f);
+
+	float3 diffuseFresnelCoeff = 21.0f * rcp(20.0f * (0.97f - 0.03f * specularColor.xyz))
+		* (1.0f - reflectanceFresnel) * (1.0f - pow(1.0f - saturate(cosCamAngle), 5));
 
 	// Angle fallof
-	float cosAngle = dot(worldNormal, -DirectionalLight.Dir);
 	float negIntensity = saturate(0.5f - 0.35f * cosAngle); // * AmbientTexture.SampleLevel(DefaultSampler, p.TexCoord, 0).a;
-	float rimIntensity = (1 - abs(cosAngle)) * pow(1 - dot(-camDir, worldNormal), 8) * saturate( dot(camDir, -DirectionalLight.Dir) );
-	float4 posIntensity = saturate(cosAngle) * intensity;
+//	float rimIntensity = (1 - abs(cosAngle)) * pow(1 - dot(-camDir, worldNormal), 8) * saturate( dot(camDir, -DirectionalLight[p.LightIdx].Dir) );
+	float3 posIntensity = orenNayar * intensity;
 
-	float3 diffuse = diffuseColor.xyz * lerp(posIntensity, DirectionalLight.SkyColor.xyz * negIntensity, DirectionalLight.Color.w);
+	float3 ambient = diffuseColor.xyz * negIntensity * DirectionalLight[p.LightIdx].Color.w;
+
+	float3 diffuse = diffuseColor.xyz * posIntensity;
+	diffuse *= (1.0f - gbSpecular.Metalness);
+
+	float3 radiance = lerp(diffuse, diffuse * diffuseFresnelCoeff + specular, gbSpecular.Shininess);
+	radiance *=  DirectionalLight[p.LightIdx].Color.xyz;
+	radiance += (ambient + alternateSpecular) * DirectionalLight[p.LightIdx].SkyColor.xyz;
+
+//	radiance = diffuseFresnelCoeff;
 
 	// Specular
-	float3 halfway = -normalize(camDir + DirectionalLight.Dir);
-	float specExp = 1024.0f * specularColor.a + 0.00001f;
-	float3 specular = specularColor.xyz * intensity * pow( saturate( dot(worldNormal, halfway) ) , specExp ); // * (specExp + 1.0f) * 0.5f;
+/*	float3 fresnelLightDir = (cosAngle >= 0.0f) ? DirectionalLight[p.LightIdx].Dir : -DirectionalLight[p.LightIdx].Dir;
+	float3 halfway = -normalize(camDir + fresnelLightDir);
+	float fresnel = pow(1.0f - dot(halfway, -camDir), 5);
 	
-	return float4( (diffuse + specular) * DirectionalLight.Color.xyz, 0.0f );
+	float reflectCoeff = lerp(gbSpecular.FresnelR, 1.0f, fresnel);
+	float3 specular = intensity * kelemen;
+
+	float metalCoeff = lerp(gbSpecular.FresnelM, 1.0f, fresnel);
+	float3 metalSpecular = lerp(specularColor.xyz, 1.0f, metalCoeff) * specular;
+
+	specular = lerp(specular, metalSpecular, gbSpecular.Metalness);
+
+	float3 radiance = lerp(diffuse, specular, reflectCoeff * gbSpecular.Shininess);
+*/
+
+//	float3 radiance = lerp(diffuse, specular, reflectCoeff * gbSpecular.Shininess);
+//	float3 radiance = lerp(diffuse, (diffuse + specular * reflectCoeff), gbSpecular.Shininess);
+
+//	float specExp = 1024.0f * (1.0f - gbDiffuse.Roughness) + 0.00001f;
+//	float3 specular = specularColor.xyz * pow( saturate( dot(worldNormal, halfway) ) , specExp ); // * (specExp + 1.0f) * 0.5f;
+	
+	return float4( radiance, 0.0f );
 }
 
 technique11 Shadowed <

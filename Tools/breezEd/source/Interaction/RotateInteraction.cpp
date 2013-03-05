@@ -10,7 +10,8 @@
 
 #include "DeviceManager.h"
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
+#include <beEntitySystem/beWorldControllers.h>
 #include "Interaction/Widgets.h"
 #include "Interaction/Math.h"
 
@@ -22,8 +23,6 @@
 
 #include <lean/logging/errors.h>
 
-static const uint4 RotateAxisWidgetIDs[3] = { reserveWidgetID(), reserveWidgetID(), reserveWidgetID() };
-
 // Constructor.
 RotateInteraction::RotateInteraction(SceneDocument *pDocument, QObject *pParent)
 	: QObject( pParent ),
@@ -32,12 +31,15 @@ RotateInteraction::RotateInteraction(SceneDocument *pDocument, QObject *pParent)
 	m_axisID( InvalidAxisID )
 {
 	// TODO: NO HARD-CODED PATHS
-	m_axes[0] = createWidgetMesh(RotateAxisWidgetIDs[0], "Static/UI/RotateWidget.mesh", beMath::vec(1.0f, 0.0f, 0.1f, 0.7f),
-		m_pDocument->scene(), *m_pDocument->deviceManager()->graphicsResources(), *m_pDocument->renderer());
-	m_axes[1] = createWidgetMesh(RotateAxisWidgetIDs[1], "Static/UI/RotateWidget.mesh", beMath::vec(0.1f, 1.0f, 0.0f, 0.7f),
-		m_pDocument->scene(), *m_pDocument->deviceManager()->graphicsResources(), *m_pDocument->renderer());
-	m_axes[2] = createWidgetMesh(RotateAxisWidgetIDs[2], "Static/UI/RotateWidget.mesh", beMath::vec(0.0f, 0.1f, 1.0f, 0.7f),
-		m_pDocument->scene(), *m_pDocument->deviceManager()->graphicsResources(), *m_pDocument->renderer());
+	m_axes[0] = createWidgetMesh("Static/UI/RotateWidget.mesh", beMath::vec(0.7f, 0.0f, 0.2f, 0.5f), "DARKEN_SPHERE_BACK",
+		*m_pDocument->world()->Entities(), *m_pDocument->world()->Controllers().GetController<besc::MeshControllers>(),
+		*m_pDocument->graphicsResources(), *m_pDocument->renderer());
+	m_axes[1] = createWidgetMesh("Static/UI/RotateWidget.mesh", beMath::vec(0.2f, 0.7f, 0.0f, 0.5f), "DARKEN_SPHERE_BACK",
+		*m_pDocument->world()->Entities(), *m_pDocument->world()->Controllers().GetController<besc::MeshControllers>(),
+		*m_pDocument->graphicsResources(), *m_pDocument->renderer());
+	m_axes[2] = createWidgetMesh("Static/UI/RotateWidget.mesh", beMath::vec(0.0f, 0.2f, 0.7f, 0.5f), "DARKEN_SPHERE_BACK",
+		*m_pDocument->world()->Entities(), *m_pDocument->world()->Controllers().GetController<besc::MeshControllers>(),
+		*m_pDocument->graphicsResources(), *m_pDocument->renderer());
 }
 
 // Destructor.
@@ -50,7 +52,7 @@ void RotateInteraction::step(float timeStep, InputProvider &input, const beScene
 {
 	using namespace beMath;
 
-	// TODO: Change-based update?
+	// NOTE: Make sure widgets are up to date *before* editing has started
 	updateWidgets();
 
 	uint4 axisID = InvalidAxisID;
@@ -66,7 +68,7 @@ void RotateInteraction::step(float timeStep, InputProvider &input, const beScene
 			uint4 objectID = objectIDUnderCursor(*m_pDocument->renderer(), *m_pDocument->scene(), input.relativePosition(), perspective);
 
 			for (int i = 0; i < 3; ++i)
-				if (objectID == RotateAxisWidgetIDs[i])
+				if (objectID == m_axes[i]->GetCustomID())
 					axisID = i;
 		}
 
@@ -79,12 +81,8 @@ void RotateInteraction::step(float timeStep, InputProvider &input, const beScene
 
 	if (axisID < 3)
 	{
-		// NOTE: Make sure widgets are up to date *before* editing has started
-		if (m_axisID == InvalidAxisID)
-			updateWidgets();
-
-		fvec3 axisOrig = m_axes[axisID]->GetPosition();
-		fvec3 axisDir = m_axes[axisID]->GetOrientation()[2];
+		fvec3 axisOrig = (m_axisID != InvalidAxisID) ? m_axisCenter : m_axes[axisID]->GetPosition();
+		fvec3 axisDir = (m_axisID != InvalidAxisID) ? m_axisDir : m_axes[axisID]->GetOrientation()[2];
 
 		fvec3 rayOrig, rayDir;
 		camRayDirUnderCursor(rayOrig, rayDir, toQt(input.relativePosition()), perspective.ViewProjMat);
@@ -116,10 +114,9 @@ void RotateInteraction::step(float timeStep, InputProvider &input, const beScene
 				
 				(*itEntity)->SetPosition(position);
 				(*itEntity)->SetOrientation(orientation);
-				(*itEntity)->Synchronize();
+				(*itEntity)->NeedSync();
 			}
 			
-			m_axisStop = nextAxisStop;
 			m_pCommand->capture();
 			updateWidgets();
 		}
@@ -129,9 +126,12 @@ void RotateInteraction::step(float timeStep, InputProvider &input, const beScene
 			m_pCommand = new RotateEntityCommand(m_selection);
 			m_pDocument->undoStack()->push(m_pCommand);
 
-			m_axisStop = nextAxisStop;
 			m_axisID = axisID;
 		}
+
+		m_axisCenter = axisOrig;
+		m_axisStop = nextAxisStop;
+		m_axisDir = axisDir;
 	}
 }
 

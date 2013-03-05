@@ -5,8 +5,6 @@
 #include "beSceneInternal/stdafx.h"
 #include "beScene/beRenderingPipeline.h"
 #include "beScene/bePipelinePerspective.h"
-#include "beScene/bePerspectiveModifier.h"
-#include <boost/ptr_container/ptr_vector.hpp>
 #include <lean/functional/algorithm.h>
 #include <lean/logging/errors.h>
 
@@ -17,17 +15,6 @@ namespace beScene
 class RenderingPipeline::Impl
 {
 public:
-	typedef std::vector<const Scenery*> scenery_vector;
-	scenery_vector scenery;
-	
-	typedef boost::ptr_vector<PipelinePerspective> perspective_vector;
-	perspective_vector perspectives;
-	size_t activePerspectiveCount;
-
-	uint4 maxPerspectiveCount;
-
-	PerspectiveModifier *pPerspectiveModifier;
-
 	/// Pipeline stage.
 	struct Stage
 	{
@@ -72,12 +59,9 @@ public:
 
 	/// Constructor.
 	Impl()
-		: activePerspectiveCount(0),
-		pPerspectiveModifier(nullptr),
-		normalStageMask(0),
+		: normalStageMask(0),
 		defaultStageID(InvalidPipelineStage),
-		defaultQueueIDs(),
-		maxPerspectiveCount(16) { }
+		defaultQueueIDs() { }
 };
 
 // Constructor.
@@ -92,149 +76,169 @@ RenderingPipeline::~RenderingPipeline()
 {
 }
 
-// Adds a perspective.
-PipelinePerspective* RenderingPipeline::AddPerspective(const PerspectiveDesc &desc, Pipe *pPipe,
-	PipelineProcessor *pProcessor, PipelineStageMask stageMask, bool bNormalOnly)
+// Prepares rendering of all stages and queues.
+void RenderingPipeline::Prepare(PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+								PipelineStageMask overrideStageMask, bool bNoChildren) const
 {
-	if (m_impl->activePerspectiveCount >= m_impl->maxPerspectiveCount)
-		LEAN_THROW_ERROR_MSG("Pipeline max perspective count exceeded!");
+	for (uint4 i = 0; i < renderableCount; ++i)
+		renderables[i]->Cull(perspective);
 
-	PerspectiveDesc modifiedDesc(desc);
-
-	// Allow for the adaption of perspectives to special GPU-only global transformations
-	if (m_impl->pPerspectiveModifier)
-		m_impl->pPerspectiveModifier->PerspectiveAdded(modifiedDesc);
-
-	if (stageMask == 0)
-		stageMask = m_impl->normalStageMask;
-	else if (bNormalOnly)
+	uint4 stageMask = (overrideStageMask) ? overrideStageMask : perspective.GetStageMask();
+	if (stageMask & NormalPipelineStagesOnly)
 		stageMask &= m_impl->normalStageMask;
 
-	PipelinePerspective *pPerspective;
-
-	// Reset existing perspective, only create new one if none available
-	if (m_impl->activePerspectiveCount == m_impl->perspectives.size())
+	for (Impl::id_vector::const_iterator stageIt = m_impl->sortedStageIDs.begin();
+		stageIt != m_impl->sortedStageIDs.end(); ++stageIt)
 	{
-		pPerspective = new PipelinePerspective(this, modifiedDesc, pPipe, pProcessor, stageMask);
-		m_impl->perspectives.push_back(pPerspective);
-	}
-	else
-	{
-		pPerspective = &m_impl->perspectives[m_impl->activePerspectiveCount];
-		pPerspective->Reset(modifiedDesc, pPipe, pProcessor, stageMask);
-	}
-
-	++m_impl->activePerspectiveCount;
-
-	return pPerspective;
-}
-
-// Clears all perspectives.
-void RenderingPipeline::ClearPerspectives()
-{
-	for (size_t i = 0; i < m_impl->activePerspectiveCount; ++i)
-		m_impl->perspectives[i].Release();
-
-	m_impl->activePerspectiveCount = 0;
-
-	// TODO: keep here?
-	m_impl->scenery.clear();
-}
-
-// Releases shared references held.
-void RenderingPipeline::Release()
-{
-	ClearPerspectives();
-}
-
-// Sets a perspective modifier (nullptr to unset), returning any previous perspective modifier.
-PerspectiveModifier* RenderingPipeline::SetPerspectiveModifier(PerspectiveModifier *pModifier)
-{
-	if (pModifier)
-		pModifier->ModifierAdded(this);
-
-	PerspectiveModifier *pPreviousModifier = m_impl->pPerspectiveModifier;
-	m_impl->pPerspectiveModifier = pModifier;
-
-	if (pPreviousModifier)
-		pPreviousModifier->ModifierRemoved(this);
-
-	return pPreviousModifier;
-}
-
-// Includes all visible objects in the given scenery.
-void RenderingPipeline::AddScenery(const Scenery &scenery)
-{
-	m_impl->scenery.push_back(&scenery);
-}
-
-// Prepares rendering of all stages and queues.
-void RenderingPipeline::Prepare()
-{
-	// WARNING: activePerspectiveCount may change during loop
-	for (size_t i = 0; i < m_impl->activePerspectiveCount; ++i)
-	{
-		// WARNING: perspective only valid inside this scope
-		{
-			PipelinePerspective &perspective = m_impl->perspectives[i];
-
-			for (Impl::scenery_vector::const_iterator it = m_impl->scenery.begin(); it != m_impl->scenery.end(); ++it)
+		if ((1 << *stageIt) & stageMask)
+			for (Impl::id_vector::const_iterator queueIt = m_impl->sortedQueueIDs.begin();
+				queueIt != m_impl->sortedQueueIDs.end(); ++queueIt)
 			{
-				perspective.AddRenderables(**it);
-				perspective.AddLights(**it);
+				PipelineQueueID queueID(*stageIt, *queueIt);
+
+				for (uint4 i = 0; i < renderableCount; ++i)
+					renderables[i]->Prepare(perspective, queueID, m_impl->stages[queueID.StageID].desc, m_impl->queues[queueID.QueueID].desc);
+			}
+	}
+
+	for (uint4 i = 0; i < renderableCount; ++i)
+		renderables[i]->Collect(perspective);
+	
+	;
+
+	if (!bNoChildren)
+		for (PipelinePerspective::PerspectiveRange perspectives = perspective.GetPerspectives(); perspectives; ++perspectives)
+			Prepare(**perspectives, renderables, renderableCount);
+}
+
+// Optimizes the given stage and queue.
+void RenderingPipeline::Optimize(PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+								 PipelineStageMask overrideStageMask, bool bNoChildren) const
+{
+	PipelinePerspective::PerspectiveRange perspectives = perspective.GetPerspectives();
+
+	if (!bNoChildren)
+		for (uint4 i = Size(perspectives); i-- > 0; )
+			Optimize(*perspectives.Begin[i], renderables, renderableCount);
+
+	uint4 stageMask = (overrideStageMask) ? overrideStageMask : perspective.GetStageMask();
+	if (stageMask & NormalPipelineStagesOnly)
+		stageMask &= m_impl->normalStageMask;
+
+	for (Impl::id_vector::const_iterator stageIt = m_impl->sortedStageIDs.begin();
+		stageIt != m_impl->sortedStageIDs.end(); ++stageIt)
+	{
+		if ((1 << *stageIt) & stageMask)
+			for (Impl::id_vector::const_iterator queueIt = m_impl->sortedQueueIDs.begin();
+				queueIt != m_impl->sortedQueueIDs.end(); ++queueIt)
+			{
+				PipelineQueueID queueID(*stageIt, *queueIt);
+
+				for (uint4 i = 0; i < renderableCount; ++i)
+					renderables[i]->Optimize(perspective, queueID);
+
+				perspective.Prepare(queueID);
+			}
+	}
+}
+
+// Renders child perspectives & prepares rendering for the given perspective.
+void RenderingPipeline::PreRender(const PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+								  const RenderContext &context, bool bNoChildren) const
+{
+	PipelinePerspective::PerspectiveRange perspectives = perspective.GetPerspectives();
+
+	if (!bNoChildren)
+		for (uint4 i = Size(perspectives); i-- > 0; )
+			Render(*perspectives.Begin[i], renderables, renderableCount, context, 0, false, false);
+
+	for (uint4 i = 0; i < renderableCount; ++i)
+		renderables[i]->PreRender(perspective, context);
+}
+
+/// Renders the given stage and queue.
+void RenderingPipeline::RenderStages(const PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+									 const RenderContext &context, PipelineStageMask overrideStageMask) const
+{
+	uint4 stageMask = (overrideStageMask) ? overrideStageMask : perspective.GetStageMask();
+	if (stageMask & NormalPipelineStagesOnly)
+		stageMask &= m_impl->normalStageMask;
+
+	for (Impl::id_vector::const_iterator stageIt = m_impl->sortedStageIDs.begin();
+		stageIt != m_impl->sortedStageIDs.end(); ++stageIt)
+	{
+		if ((1 << *stageIt) & stageMask)
+		{
+			const PipelineStageDesc &stageDesc = m_impl->stages[*stageIt].desc;
+
+			// Set stage
+			if (stageDesc.Setup)
+				stageDesc.Setup->SetupRendering(*stageIt, InvalidRenderQueue, perspective, context);
+
+			// Render all queues
+			for (Impl::id_vector::const_iterator queueIt = m_impl->sortedQueueIDs.begin();
+				queueIt != m_impl->sortedQueueIDs.end(); ++queueIt)
+			{
+				PipelineQueueID queueID(*stageIt, *queueIt);
+
+				const RenderQueueDesc &queueDesc = m_impl->queues[queueID.QueueID].desc;
+
+				// Set up individual queues
+				if (queueDesc.Setup)
+					queueDesc.Setup->SetupRendering(queueID.StageID, queueID.QueueID, perspective, context);
+
+				for (uint4 i = 0; i < renderableCount; ++i)
+					renderables[i]->Render(perspective, queueID, context);
+
+				perspective.Render(queueID, context);
+
+				// Individual queue processing
+				perspective.Process(queueID, context);
 			}
 
-			// WARNING: This will invalidate the address of the current perspective when new perspectives are added
-			perspective.Enqueue();
+			// Stage processing
+			perspective.Process(PipelineQueueID(*stageIt, InvalidRenderQueue), context);
 		}
-
-		// WARNING: Always RE-FETCH reference to perspective here
-		PipelinePerspective &perspective = m_impl->perspectives[i];
-
-		perspective.Prepare();
-		perspective.Optimize();
 	}
 }
 
-// Prepares rendering of the given stage.
-void RenderingPipeline::Prepare(uint2 stageID)
+// Finalizes rendering for the given perspective.
+void RenderingPipeline::PostRender(const PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+								   const RenderContext &context, bool bFinalProcessing) const
 {
-	// TODO: Missing enqueue!
+	// Global post-processing
+	if (bFinalProcessing)
+		perspective.Process(PipelineQueueID(InvalidPipelineStage, InvalidRenderQueue), context);
 
-	for (size_t i = 0; i < m_impl->activePerspectiveCount; ++i)
-	{
-		PipelinePerspective &perspective = m_impl->perspectives[i];
-		perspective.Prepare(stageID);
-		perspective.Optimize(stageID);
-	}
+	for (uint4 i = 0; i < renderableCount; ++i)
+		renderables[i]->PostRender(perspective, context);
 }
 
-// Renders all stages and queues.
-void RenderingPipeline::Render(const RenderContext &context) const
+// Renders the given stage and queue.
+void RenderingPipeline::Render(const PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+							   const RenderContext &context, PipelineStageMask overrideStageMask, bool bNoChildren, bool bFinalProcessing) const
 {
-	for (Impl::id_vector::const_iterator it = m_impl->sortedStageIDs.begin();
-		it != m_impl->sortedStageIDs.end(); ++it)
-		Render(*it, context);
+	PreRender(perspective, renderables, renderableCount, context, bNoChildren);
+	RenderStages(perspective, renderables, renderableCount, context, overrideStageMask);
+	PostRender(perspective, renderables, renderableCount, context, bFinalProcessing);
 }
 
-// Renders the given stage and render queue.
-void RenderingPipeline::Render(uint2 stageID, const RenderContext &context) const
+// Releases temporary rendering resources.
+void RenderingPipeline::ReleaseIntermediate(PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
+											bool bReleasePerspective) const
 {
-	for (size_t i = m_impl->activePerspectiveCount; i-- > 0; )
-	{
-		const PipelinePerspective &perspective = m_impl->perspectives[i];
+	PipelinePerspective::PerspectiveRange perspectives = perspective.GetPerspectives();
 
-		if (perspective.GetStageMask() & (1 << stageID))
-			perspective.Render(stageID, context);
-	}
-}
+	for (uint4 i = Size(perspectives); i-- > 0; )
+		// NOTE: Don't release child perspectives just yet
+		ReleaseIntermediate(*perspectives.Begin[i], renderables, renderableCount, false);
 
-// Renders all stages and queues including the given scenery.
-void RenderingPipeline::Render(const Scenery &scenery, const RenderContext &context)
-{
-	AddScenery(scenery);
-	Prepare();
-	Render(context);
+	for (uint4 i = 0; i < renderableCount; ++i)
+		renderables[i]->ReleaseIntermediate(perspective);
+
+	if (bReleasePerspective)
+		// NOTE: Releases child perspectives recursively
+		perspective.ReleaseIntermediate();
 }
 
 namespace
@@ -459,16 +463,10 @@ uint2 RenderingPipeline::GetDefaultQueueID(uint2 stageID) const
 		: InvalidRenderQueue;
 }
 
-// Sets the maximum number of active perspectives.
-void RenderingPipeline::SetMaxPerspectiveCount(uint4 count)
+// Gets the mask of normal pipeline stages.
+PipelineStageMask RenderingPipeline::GetNormalStages() const
 {
-	m_impl->maxPerspectiveCount = count;
-}
-
-// Gets the maximum number of active perspectives.
-uint4 RenderingPipeline::GetMaxPerspectiveCount() const
-{
-	return m_impl->maxPerspectiveCount;
+	return m_impl->normalStageMask;
 }
 
 // Sets the name.

@@ -2,7 +2,7 @@
 #define UNDO_H
 
 #include "breezEd.h"
-#include <QtGui/QUndoStack>
+#include <QtWidgets/QUndoStack>
 
 /// Undos the given command, if it still is the one most recently excuted.
 inline void undoIfMostRecent(QUndoStack &stack, const QUndoCommand &command)

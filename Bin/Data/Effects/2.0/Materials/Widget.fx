@@ -1,4 +1,5 @@
 #define BE_RENDERABLE_INCLUDE_WORLD
+#define BE_RENDERABLE_INCLUDE_VIEW
 #define BE_RENDERABLE_INCLUDE_PROJ
 #define BE_RENDERABLE_INCLUDE_ID
 
@@ -23,24 +24,45 @@ struct Vertex
 struct Pixel
 {
 	float4 Position		: SV_Position;
+	float3 CamNormal	: TexCoord0;
+#ifdef DARKEN_SPHERE_BACK
+	float3 CamPos		: TexCoord1;
+#endif
 };
 
-Pixel VSMain(Vertex v)
+Pixel VSMain(Vertex v, uniform bool bKeepDepth = false)
 {
 	Pixel o;
 	
 	o.Position = mul(v.Position, WorldViewProj);
 	o.Position -= WorldViewProj[3];
-	o.Position *= WorldViewProj[3][3] * 0.15f;
+	o.Position *= (sqrt(0.9f + WorldViewProj[3][3]) - 0.9f) * 1.1f;
 	o.Position += WorldViewProj[3];
-	o.Position.z = 0.0f;
+	if (!bKeepDepth)
+		o.Position.z = 0.0f;
+
+	o.CamNormal = mul(mul((float3x3) WorldInverse, v.Normal), (float3x3) Perspective.View);
+#ifdef DARKEN_SPHERE_BACK
+	o.CamPos = mul(v.Position.xyz, (float3x3) WorldView);
+#endif
 	
 	return o;
 }
 
 float4 PSMain(Pixel p) : SV_Target0
 {
-	return Color;
+	float3 camNormal = normalize(p.CamNormal);
+
+	float4 color = Color;
+#ifdef DARKEN_SPHERE_BACK
+	if (p.CamPos.z > 0.0f)
+	{
+		color.xyz *= 0.01f;
+		color.a *= step( 0.95f * saturate( 1.0f - dot(normalize(p.CamPos), -camNormal) ), -camNormal.z );
+	}
+#endif
+	color.xyz *= saturate(-camNormal.z) * color.a;
+	return color;
 }
 
 uint4 PSObjectIDs(float4 p : SV_Position) : SV_Target0
@@ -57,7 +79,7 @@ BlendState AlphaBlendState
 };
 
 technique11 Overlay <
-	string PipelineStage = "DefaultPipelineStage";
+	string PipelineStage = "OverlayPipelineStage";
 	string RenderQueue = "AlphaRenderQueue";
 >
 {
@@ -65,7 +87,7 @@ technique11 Overlay <
 	{
 		SetBlendState( AlphaBlendState, float4(0.0f, 0.0f, 0.0f, 0.0f), 0xffffffff );
 
-		SetVertexShader( CompileShader(vs_4_0, VSMain()) );
+		SetVertexShader( CompileShader(vs_4_0, VSMain(true)) );
 		SetGeometryShader( NULL );
 		SetPixelShader( CompileShader(ps_4_0, PSMain()) );
 	}

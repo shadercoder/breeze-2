@@ -26,10 +26,4 @@ void Simulation::SetName(const utf8_ntri &name)
 	m_name.assign(name.begin(), name.end());
 }
 
-// Gets the simulation type.
-utf8_ntr Simulation::GetSimulationType()
-{
-	return utf8_ntr("Simulation");
-}
-
 } // namespace

@@ -2,12 +2,13 @@
 /* breeze Engine Entity System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM_SIMULATION
 #define BE_ENTITYSYSTEM_SIMULATION
 
 #include "beEntitySystem.h"
 #include <beCore/beShared.h>
-#include "beControllerDriven.h"
+#include <beCore/beComponent.h>
 #include "beSynchronizedHost.h"
 #include "beAnimatedHost.h"
 #include "beRenderableHost.h"
@@ -17,7 +18,7 @@ namespace beEntitySystem
 {
 
 /// Simulation class.
-class Simulation : public beCore::Resource, public ControllerDriven,
+class Simulation : public beCore::Resource,
 	public SynchronizedHost, public AnimatedHost, public RenderableHost
 {
 private:
@@ -42,11 +43,6 @@ public:
 	BE_ENTITYSYSTEM_API void SetName(const utf8_ntri &name);
 	/// Gets the name.
 	LEAN_INLINE const utf8_string& GetName() const { return m_name; }
-
-	/// Gets the simulation type.
-	BE_ENTITYSYSTEM_API static utf8_ntr GetSimulationType();
-	/// Gets the simulation type.
-	virtual utf8_ntr GetType() const { return GetSimulationType(); }
 };
 
 } // namespace

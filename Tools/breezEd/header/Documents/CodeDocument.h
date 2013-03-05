@@ -13,11 +13,11 @@ class CodeDocument : public AbstractDocument
 
 private:
 	QTextDocument m_document;
-
+	
 public:
 	/// Code document type name.
 	static const char *const DocumentTypeName;
-
+	
 	/// Constructor.
 	CodeDocument(const QString &type, const QString &name, const QString &file, Editor *pEditor, QObject *pParent = nullptr);
 	/// Destructor.

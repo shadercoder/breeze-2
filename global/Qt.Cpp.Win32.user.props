@@ -2,10 +2,12 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <BE_QT_DIR>C:\SDKs\Qt\4\</BE_QT_DIR>
-    <BE_QT_BIN>$(BE_QT_DIR)bin\</BE_QT_BIN>
-    <BE_QT_INCLUDE>$(BE_QT_DIR)include\</BE_QT_INCLUDE>
-    <BE_QT_LIB>$(SolutionDir)global\</BE_QT_LIB>
+    <BE_QT_BIN>C:\SDKs\Qt\5\5.0.1\msvc2010\bin\</BE_QT_BIN>
+    <BE_QT_DIR>C:\SDKs\Qt\5.0.1-src\</BE_QT_DIR>
+    <BE_QT_LIB>$(BE_QT_DIR)qtbase\lib\</BE_QT_LIB>
+    <BE_QT_INCLUDE>$(BE_QT_DIR)qtbase\include\</BE_QT_INCLUDE>
+    <BE_QT_SRC>$(BE_QT_DIR)qtbase\src\</BE_QT_SRC>
+    <BE_QT_MKSPEC>$(BE_QT_DIR)qtbase\mkspecs\win32-msvc2012\</BE_QT_MKSPEC>
   </PropertyGroup>
   <PropertyGroup>
     <IncludePath>$(BE_QT_INCLUDE);$(IncludePath)</IncludePath>
@@ -13,19 +15,34 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link />
+    <QtCompile>
+      <MOCPath>$(BE_QT_BIN)moc.exe</MOCPath>
+    </QtCompile>
+    <QtRcCompile>
+      <RCCPath>$(BE_QT_BIN)rcc.exe</RCCPath>
+    </QtRcCompile>
+    <QtUiCompile>
+      <UICPath>$(BE_QT_BIN)uic.exe</UICPath>
+    </QtUiCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <BuildMacro Include="BE_QT_BIN">
+      <Value>$(BE_QT_BIN)</Value>
+    </BuildMacro>
     <BuildMacro Include="BE_QT_DIR">
       <Value>$(BE_QT_DIR)</Value>
     </BuildMacro>
-    <BuildMacro Include="BE_QT_BIN">
-      <Value>$(BE_QT_BIN)</Value>
+    <BuildMacro Include="BE_QT_LIB">
+      <Value>$(BE_QT_LIB)</Value>
     </BuildMacro>
     <BuildMacro Include="BE_QT_INCLUDE">
       <Value>$(BE_QT_INCLUDE)</Value>
     </BuildMacro>
-    <BuildMacro Include="BE_QT_LIB">
-      <Value>$(BE_QT_LIB)</Value>
+    <BuildMacro Include="BE_QT_SRC">
+      <Value>$(BE_QT_SRC)</Value>
+    </BuildMacro>
+    <BuildMacro Include="BE_QT_MKSPEC">
+      <Value>$(BE_QT_MKSPEC)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

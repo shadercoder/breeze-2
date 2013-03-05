@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_MESH_DX11
 #define BE_SCENE_MESH_DX11
 
@@ -43,16 +44,16 @@ protected:
 
 public:
 	/// Constructor.
-	BE_SCENE_API Mesh(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
+	BE_SCENE_API Mesh(const utf8_ntri& name, const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 		uint4 vertexSize, const void *pVertices, uint4 vertexCount,
 		DXGI_FORMAT indexFormat, const void *pIndices, uint4 indexCount,
 		const beMath::faab3 &bounds, 
-		beGraphics::Any::API::Device *pDevice, MeshCompound *pCompound = nullptr);
+		beGraphics::Any::API::Device *pDevice, AssembledMesh *pCompound = nullptr);
 	/// Constructor.
-	BE_SCENE_API Mesh(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
+	BE_SCENE_API Mesh(const utf8_ntri& name, const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 		uint4 vertexSize, const void *pVertices, uint4 vertexCount,
 		DXGI_FORMAT indexFormat, const void *pIndices, uint4 indexCount,
-		beGraphics::Any::API::Device *pDevice, MeshCompound *pCompound = nullptr);
+		beGraphics::Any::API::Device *pDevice, AssembledMesh *pCompound = nullptr);
 	/// Destructor.
 	BE_SCENE_API ~Mesh();
 

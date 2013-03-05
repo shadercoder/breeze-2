@@ -2,21 +2,23 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_PROPERTY_PROVIDER
 #define BE_CORE_PROPERTY_PROVIDER
 
 #include "beCore.h"
-#include "beTypeIndex.h"
+#include "beComponent.h"
+#include "beValueType.h"
 #include "beExchangeContainers.h"
 #include <lean/properties/property_type.h>
 
-#include <forward_list>
+#include <lean/smart/scoped_ptr.h>
 
 namespace beCore
 {
 
 /// Widget enumeration.
-namespace Widget
+struct Widget
 {
 	/// Enumeration.
 	enum T
@@ -30,40 +32,59 @@ namespace Widget
 
 		End
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(Widget)
+};
+
+struct ValueTypeDesc;
 
 /// Property description.
 struct PropertyDesc
 {
-	const lean::property_type_info *TypeInfo;	///< Value (component) type.
-	uint4 Count;								///< Value (component) count.
-	uint2 TypeID;								///< Serialization type.
-	int2 Widget;								///< UI widget.
+	const ValueTypeDesc *TypeDesc;	///< Value (component) type.
+	uint4 Count;					///< Value (component) count.
+	int2 Widget;					///< UI widget.
 
 	/// Default Constructor.
 	PropertyDesc()
-		: TypeInfo(nullptr),
+		: TypeDesc(nullptr),
 		Count(0),
-		TypeID(TypeIndex::InvalidShortID),
 		Widget(Widget::None) { }
 	/// Constructor. Truncates type ID to 2 bytes.
-	PropertyDesc(const lean::property_type_info &typeInfo, uint4 count, uint4 typeID, int2 widget)
-		: TypeInfo(&typeInfo),
+	PropertyDesc(const ValueTypeDesc &typeDesc, uint4 count, int2 widget)
+		: TypeDesc(&typeDesc),
 		Count(count),
-		// MONITOR: Type ID truncated to two bytes.
-		TypeID(static_cast<uint2>(typeID)),
 		Widget(widget) { }
 };
 
+LEAN_INLINE bool operator ==(const PropertyDesc &desc1, const PropertyDesc &desc2)
+{
+	return desc1.TypeDesc == desc2.TypeDesc && desc1.Count == desc2.Count && desc1.Widget == desc2.Widget;
+}
+
+LEAN_INLINE bool operator !=(const PropertyDesc &desc1, const PropertyDesc &desc2)
+{
+	return !(desc1 == desc2);
+}
+
 class PropertyVisitor;
-class PropertyListener;
+class ComponentObserver;
+class ReflectedComponent;
+
+struct PropertyVisitFlags
+{
+	enum T
+	{
+		None = 0x0,				///< Default access.
+		PartialWrite = 0x1,		///< Not all data overwritten, keep untouched data.
+
+		PersistentOnly = 0x10	///< Fail for non-persistent properties.
+	};
+};
 
 /// Generic property provider base class.
-class LEAN_INTERFACE PropertyProvider
+class LEAN_INTERFACE PropertyProvider : public Component
 {
-protected:
-	PropertyProvider& operator =(const PropertyProvider&) { return *this; }
-	~PropertyProvider() throw() { }
+	LEAN_INTERFACE_BEHAVIOR(PropertyProvider)
 
 public:
 	/// Invalid property ID.
@@ -84,9 +105,9 @@ public:
 	virtual bool GetProperty(uint4 id, const std::type_info &type, void *values, size_t count) const = 0;
 
 	/// Visits a property for modification.
-	virtual bool WriteProperty(uint4 id, PropertyVisitor &visitor, bool bWriteOnly = true) = 0;
+	virtual bool WriteProperty(uint4 id, PropertyVisitor &visitor, uint4 flags = PropertyVisitFlags::None) = 0;
 	/// Visits a property for reading.
-	virtual bool ReadProperty(uint4 id, PropertyVisitor &visitor, bool bPersistentOnly = false) const = 0;
+	virtual bool ReadProperty(uint4 id, PropertyVisitor &visitor, uint4 flags = PropertyVisitFlags::None) const = 0;
 
 	/// Sets the given value.
 	template <class Value>
@@ -102,75 +123,154 @@ public:
 	LEAN_INLINE bool GetProperty(uint4 id, Value *values, size_t count) const { return GetProperty(id, typeid(Value), values, count); }
 
 	/// Adds a property listener.
-	virtual void AddPropertyListener(PropertyListener *listener) = 0;
+	virtual void AddObserver(ComponentObserver *listener) = 0;
 	/// Removes a property listener.
-	virtual void RemovePropertyListener(PropertyListener *pListener) = 0;
-
-	/// Gets the type index.
-	virtual const TypeIndex* GetPropertyTypeIndex() const = 0;
+	virtual void RemoveObserver(ComponentObserver *pListener) = 0;
 };
 
 /// Simple property listener callback implementation.
-class PropertyListenerCollection
+class ComponentObserverCollection
 {
+public:
+	struct ListenerEntry;
+	typedef lean::scoped_ptr<ListenerEntry> listeners_t;
+
 private:
-	typedef std::forward_list<PropertyListener*> listener_list;
-	listener_list m_listeners;
+	listeners_t m_listeners;
 
 public:
 	/// Constructor.
-	BE_CORE_API PropertyListenerCollection();
-	/// Does nothing.
-	LEAN_INLINE PropertyListenerCollection(const PropertyListenerCollection&) { }
+	BE_CORE_API ComponentObserverCollection();
+	// Copies the given collection.
+	BE_CORE_API ComponentObserverCollection(const ComponentObserverCollection &right);
+#ifndef LEAN0X_NO_RVALUE_REFERENCES
+	/// Takes over the given collection.
+	BE_CORE_API ComponentObserverCollection(ComponentObserverCollection &&right);
+#endif
 	/// Destructor.
-	BE_CORE_API ~PropertyListenerCollection();
+	BE_CORE_API ~ComponentObserverCollection();
 
-	/// Does nothing.
-	LEAN_INLINE PropertyListenerCollection& operator =(const PropertyListenerCollection&) { return *this; }
+	/// Copies the given collection.
+	ComponentObserverCollection& operator =(ComponentObserverCollection right)
+	{
+		swap(right);
+		return *this;
+	}
+#ifndef LEAN0X_NO_RVALUE_REFERENCES
+	/// Copies the given collection.
+	LEAN_INLINE ComponentObserverCollection& operator =(ComponentObserverCollection &&right)
+	{
+		swap(right);
+		return *this;
+	}
+#endif
 
 	/// Adds a property listener.
-	BE_CORE_API void AddPropertyListener(PropertyListener *listener);
+	BE_CORE_API void AddObserver(ComponentObserver *listener);
 	/// Removes a property listener.
-	BE_CORE_API void RemovePropertyListener(PropertyListener *pListener);
-	/// Calls all property listeners.
+	BE_CORE_API void RemoveObserver(ComponentObserver *pListener);
+	/// Calls all listeners.
 	BE_CORE_API void EmitPropertyChanged(const PropertyProvider &provider) const;
+	/// Calls all listeners.
+	BE_CORE_API void EmitChildChanged(const ReflectedComponent &provider) const;
+	/// Calls all listeners.
+	BE_CORE_API void EmitStructureChanged(const Component &provider) const;
+	/// Calls all listeners.
+	BE_CORE_API void EmitComponentReplaced(const Component &previous) const;
 
-	/// Checks, if any property listeners have been registered, before making the call.
+	/// Checks if any listeners have been registered.
+	LEAN_INLINE bool HasObservers() const { return m_listeners != nullptr; }
+
+	/// Checks if any property listeners have been registered before making the call.
 	LEAN_INLINE void RarelyEmitPropertyChanged(const PropertyProvider &provider) const
 	{
-		if (!m_listeners.empty())
+		if (m_listeners != nullptr)
 			EmitPropertyChanged(provider);
 	}
+	/// Checks if any property listeners have been registered before making the call.
+	LEAN_INLINE void RarelyEmitChildChanged(const ReflectedComponent &provider) const
+	{
+		if (m_listeners != nullptr)
+			EmitChildChanged(provider);
+	}
+	/// Checks if any property listeners have been registered before making the call.
+	LEAN_INLINE void RarelyEmitStructureChanged(const Component &provider) const
+	{
+		if (m_listeners != nullptr)
+			EmitStructureChanged(provider);
+	}
+	/// Checks if any property listeners have been registered before making the call.
+	LEAN_INLINE void RarelyEmitComponentReplaced(const Component &provider) const
+	{
+		if (m_listeners != nullptr)
+			EmitComponentReplaced(provider);
+	}
+
+	/// Swaps the listeners of this collection with those of the given collection.
+	LEAN_INLINE void swap(ComponentObserverCollection &right)
+	{
+		m_listeners.swap(right.m_listeners);
+	}
 };
+
+/// Swaps the listeners of the given collections.
+LEAN_INLINE void swap(ComponentObserverCollection &left, ComponentObserverCollection &right)
+{
+	left.swap(right);
+}
 
 /// Simple property listener callback implementation.
 template <class Interface = PropertyProvider>
 class LEAN_INTERFACE PropertyFeedbackProvider : public Interface
 {
+	LEAN_BASE_BEHAVIOR(PropertyFeedbackProvider)
+
 private:
-	PropertyListenerCollection m_listeners;
+	ComponentObserverCollection m_listenerCollection;
 
 protected:
-	PropertyFeedbackProvider& operator =(const PropertyFeedbackProvider&) { return *this; }
-	~PropertyFeedbackProvider() throw() { }
+	LEAN_BASE_DELEGATE(PropertyFeedbackProvider, Interface)
 
 public:
 	/// Adds a property listener.
-	void AddPropertyListener(PropertyListener *listener) { m_listeners.AddPropertyListener(listener); }
+	void AddObserver(ComponentObserver *listener) { m_listenerCollection.AddObserver(listener); }
 	/// Removes a property listener.
-	void RemovePropertyListener(PropertyListener *pListener) { m_listeners.RemovePropertyListener(pListener); }
+	void RemoveObserver(ComponentObserver *pListener) { m_listenerCollection.RemoveObserver(pListener); }
 	
 	/// Checks, if any property listeners have been registered, before making the call.
-	LEAN_INLINE void EmitPropertyChanged() const { m_listeners.RarelyEmitPropertyChanged(*this); }
+	LEAN_INLINE void EmitPropertyChanged() const { m_listenerCollection.RarelyEmitPropertyChanged(*this); }
+	/// Checks, if any property listeners have been registered, before making the call.
+	LEAN_INLINE void EmitChildChanged() const { m_listenerCollection.RarelyEmitChildChanged(*this); }
+	/// Checks, if any property listeners have been registered, before making the call.
+	LEAN_INLINE void EmitStructureChanged() const { m_listenerCollection.RarelyEmitStructureChanged(*this); }
+	/// Checks, if any property listeners have been registered, before making the call.
+	LEAN_INLINE void EmitComponentReplaced() const { m_listenerCollection.RarelyEmitComponentReplaced(*this); }
+};
+
+/// No listener support implementation.
+template <class Interface = PropertyProvider>
+class LEAN_INTERFACE NoPropertyFeedbackProvider : public Interface
+{
+	LEAN_BASE_BEHAVIOR(NoPropertyFeedbackProvider)
+
+protected:
+	LEAN_BASE_DELEGATE(NoPropertyFeedbackProvider, Interface)
+	
+public:
+	/// Does nothing.
+	void AddObserver(ComponentObserver *listener) { }
+	/// Does nothing.
+	void RemoveObserver(ComponentObserver *pListener) { }
 };
 
 /// Generic property provider base class.
 template <class Interface = PropertyProvider>
-class LEAN_INTERFACE OptionalPropertyProvider : public PropertyFeedbackProvider<Interface>
+class LEAN_INTERFACE OptionalPropertyProvider : public Interface
 {
+	LEAN_BASE_BEHAVIOR(OptionalPropertyProvider)
+
 protected:
-	OptionalPropertyProvider& operator =(const OptionalPropertyProvider&) { return *this; }
-	~OptionalPropertyProvider() throw() { }
+	LEAN_BASE_DELEGATE(OptionalPropertyProvider, Interface)
 
 public:
 	/// Gets the number of properties.
@@ -188,20 +288,15 @@ public:
 	virtual bool GetProperty(uint4 id, const std::type_info &type, void *values, size_t count) const { return false; }
 
 	/// Visits a property for modification.
-	virtual bool WriteProperty(uint4 id, PropertyVisitor &visitor, bool bWriteOnly = true) { return false; }
+	virtual bool WriteProperty(uint4 id, PropertyVisitor &visitor, uint4 flags = PropertyVisitFlags::None) { return false; }
 	/// Visits a property for reading.
-	virtual bool ReadProperty(uint4 id, PropertyVisitor &visitor, bool bPersistentOnly = false) const { return false; }
-
-	/// Gets the type index.
-	virtual const TypeIndex* GetPropertyTypeIndex() const { return nullptr; }
+	virtual bool ReadProperty(uint4 id, PropertyVisitor &visitor, uint4 flags = PropertyVisitFlags::None) const { return false; }
 };
 
 /// Enhanced generic property provider base class.
 class LEAN_INTERFACE EnhancedPropertyProvider : public PropertyProvider
 {
-protected:
-	EnhancedPropertyProvider& operator =(const EnhancedPropertyProvider&) { return *this; }
-	~EnhancedPropertyProvider() throw() { }
+	LEAN_INTERFACE_BEHAVIOR(EnhancedPropertyProvider)
 
 public:
 	/// Resets the given property to its default value.

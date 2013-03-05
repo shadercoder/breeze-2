@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_RIGIDACTORS
 #define BE_PHYSICS_RIGIDACTORS
 
@@ -15,7 +16,7 @@ namespace bePhysics
 {
 
 /// Serialization IDs
-namespace RigidActorSerializationID
+struct RigidActorSerializationID
 {
 	/// Enum
 	enum T
@@ -25,7 +26,8 @@ namespace RigidActorSerializationID
 		
 		InternalBase = 0x80000000					///< Base for internal serialization IDs.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(RigidActorSerializationID)
+};
 
 /// Dynamic rigid body interface.
 class RigidDynamic : public beCore::OptionalResource, public Implementation
@@ -49,11 +51,11 @@ public:
 
 // Prototypes
 class Device;
-class ShapeCompound;
+class RigidShape;
 class Material;
 
 /// Creates a dynamic actor from the given shape.
-BE_PHYSICS_API lean::resource_ptr<RigidDynamic, true> CreateDynamicFromShape(Device &device, const ShapeCompound &shape, float mass);
+BE_PHYSICS_API lean::resource_ptr<RigidDynamic, true> CreateDynamicFromShape(Device &device, const RigidShape &shape, float mass);
 /// Creates a dynamic box actor.
 BE_PHYSICS_API lean::resource_ptr<RigidDynamic, true> CreateDynamicBox(Device &device, const beMath::fvec3 &extents, Material *material, float mass,
 	const beMath::fvec3 &pos = beMath::fvec3(0.0f), const beMath::fmat3 &orientation = beMath::fmat3::identity);
@@ -62,7 +64,7 @@ BE_PHYSICS_API lean::resource_ptr<RigidDynamic, true> CreateDynamicSphere(Device
 	const beMath::fvec3 &center = beMath::fvec3(0.0f));
 
 /// Creates a static actor from the given shape.
-BE_PHYSICS_API lean::resource_ptr<RigidStatic, true> CreateStaticFromShape(Device &device, const ShapeCompound &shape);
+BE_PHYSICS_API lean::resource_ptr<RigidStatic, true> CreateStaticFromShape(Device &device, const RigidShape &shape);
 /// Creates a static box actor.
 BE_PHYSICS_API lean::resource_ptr<RigidStatic, true> CreateStaticBox(Device &device, const beMath::fvec3 &extents, Material *material,
 	const beMath::fvec3 &pos = beMath::fvec3(0.0f), const beMath::fmat3 &orientation = beMath::fmat3::identity);

@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_EFFECT_DX11
 #define BE_GRAPHICS_EFFECT_DX11
 
@@ -17,6 +18,9 @@ namespace beGraphics
 
 namespace DX11
 {
+
+class Effect;
+class EffectConfig;
 
 // Compiles the given effect file's source to object code.
 BE_GRAPHICS_DX11_API lean::com_ptr<ID3DBlob, true> CompileEffect(const lean::utf8_ntri &fileName,
@@ -37,7 +41,7 @@ LEAN_INLINE lean::com_ptr<ID3DX11Effect, true> CreateEffect(ID3DBlob *pBlob, ID3
 }
 
 /// Shader type enumeration.
-namespace ShaderType
+struct ShaderType
 {
 	/// Enumeration.
 	enum T
@@ -53,7 +57,8 @@ namespace ShaderType
 
 		End						/// One past the last valid shader type.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(ShaderType)
+};
 
 /// Reflects the given shader byte code.
 BE_GRAPHICS_DX11_API lean::com_ptr<ID3D11ShaderReflection, true> ReflectShader(const char *data, uint4 dataLength);
@@ -96,15 +101,11 @@ class Effect : public beCore::IntransitiveWrapper<ID3DX11Effect, Effect>, public
 private:
 	lean::com_ptr<ID3DX11Effect> m_pEffect;
 
-	beGraphics::EffectCache *m_pCache;
+	lean::resource_ptr<EffectConfig> m_pConfig;
 
 public:
 	/// Constructor.
-	BE_GRAPHICS_DX11_API Effect(const char *data, uint4 dataLength, ID3D11Device *pDevice, beGraphics::EffectCache *pCache = nullptr);
-	/// Constructor.
-	BE_GRAPHICS_DX11_API Effect(ID3DBlob *pBlob, ID3D11Device *pDevice, beGraphics::EffectCache *pCache = nullptr);
-	/// Constructor.
-	BE_GRAPHICS_DX11_API Effect(ID3DX11Effect *pEffect, beGraphics::EffectCache *pCache = nullptr);
+	BE_GRAPHICS_DX11_API Effect(ID3DX11Effect *effect, beGraphics::TextureCache *pTextureCache);
 	/// Destructor.
 	BE_GRAPHICS_DX11_API ~Effect();
 
@@ -113,8 +114,10 @@ public:
 	/// Gets the D3DX effect.
 	LEAN_INLINE ID3DX11Effect*const& GetEffect() const { return m_pEffect.get(); }
 
-	/// Gets the effect cache.
-	LEAN_INLINE EffectCache* GetCache() const { return m_pCache; }
+	/// Sets the default configuration.
+	BE_GRAPHICS_DX11_API void SetConfig(EffectConfig *config);
+	/// Gets the default configuration.
+	LEAN_INLINE EffectConfig* GetConfig() const { return m_pConfig; }
 
 	/// Gets the implementation identifier.
 	LEAN_INLINE ImplementationID GetImplementationID() const { return DX11Implementation; }

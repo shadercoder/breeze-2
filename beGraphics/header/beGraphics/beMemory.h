@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_MEMORY
 #define BE_GRAPHICS_MEMORY
 
@@ -13,11 +14,9 @@ namespace beGraphics
 
 /// Memory interface.
 template <class Element>
-class Memory : public beCore::COMResource
+class LEAN_INTERFACE Memory : public beCore::RefCounted
 {
-protected:
-	LEAN_INLINE Memory& operator =(const Memory&) { return *this; }
-	LEAN_INLINE ~Memory() throw() { }
+	LEAN_INTERFACE_BEHAVIOR(Memory)
 
 public:
 	/// Gets a pointer to the data buffer.

@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_RENDER_CONTEXT
 #define BE_SCENE_RENDER_CONTEXT
 
@@ -32,7 +33,7 @@ public:
 	BE_SCENE_API ~RenderContext();
 
 	/// Gets the immediate device context.
-	LEAN_INLINE const beGraphics::DeviceContext& Context() const { return *m_pContext; }
+	LEAN_INLINE beGraphics::DeviceContext& Context() const { return *m_pContext; }
 
 	/// Gets the state manager.
 	LEAN_INLINE beGraphics::StateManager& StateManager() const { return *m_pStateManager; }

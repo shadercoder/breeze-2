@@ -7,6 +7,7 @@
 
 #include <beCore/beComponentReflector.h>
 #include <beCore/beComponentTypes.h>
+#include <beCore/beReflectionTypes.h>
 
 #include "beScene/beSerializationParameters.h"
 #include "beScene/beResourceManager.h"
@@ -22,68 +23,120 @@ namespace beScene
 /// Reflects effects for use in component-based editing environments.
 class EffectReflector : public beCore::ComponentReflector
 {
-	/// Returns true, if the component can be loaded from a file.
-	bool CanBeLoaded() const
+	/// Gets principal component flags.
+	uint4 GetComponentFlags() const LEAN_OVERRIDE
 	{
-		return true;
+		return bec::ComponentFlags::Filed;
 	}
-	/// Gets a fitting file extension, if available.
-	utf8_ntr GetFileExtension() const
+	/// Gets specific component flags.
+	uint4 GetComponentFlags(const lean::any &component) const LEAN_OVERRIDE
 	{
-		return utf8_ntr("fx");
-	}
-	/// Gets a component from the given file.
-	lean::cloneable_obj<lean::any, true> GetComponent(const utf8_ntri &file, const beCore::ParameterSet &parameters) const
-	{
-		SceneParameters sceneParameters = GetSceneParameters(parameters);
+		uint4 flags = bec::ComponentFlags::NameMutable; // | bec::ComponentFlags::FileMutable
 
-		return lean::any_value<beGraphics::Effect*>(
-				sceneParameters.ResourceManager->EffectCache()->GetEffect(file, nullptr, 0) // TODO: Where to get parameters from? --> create?
-			);
+		if (const beg::Effect *effect = any_cast_default<beg::Effect*>(component))
+			if (const beg::EffectCache *cache = effect->GetCache())
+				if (!cache->GetFile(effect).empty())
+					flags |= bec::ComponentState::Filed;
+
+		return flags;
 	}
 
-	/// Gets the name or file of the given component.
-	beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, beCore::ComponentState::T *pState = nullptr) const
+	/// Gets information on the components currently available.
+	bec::ComponentInfoVector GetComponentInfo(const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
 	{
-		beCore::Exchange::utf8_string result;
+		return GetSceneParameters(parameters).ResourceManager->EffectCache()->GetInfo();
+	}
+	
+	/// Gets the component info.
+	bec::ComponentInfo GetInfo(const lean::any &component) const LEAN_OVERRIDE
+	{
+		bec::ComponentInfo result;
 
-		const beGraphics::Effect *pEffect = any_cast<beGraphics::Effect*>(component);
-
-		if (pEffect)
-		{
-			const beGraphics::EffectCache *pCache = pEffect->GetCache();
-			
-			if (pCache)
-			{
-				bool bFile = false;
-				result = pCache->GetFile(*pEffect, nullptr, &bFile).to<beCore::Exchange::utf8_string>();
-
-				if (pState)
-				{
-					if (bFile)
-						*pState = beCore::ComponentState::Filed;
-					else if (!result.empty())
-						*pState = beCore::ComponentState::Named;
-					else
-						*pState = beCore::ComponentState::Unknown;
-				}
-			}
-			else if (pState)
-				*pState = beCore::ComponentState::Unknown;
-		}
-		else if (pState)
-			*pState = beCore::ComponentState::NotSet;
+		if (const beg::Effect *effect = any_cast_default<beg::Effect*>(component))
+			if (const beg::EffectCache *cache = effect->GetCache())
+				result = cache->GetInfo(effect);
 
 		return result;
 	}
 
-	/// Gets the component type reflected.
-	utf8_ntr GetType() const
+	/// Sets the component name.
+	void SetName(const lean::any &component, const utf8_ntri &name) const LEAN_OVERRIDE
 	{
-		return utf8_ntr("Effect"); 
+		if (beg::Effect *effect = any_cast_default<beg::Effect*>(component))
+			if (beg::EffectCache *cache = effect->GetCache())
+			{
+				cache->SetName(effect, name);
+				return;
+			}
+
+		LEAN_THROW_ERROR_CTX("Unknown effect cannot be renamed", name.c_str());
+	}
+
+	/// Gets a component by name.
+	lean::cloneable_obj<lean::any, true> GetComponentByName(const utf8_ntri &name, const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
+	{
+		SceneParameters sceneParameters = GetSceneParameters(parameters);
+
+		return bec::any_resource_t<beGraphics::Effect>::t(
+				sceneParameters.ResourceManager->EffectCache()->GetByName(name)
+			);
+	}
+
+	/// Gets a fitting file extension, if available.
+	utf8_ntr GetFileExtension() const LEAN_OVERRIDE
+	{
+		return utf8_ntr("fx");
+	}
+	/// Gets a list of creation parameters.
+	beCore::ComponentParameters GetFileParameters(const utf8_ntri &file) const LEAN_OVERRIDE
+	{
+		static const beCore::ComponentParameter parameters[] = {
+				beCore::ComponentParameter(utf8_ntr("Switches"), bec::GetReflectionType(bec::ReflectionType::String), bec::ComponentParameterFlags::Array),
+				beCore::ComponentParameter(utf8_ntr("Hooks"), bec::GetReflectionType(bec::ReflectionType::File), bec::ComponentParameterFlags::Array)
+			};
+
+		return beCore::ComponentParameters(parameters, parameters + lean::arraylen(parameters));
+	}
+	/// Gets a component from the given file.
+	lean::cloneable_obj<lean::any, true> GetComponentByFile(const utf8_ntri &file,
+		const beCore::Parameters &fileParameters, const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
+	{
+		SceneParameters sceneParameters = GetSceneParameters(parameters);
+
+		std::vector<beg::EffectMacro> macros;
+		if (const lean::any *macroParam = fileParameters.GetAnyValue(fileParameters.GetID("Switches")))
+		{
+			macros.resize(macroParam->size());
+
+			for (uint4 i = 0, count = (uint4) macroParam->size(); i < count; ++i)
+				macros[i].Name = lean::make_range_v(
+						any_cast_checked<const bec::reflection_type<bec::ReflectionType::String>::type&>(macroParam, i)
+					);
+		}
+
+		std::vector<beg::EffectHook> hooks;
+		if (const lean::any *hookParam = fileParameters.GetAnyValue(fileParameters.GetID("Hooks")))
+		{
+			hooks.resize(hookParam->size());
+
+			for (uint4 i = 0, count = (uint4) hookParam->size(); i < count; ++i)
+				hooks[i].File = lean::make_range_v(
+						any_cast_checked<const bec::reflection_type<bec::ReflectionType::File>::type&>(hookParam, i)
+					);
+		}
+
+		return bec::any_resource_t<beGraphics::Effect>::t(
+				sceneParameters.ResourceManager->EffectCache()->GetByFile(file, &macros[0], (uint4) macros.size(), &hooks[0], (uint4) hooks.size())
+			);
+	}
+
+	/// Gets the component type reflected.
+	const beCore::ComponentType* GetType() const LEAN_OVERRIDE
+	{
+		return beg::Effect::GetComponentType(); 
 	}
 };
 
-static const beCore::ComponentTypePlugin<EffectReflector> EffectReflectorPlugin;
+static const beCore::ComponentReflectorPlugin<EffectReflector> EffectReflectorPlugin(beg::Effect::GetComponentType());
 
 } // namespace

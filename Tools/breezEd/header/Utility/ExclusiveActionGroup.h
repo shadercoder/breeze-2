@@ -2,7 +2,7 @@
 #define DRAGTREEWIDGET_H
 
 #include "breezEd.h"
-#include <QtGui/QAction>
+#include <QtWidgets/QAction>
 
 #include "Checked.h"
 

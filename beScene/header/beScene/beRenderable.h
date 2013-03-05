@@ -2,58 +2,47 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_RENDERABLE
 #define BE_SCENE_RENDERABLE
 
 #include "beScene.h"
-#include "beRenderJob.h"
+#include "beRenderingLimits.h"
 
 namespace beScene
 {
 
-// Prototypes.
-class Perspective;
-class PerspectiveScheduler;
-class DynamicScenery;
-class RenderableDataAllocator;
+class PipelinePerspective;
+struct PipelineQueueID;
+struct PipelineStageDesc;
+struct RenderQueueDesc;
+class RenderContext;
 
-/// Renderable flags enumeration.
-namespace RenderableFlags
-{
-	/// Enumeration
-	enum T
-	{
-		PerspectivePrepare = 0x1,	///< Indicates @code Prepare(Perspective*)@endcode should be called.
-		PerspectiveFinalize = 0x2,	///< Indicates @code Finalize(Perspective*)@endcode should be called.
-		
-		Lit = 0x4					///< Indicates affecting lights should be queried and passed.
-	};
-}
-
-/// Renderable base.
+/// Renderable interface.
 class LEAN_INTERFACE Renderable
 {
-protected:
-	Renderable& operator =(const Renderable&) { return *this; }
-	~Renderable() { }
+	LEAN_INTERFACE_BEHAVIOR(Renderable)
 
 public:
-	/// Called when a renderable is attached to a scenery.
-	virtual void Attached(DynamicScenery *pScenery, RenderableData &data, RenderableDataAllocator &allocator) = 0;
-	/// Called for each pass when a renderable is attached to a scenery.
-	virtual void Attached(DynamicScenery *pScenery, const RenderableData &data, RenderablePass &pass, uint4 passIdx, RenderableDataAllocator &allocator) = 0;
-	/// Called when a renderable is detached from a scenery.
-	virtual void Detached(DynamicScenery *pScenery) { }
-
-	/// Gets the sort index.
-	virtual uint4 GetSortIndex() const = 0;
-	/// Gets the number of passes.
-	virtual uint4 GetPassCount() const = 0;
-
-	/// Prepares this renderable object.
-	virtual void* Prepare(Perspective &perspective, PerspectiveScheduler &perspectiveScheduler) const { return nullptr; }
-	/// Prepares this renderable object.
-	virtual void Finalize(Perspective &perspective, void *pData) const { }
+	/// Perform visiblity culling.
+	virtual void Cull(PipelinePerspective &perspective) const = 0;
+	/// Prepares the given render queue for the given perspective.
+	virtual void Prepare(PipelinePerspective &perspective, PipelineQueueID queueID,
+		const PipelineStageDesc &stageDesc, const RenderQueueDesc &queueDesc) const = 0;
+	/// Prepares the collected render queues for the given perspective.
+	BE_SCENE_API virtual void Collect(PipelinePerspective &perspective) const { }
+	/// Performs optional optimization such as sorting.
+	virtual void Optimize(const PipelinePerspective &perspective, PipelineQueueID queueID) const = 0;
+	/// Prepares rendering from the collected render queues for the given perspective.
+	BE_SCENE_API virtual void PreRender(const PipelinePerspective &perspective, const RenderContext &context) const { }
+	/// Renders the given render queue for the given perspective.
+	virtual void Render(const PipelinePerspective &perspective, PipelineQueueID queueID, const RenderContext &context) const = 0;
+	/// Renders the given single object for the given perspective.
+	virtual void Render(uint4 objectID, const PipelinePerspective &perspective, PipelineQueueID queueID, const RenderContext &context) const = 0;
+	/// Finalizes rendering from the collected render queues for the given perspective.
+	BE_SCENE_API virtual void PostRender(const PipelinePerspective &perspective, const RenderContext &context) const { }
+	/// Releases temporary rendering resources.
+	BE_SCENE_API virtual void ReleaseIntermediate(PipelinePerspective &perspective) const { }
 };
 
 } // namespace

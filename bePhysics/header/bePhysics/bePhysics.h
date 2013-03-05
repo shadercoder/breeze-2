@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS
 #define BE_PHYSICS
 
@@ -110,8 +111,13 @@ namespace bePhysics
 /// Shorthand namespace.
 namespace breeze
 {
-	/// Physics namespace alias.
+#ifndef DOXYGEN_READ_THIS
+	/// bePhysics namespace alias.
 	namespace bepx = ::bePhysics;
+#else
+	/// bePhysics namespace alias.
+	namespace bepx { using namespace ::bePhysics; }
+#endif
 }
 
 /// @}

@@ -1,7 +1,7 @@
 #ifndef SHAPEIMPORTDIALOG_H
 #define SHAPEIMPORTDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_ShapeImportDialog.h"
 
 class Editor;
@@ -21,7 +21,7 @@ private Q_SLOTS:
 
 public:
 	/// Constructor.
-	ShapeImportDialog(Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	ShapeImportDialog(Editor *pEditor, QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~ShapeImportDialog();
 

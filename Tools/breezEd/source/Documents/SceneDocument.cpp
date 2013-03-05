@@ -3,7 +3,7 @@
 
 #include "Interaction/DropInteraction.h"
 
-#include <QtGui/QUndoStack>
+#include <QtWidgets/QUndoStack>
 
 #include "Editor.h"
 #include "DeviceManager.h"
@@ -13,6 +13,8 @@
 #include <bePhysics/beSerializationParameters.h>
 
 #include <beScene/beShaderDrivenPipeline.h>
+
+#include <beEntitySystem/beEntities.h>
 
 #include "Utility/Strings.h"
 #include "Utility/Checked.h"
@@ -24,39 +26,40 @@ const char *const SceneDocument::DocumentTypeName = "Scene";
 SceneDocument::SceneDocument(const QString &type, const QString &name, const QString &file, bool bLoadFromFile, Editor *pEditor, QObject *pParent)
 	: AbstractDocument(type, name, file, pEditor, pParent),
 	m_pUndoStack( new QUndoStack(this) ),
-	m_pWorld( nullptr ),
-	m_pSimulation( lean::new_resource<beEntitySystem::Simulation>( toUtf8Range(name) ) ),
-	m_pRenderer( beScene::CreateEffectDrivenRenderer(editor()->deviceManager()->graphicsDevice()) ),
-	m_pRenderContext( beScene::CreateRenderContext(m_pRenderer->ImmediateContext()) ),
-	m_pScene( lean::new_resource<beScene::SceneController>(m_pSimulation, m_pRenderer->Pipeline(), m_pRenderContext) ),
-	m_pPhysics( lean::new_resource<bePhysics::SceneController>(m_pSimulation, editor()->deviceManager()->physicsDevice()) ),
-	m_pPrimaryView(),
-	m_pDropInteraction()
+	m_pGraphicsResources( beScene::CreateResourceManager(editor()->deviceManager()->graphicsDevice(), "EffectCache", "Effects", "Textures", "Materials", "Meshes") ),
+	m_pPhysicsResources( bePhysics::CreateResourceManager(editor()->deviceManager()->physicsDevice(), "PhysicsMaterials", "PhysicsShapes", m_pGraphicsResources->Monitor()) ),
+	m_pRenderer( beScene::CreateEffectDrivenRenderer(editor()->deviceManager()->graphicsDevice(), m_pGraphicsResources->Monitor()) ),
+	m_pRenderContext( beScene::CreateRenderContext(*m_pRenderer->ImmediateContext()) ),
+	m_pPrimaryView()
 {
+	
+	// TODO: read from somewhere
+	beScene::LoadRenderingPipeline(*m_pRenderer->Pipeline(),
+		m_pGraphicsResources->EffectCache()->GetByFile("Pipelines/LPR/Pipeline.fx", nullptr, 0),
+		*m_pRenderer->RenderableDrivers());
+
+	{
+		lean::scoped_ptr<bees::WorldControllers> controllers = new_scoped bees::WorldControllers();
+	
+		m_pScene = new besc::RenderingController(m_pRenderer->Pipeline(), m_pRenderContext);
+		controllers->AddControllerKeep(m_pScene);
+
+		m_pPhysics = new bepx::SceneController(editor()->deviceManager()->physicsDevice());
+		controllers->AddControllerKeep(m_pPhysics);
+
+		if (bLoadFromFile)
+			m_pWorld = new_resource bees::World( toUtf8Range(name), toUtf8Range(file), getSerializationParameters(), controllers.move_ptr() );
+		else
+			m_pWorld = new_resource bees::World( toUtf8Range(name), controllers.move_ptr() );
+	}
+
+	m_pSimulation = new_resource bees::Simulation( toUtf8Range(name) );
+	m_pSimulation->Pause(true);
+	Attach(m_pWorld, m_pSimulation);
+
 	// Keep documents in sync
 	checkedConnect(m_pUndoStack, SIGNAL(cleanChanged(bool)), this, SLOT(setClean(bool)));
 	checkedConnect(this, SIGNAL(documentClean()), m_pUndoStack, SLOT(setClean()));
-
-	// TODO: read from somewhere
-	beScene::LoadRenderingPipeline(*m_pRenderer->Pipeline(),
-		*editor()->deviceManager()->graphicsResources()->EffectCache()->GetEffect("Pipelines/LPR/Pipeline.fx", nullptr, 0),
-		*m_pRenderer->RenderableDrivers());
-
-	m_pSimulation->Pause(true);
-
-	m_pSimulation->AddController(m_pScene);
-	m_pSimulation->AddController(m_pPhysics);
-	m_pSimulation->Attach();
-
-	if (bLoadFromFile)
-	{
-		beCore::ParameterSet serializationParams( getSerializationParameters() );
-		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8Range(name), toUtf8Range(file), serializationParams );
-	}
-	else
-		m_pWorld = lean::new_resource<beEntitySystem::World>( toUtf8Range(name) ); 
-
-	m_pWorld->Attach();
 }
 
 // Destructor.
@@ -80,19 +83,9 @@ void SceneDocument::pushInteraction(Interaction *pInteraction)
 	pInteraction->attach();
 }
 
-// Adds the given interaction.
-void SceneDocument::pushInteraction(DropInteraction *pInteraction)
-{
-	pushInteraction( static_cast<Interaction*>(pInteraction) );
-	m_pDropInteraction = pInteraction;
-}
-
 // Removes the given interaction.
 void SceneDocument::removeInteraction(Interaction *pInteraction)
 {
-	if (pInteraction == m_pDropInteraction)
-		m_pDropInteraction = nullptr;
-
 	int idx = m_interactions.indexOf(pInteraction);
 	
 	if (idx != -1)
@@ -100,6 +93,29 @@ void SceneDocument::removeInteraction(Interaction *pInteraction)
 		m_interactions.remove(idx);
 		pInteraction->detach();
 	}
+}
+
+// Commits changes.
+void SceneDocument::commit()
+{
+	for (bool bRetry = true; bRetry; )
+		try
+		{
+			// TODO
+//			Q_EMIT preCommit();
+
+			m_pGraphicsResources->Commit();
+			m_pRenderer->Commit();
+			m_pPhysicsResources->Commit();
+			m_pWorld->Commit();
+
+			Q_EMIT postCommit();
+			bRetry = m_pGraphicsResources->Monitor->ChangesPending();
+		}
+		catch (...)
+		{
+			exceptionToMessageBox("Commit failed", "An unexpected error occurred while trying to react to changes, try to fix then retry.");
+		}
 }
 
 // Clears the selection.
@@ -111,9 +127,9 @@ void SceneDocument::clearSelection()
 // Select everything.
 void SceneDocument::selectAll()
 {
-	beEntitySystem::World::Entities entities = m_pWorld->GetEntities();
-	EntityVector selection(entities.size());
-	std::copy(entities.begin(), entities.end(), selection.begin());
+	beEntitySystem::Entities::Range entities = m_pWorld->Entities()->GetEntities();
+	EntityVector selection(Size(entities));
+	std::copy(entities.Begin, entities.End, selection.begin());
 	setSelection(selection);
 }
 
@@ -144,19 +160,18 @@ beCore::ParameterSet SceneDocument::getSerializationParameters()
 // Sets all available serialization parameters.
 void SceneDocument::setSerializationParameters(beCore::ParameterSet &serializationParams)
 {
-	beEntitySystem::EntitySystemParameters entityParameters(m_pSimulation);
+	beEntitySystem::EntitySystemParameters entityParameters(m_pWorld);
 	SetEntitySystemParameters(serializationParams, entityParameters);
 
 	beScene::SceneParameters sceneParameters(
-			editor()->deviceManager()->graphicsResources(),
-			m_pRenderer,
-			m_pScene, m_pScene->GetScenery()
+			m_pGraphicsResources,
+			m_pRenderer, m_pScene
 		);
 	SetSceneParameters(serializationParams, sceneParameters);
 
 	bePhysics::PhysicsParameters physicsParameters(
 			editor()->deviceManager()->physicsDevice(),
-			editor()->deviceManager()->physicsResources(),
+			m_pPhysicsResources,
 			m_pPhysics, m_pPhysics->GetScene()
 		);
 	SetPhysicsParameters(serializationParams, physicsParameters);
@@ -260,7 +275,7 @@ public:
 	}
 
 	/// Creates a default mdi document view.
-	QWidget* createDocumentView(AbstractDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+	QWidget* createDocumentView(AbstractDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	{
 		DocumentModeState *pDocumentModeState = pDocumentMode->findChild<DocumentModeState*>();
 		Mode *pViewModes = LEAN_ASSERT_NOT_NULL(pDocumentModeState)->viewModes();

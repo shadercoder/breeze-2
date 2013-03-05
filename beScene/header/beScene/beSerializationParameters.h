@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_SERIALIZATION_PARAMETERS
 #define BE_SCENE_SERIALIZATION_PARAMETERS
 
@@ -15,26 +16,22 @@ namespace beScene
 // Prototypes
 class ResourceManager;
 class EffectDrivenRenderer;
-class SceneController;
-class DynamicScenery;
+class RenderingController;
 
 /// Scene parameter IDs.
 struct SceneParameterIDs
 {
 	uint4 ResourceManager;
 	uint4 Renderer;
-	uint4 SceneController;
-	uint4 Scenery;
+	uint4 RenderingController;
 
 	/// Non-initializing constructor.
 	SceneParameterIDs() { }
 	/// Constructor.
-	SceneParameterIDs(uint4 resourceManagerID, uint4 rendererID,
-		uint4 sceneControllerID, uint4 sceneryID)
+	SceneParameterIDs(uint4 resourceManagerID, uint4 rendererID, uint4 renderingControllerID)
 			: ResourceManager(resourceManagerID),
 			Renderer(rendererID),
-			SceneController(sceneControllerID),
-			Scenery(sceneryID) { }
+			RenderingController(renderingControllerID) { }
 };
 
 /// Scene parameters.
@@ -42,24 +39,20 @@ struct SceneParameters
 {
 	ResourceManager *ResourceManager;
 	EffectDrivenRenderer *Renderer;
-	SceneController *SceneController;
-	DynamicScenery *Scenery;
+	RenderingController *RenderingController;
 
 	/// Default constructor.
 	SceneParameters()
 		: ResourceManager(),
 		Renderer(),
-		SceneController(),
-		Scenery() { }
+		RenderingController() { }
 	/// Constructor.
 	SceneParameters(class ResourceManager *pResourceManager,
 		EffectDrivenRenderer *pRenderer,
-		class SceneController *pSceneController = nullptr,
-		class DynamicScenery *pScenery = nullptr)
+		class RenderingController *pRenderingController = nullptr)
 			: ResourceManager(pResourceManager),
 			Renderer(pRenderer),
-			SceneController(pSceneController),
-			Scenery(pScenery) { }
+			RenderingController(pRenderingController) { }
 };
 
 /// Gets the serialization parameter IDs.
