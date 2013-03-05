@@ -2,57 +2,54 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_MATERIALCACHE
 #define BE_PHYSICS_MATERIALCACHE
 
 #include "bePhysics.h"
 #include <beCore/beShared.h>
+#include <beCore/beResourceManagerImpl.h>
 #include <lean/tags/noncopyable.h>
-#include <lean/smart/resource_ptr.h>
 #include "beMaterial.h"
+#include <beCore/beComponentMonitor.h>
+#include <lean/smart/resource_ptr.h>
 #include <beCore/bePathResolver.h>
 #include <beCore/beContentProvider.h>
-#include <beCore/beDependencies.h>
 
 namespace bePhysics
 {
 
+class Device;
+
 /// Material cache interface.
-class MaterialCache : public lean::noncopyable, public beCore::Resource, public Implementation
+class MaterialCache : public lean::noncopyable, public beCore::ResourceManagerImpl<Material, MaterialCache>
 {
+	friend ResourceManagerImpl;
+	
 public:
-	virtual ~MaterialCache() throw() { }
+	struct M;
 
-	/// Sets the given name for the given material.
-	virtual Material* Set(bePhysics::Material *material, const utf8_ntri &name) = 0;
-	/// Sets the given name for the given material, unsetting the old name.
-	virtual void Rename(const bePhysics::Material *material, const utf8_ntri &name) = 0;
-	/// Gets a material by name.
-	virtual Material* GetByName(const utf8_ntri &name, bool bThrow = false) const = 0;
+private:
+	lean::pimpl_ptr<M> m;
 
-	/// Gets a material by file.
-	virtual Material* GetByFile(const utf8_ntri &file) = 0;
-	/// Sets the given file for the given material, overriding the old file.
-	virtual void Refile(const bePhysics::Material *material, const utf8_ntri &file) = 0;
+public:
+	/// Constructor.
+	BE_PHYSICS_API MaterialCache(Device *device, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider);
+	/// Destructor.
+	BE_PHYSICS_API ~MaterialCache();
 
-	/// Unsets the given material.
-//	virtual void Unset(const bePhysics::Material *material) = 0;
+	/// Commits / reacts to changes.
+	BE_PHYSICS_API void Commit();
 
-	/// Gets the main name associated with the given material.
-	virtual utf8_ntr GetName(const bePhysics::Material *material) const = 0;
-	/// Gets the file associated with the given material.
-	virtual utf8_ntr GetFile(const bePhysics::Material *material) const = 0;
-
-	/// Notifies dependent listeners about dependency changes.
-	virtual void NotifyDependents() = 0;
-	/// Gets the dependencies registered for the given material.
-	virtual beCore::Dependency<bePhysics::Material*>* GetDependency(const bePhysics::Material *material) = 0;
+	/// Sets the component monitor.
+	BE_PHYSICS_API void SetComponentMonitor(beCore::ComponentMonitor *componentMonitor);
+	/// Gets the component monitor.
+	BE_PHYSICS_API beCore::ComponentMonitor* GetComponentMonitor() const;
 
 	/// Gets the path resolver.
-	virtual const beCore::PathResolver& GetPathResolver() const = 0;
-	
+	BE_PHYSICS_API const beCore::PathResolver& GetPathResolver() const;
 	/// Gets the device.
-	virtual Device* GetDevice() const = 0;
+	BE_PHYSICS_API Device* GetDevice() const;
 };
 
 /// Creates a physics material cache.

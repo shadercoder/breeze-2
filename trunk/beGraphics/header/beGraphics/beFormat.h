@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_FORMAT
 #define BE_GRAPHICS_FORMAT
 
@@ -11,7 +12,7 @@ namespace beGraphics
 {
 
 /// Enumeration of data / pixel formats.
-namespace Format
+struct Format
 {
 	/// Enumeration.
 	enum T
@@ -77,8 +78,8 @@ namespace Format
 
 		End
 	};
-
-} // namespace
+	LEAN_MAKE_ENUM_STRUCT(Format)
+};
 
 /// Multisampling type description.
 struct SampleDesc

@@ -2,10 +2,12 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_GENERIC_TEXT_SERIALIZER
 #define BE_CORE_GENERIC_TEXT_SERIALIZER
 
 #include "beCore.h"
+#include "beTextSerializer.h"
 #include <lean/io/generic.h>
 
 namespace beCore

@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_ERROR_DX
 #define BE_GRAPHICS_ERROR_DX
 
@@ -16,7 +17,7 @@ namespace DX
 {
 
 /// Gets an error message describing the given DirectX error.
-BE_GRAPHICS_API const utf16_t* GetDXError(HRESULT error);
+BE_GRAPHICS_API const utf8_t* GetDXError(HRESULT error);
 
 /// Gets an error message describing the given DirectX error.
 template <class String>
@@ -28,13 +29,13 @@ String GetDXError(HRESULT error);
 template <>
 inline utf16_string GetDXError(HRESULT error)
 {
-	return utf16_string( GetDXError(error) );
+	return lean::strings::utf_to_utf16( GetDXError(error) );
 }
 /// Gets an error message describing the given DirectX error.
 template <>
 inline utf8_string GetDXError(HRESULT error)
 {
-	return lean::strings::utf_to_utf8( GetDXError(error) );
+	return utf8_string( GetDXError(error) );
 }
 
 #endif

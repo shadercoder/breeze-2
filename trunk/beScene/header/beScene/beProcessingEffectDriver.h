@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_PROCESSING_EFFECT_DRIVER
 #define BE_SCENE_PROCESSING_EFFECT_DRIVER
 
@@ -34,19 +35,12 @@ public:
 	/// Destructor.
 	BE_SCENE_API ~ProcessingEffectDriver();
 
-	/// Applies the given perspective data to the effect bound by this effect driver.
-	BE_SCENE_API bool Apply(const Perspective *pPerspective,
-		beGraphics::StateManager& stateManager,const beGraphics::DeviceContext &context) const;
+	/// Draws the given pass.
+	BE_SCENE_API void Render(const QueuedPass *pPass, const void *pProcessor, const Perspective *pPerspective,
+		lean::vcallable<DrawJobSignature> &drawJob, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const;
 
-	/// Applies the given pass to the effect bound by this effect driver.
-	BE_SCENE_API bool ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
-		const void *pProcessor, const Perspective *pPerspective,
-		beGraphics::StateManager& stateManager, const beGraphics::DeviceContext &context) const;
-
-	/// Gets the number of passes.
-	BE_SCENE_API uint4 GetPassCount() const;
-	/// Gets the pass identified by the given ID.
-	BE_SCENE_API const PipelineEffectBinderPass* GetPass(uint4 passID) const;
+	/// Gets the passes.
+	BE_SCENE_API PassRange GetPasses() const;
 
 	/// Gets the pipeline effect binder.
 	LEAN_INLINE const PipelineEffectBinder& GetPipelineBinder() const { return m_pipelineBinder; }

@@ -26,7 +26,7 @@ namespace
 const uint4 MaterialSerializerID = beEntitySystem::GetSerializationParameters().Add("bePhysics.MaterialSerializer");
 
 /// Serializes a list of materials.
-class MaterialSerializer : public beEntitySystem::SaveJob
+class MaterialSerializer : public beCore::SaveJob
 {
 private:
 	typedef std::set<const Material*> material_set;
@@ -42,7 +42,7 @@ public:
 	}
 
 	/// Saves anything, e.g. to the given XML root node.
-	void Save(rapidxml::xml_node<lean::utf8_t> &root, beCore::ParameterSet &parameters, beEntitySystem::SerializationQueue<SaveJob> &queue) const
+	void Save(rapidxml::xml_node<lean::utf8_t> &root, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue) const
 	{
 		rapidxml::xml_document<utf8_t> &document = *root.document();
 
@@ -68,7 +68,7 @@ public:
 } // namespace
 
 // Schedules the given material for inline serialization.
-void SaveMaterial(const Material *pMaterial, beCore::ParameterSet &parameters, beEntitySystem::SerializationQueue<beEntitySystem::SaveJob> &queue)
+void SaveMaterial(const Material *pMaterial, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue)
 {
 	MaterialSerializer *pSerializer = parameters.GetValueDefault< MaterialSerializer* >(beEntitySystem::GetSerializationParameters(), MaterialSerializerID, nullptr);
 
@@ -90,11 +90,11 @@ namespace
 {
 
 /// Loads a list of materials.
-class MaterialLoader : public beEntitySystem::LoadJob
+class MaterialLoader : public beCore::LoadJob
 {
 public:
 	/// Loads anything, e.g. to the given XML root node.
-	void Load(const rapidxml::xml_node<lean::utf8_t> &root, beCore::ParameterSet &parameters, beEntitySystem::SerializationQueue<LoadJob> &queue) const
+	void Load(const rapidxml::xml_node<lean::utf8_t> &root, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const
 	{
 		PhysicsParameters physicsParameters = GetPhysicsParameters(parameters);
 		MaterialCache &materialCache = *LEAN_ASSERT_NOT_NULL(physicsParameters.ResourceManager)->MaterialCache();
@@ -111,15 +111,15 @@ public:
 				// Do not overwrite materials, if not permitted
 				if (!bNoOverwrite || !materialCache.GetByName(name))
 				{
-					lean::resource_ptr<Material> pMaterial = LoadMaterial(*physicsParameters.Device, *materialNode, &materialCache);
-					materialCache.Set(pMaterial, name);
+					lean::resource_ptr<Material> pMaterial = LoadMaterial(*physicsParameters.Device, *materialNode);
+					materialCache.SetName(pMaterial, name);
 				}
 			}
 	}
 };
 
-const beEntitySystem::LoadTaskPlugin<MaterialLoader, &beEntitySystem::GetResourceLoadTasks> MaterialLoaderPlugin;
-
 } // namespace
+
+const bec::LoadJob *CreateMaterialLoader() { return new MaterialLoader(); }
 
 } // namespace

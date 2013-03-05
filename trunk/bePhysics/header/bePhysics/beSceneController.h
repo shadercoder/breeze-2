@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module  (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_SCENECONTROLLER
 #define BE_PHYSICS_SCENECONTROLLER
 
@@ -22,17 +23,17 @@ class SceneController : public beEntitySystem::SimulationController,
 	public beEntitySystem::SynchronizedHost, public beEntitySystem::AnimatedHost
 {
 private:
-	bool m_bActive;
-
 	lean::resource_ptr<Scene> m_pScene;
+
+	beEntitySystem::Simulation *m_pAttachedTo;
 
 	float m_timeStep;
 
 public:
 	/// Constructor.
-	BE_PHYSICS_API SceneController(beEntitySystem::Simulation *pSimulation, Scene *scene);
+	BE_PHYSICS_API SceneController(Scene *scene);
 	/// Constructor.
-	BE_PHYSICS_API SceneController(beEntitySystem::Simulation *pSimulation, Device *device);
+	BE_PHYSICS_API SceneController(Device *device);
 	/// Destructor.
 	BE_PHYSICS_API ~SceneController();
 
@@ -45,9 +46,9 @@ public:
 	BE_PHYSICS_API void Step(float timeStep);
 
 	/// Attaches this controller to its simulation(s) / data source(s).
-	BE_PHYSICS_API void Attach();
+	BE_PHYSICS_API void Attach(beEntitySystem::Simulation *simulation);
 	/// Detaches this controller from its simulation(s) / data source(s).
-	BE_PHYSICS_API void Detach();
+	BE_PHYSICS_API void Detach(beEntitySystem::Simulation *simulation);
 
 	/// Gets the physics scene.
 	BE_PHYSICS_API Scene* GetScene();
@@ -55,9 +56,9 @@ public:
 	BE_PHYSICS_API const Scene* GetScene() const;
 
 	/// Gets the controller type.
-	BE_PHYSICS_API static utf8_ntr GetControllerType();
+	BE_PHYSICS_API static const beCore::ComponentType* GetComponentType();
 	/// Gets the controller type.
-	utf8_ntr GetType() const { return GetControllerType(); }
+	BE_PHYSICS_API const beCore::ComponentType* GetType() const;
 };
 
 } // nmaespace

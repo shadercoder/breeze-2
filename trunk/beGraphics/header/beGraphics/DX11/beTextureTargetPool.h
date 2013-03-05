@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_TEXTURE_TARGET_POOL_DX11
 #define BE_GRAPHICS_TEXTURE_TARGET_POOL_DX11
 
@@ -92,12 +93,12 @@ protected:
 	mutable int m_references;
 	mutable int m_uses;
 
-public:
 	/// Constructor. Texture is OPTIONAL.
 	BE_GRAPHICS_API TextureTarget(const DX11::TextureTargetDesc &desc, ID3D11Resource *pResource, ID3D11ShaderResourceView *pTexture, texture_ptr *pTextures = nullptr);
 	/// Destructor.
 	BE_GRAPHICS_API ~TextureTarget();
 
+public:
 	/// Gets the resource.
 	LEAN_INLINE ID3D11Resource* GetResource() const { return m_pResource; }
 	/// Gets the texture. OPTIONAL, may return nullptr.

@@ -22,7 +22,12 @@
     <None Include="..\Bin\Data\Effects\2.0\Engine\Renderable.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Engine\Shadow.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Engine\SpotLight.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Hooks\Transform.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Bump.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Materials\Fur.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Modifiers\Wind.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Processing\FXAA.fx" />
+    <None Include="..\Bin\Data\Effects\2.0\Utility\Color.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Utility\Hilbert.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\DirectionalLight.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Lights\PointLight.fx" />
@@ -52,6 +57,10 @@
     <None Include="..\Bin\Data\Effects\2.0\Prototypes\Shadow.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Utility\Bits.fx" />
     <None Include="..\Bin\Data\Effects\2.0\Utility\Math.fx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Bin\Data\Effects\2.0\External\Fxaa3_11.h" />
+    <ClInclude Include="..\Bin\Data\Effects\2.0\External\Fxaa3_8.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{953F5404-B0BB-471C-BC6E-92CB0A93DA24}</ProjectGuid>

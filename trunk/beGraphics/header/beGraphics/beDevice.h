@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module  (c) Tobias Zirr 2011 */
 /*******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_DEVICE
 #define BE_GRAPHICS_DEVICE
 
@@ -16,7 +17,7 @@ namespace beGraphics
 {
 
 /// Device type enumeration.
-namespace DeviceType
+struct DeviceType
 {
 	/// Enumeration.
 	enum T
@@ -25,7 +26,8 @@ namespace DeviceType
 		Software,	///< Software device
 		End
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(DeviceType)
+};
 
 /// Device description.
 struct DeviceDesc

@@ -4,7 +4,7 @@
 #include "Utility/Checked.h"
 
 // Constructor.
-BrowseWidget::BrowseWidget( QWidget *pParent, Qt::WFlags flags)
+BrowseWidget::BrowseWidget( QWidget *pParent, Qt::WindowFlags flags)
 	: QWidget(pParent, flags)
 {
 	ui.setupUi(this);
@@ -15,6 +15,7 @@ BrowseWidget::BrowseWidget( QWidget *pParent, Qt::WFlags flags)
 	checkedConnect(ui.browseButton, SIGNAL(clicked()), this, SIGNAL(browse()));
 	checkedConnect(ui.pathEdit, SIGNAL(cursorPositionChanged(int, int)), this, SIGNAL(editingStarted()));
 	checkedConnect(ui.pathEdit, SIGNAL(editingFinished()), this, SIGNAL(editingFinished()));
+	checkedConnect(ui.pathEdit, SIGNAL(editingFinished()), this, SIGNAL(pathSelected()));
 }
 
 // Destructor.
@@ -33,6 +34,8 @@ void BrowseWidget::installFocusHandler(QObject *handler)
 void BrowseWidget::setPath(const QString &path)
 {
 	ui.pathEdit->setText(path);
+
+	Q_EMIT pathSelected();
 }
 
 // Gets the path.

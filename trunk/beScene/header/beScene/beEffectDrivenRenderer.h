@@ -2,12 +2,14 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_EFFECT_DRIVEN_RENDERER
 #define BE_SCENE_EFFECT_DRIVEN_RENDERER
 
 #include "beScene.h"
 #include "beRenderer.h"
 #include "beEffectBinderCache.h"
+#include <beCore/beComponentMonitor.h>
 #include <lean/smart/resource_ptr.h>
 
 namespace beScene
@@ -16,29 +18,25 @@ namespace beScene
 // Prototypes
 class PerspectiveEffectBinderPool;
 class AbstractRenderableEffectDriver;
+class AbstractLightEffectDriver;
 class AbstractProcessingEffectDriver;
 class RenderableMaterialCache;
+class RenderableMeshCache;
+class LightMaterialCache;
 
 /// Renderer.
 class EffectDrivenRenderer : public Renderer
 {
-private:
-	const lean::resource_ptr< PerspectiveEffectBinderPool > m_pPerspectivePool;
-
-	const lean::resource_ptr< EffectBinderCache<AbstractRenderableEffectDriver> > m_pRenderableDrivers;
-
-	const lean::resource_ptr< EffectBinderCache<AbstractProcessingEffectDriver> > m_pProcessingDrivers;
-
-	const lean::resource_ptr< RenderableMaterialCache > m_pRenderableMaterials;
-
 public:
 	/// Constructor.
-	BE_SCENE_API EffectDrivenRenderer(beGraphics::Device *pDevice, beGraphics::TextureTargetPool *pTargetPool, class PipePool *pPipePool,
-		beScene::RenderingPipeline *pPipeline,
-		PerspectiveEffectBinderPool *pPerspectivePool,
-		EffectBinderCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
-		EffectBinderCache<AbstractProcessingEffectDriver> *pProcessingDrivers,
-		RenderableMaterialCache *pRenderableMaterials);
+	BE_SCENE_API EffectDrivenRenderer(Renderer &base,
+		PerspectiveEffectBinderPool *perspectiveEffectPool,
+		EffectDriverCache<AbstractProcessingEffectDriver> *processingDrivers,
+		EffectDriverCache<AbstractRenderableEffectDriver> *renderableDrivers,
+		RenderableMaterialCache *renderableMaterials,
+		RenderableMeshCache *renderableMeshes,
+		EffectDriverCache<AbstractLightEffectDriver> *lightDrivers,
+		LightMaterialCache *lightMaterials);
 	/// Copy constructor.
 	BE_SCENE_API EffectDrivenRenderer(const EffectDrivenRenderer &right);
 	/// Destructor.
@@ -47,45 +45,47 @@ public:
 	/// Invalidates all caches.
 	BE_SCENE_API virtual void InvalidateCaches();
 
-	/// Gets the perspective effect binder pool.
-	LEAN_INLINE PerspectiveEffectBinderPool* PerspectivePool() { return m_pPerspectivePool; }
-	/// Gets the device.
-	LEAN_INLINE const PerspectiveEffectBinderPool* PerspectivePool() const { return m_pPerspectivePool; }
+	/// Perspective effect binder pool.
+	lean::resource_ptr< PerspectiveEffectBinderPool > PerspectiveEffectBinderPool;
 
-	/// Gets the renderable effect driver cache.
-	LEAN_INLINE EffectBinderCache<AbstractRenderableEffectDriver>* RenderableDrivers() { return m_pRenderableDrivers; }
-	/// Gets the renderable effect driver cache.
-	LEAN_INLINE const EffectBinderCache<AbstractRenderableEffectDriver>* RenderableDrivers() const { return m_pRenderableDrivers; }
+	/// Processing effect driver cache. 
+	lean::resource_ptr< EffectDriverCache<AbstractProcessingEffectDriver> > ProcessingDrivers;
 
-	/// Gets the processing effect driver cache.
-	LEAN_INLINE EffectBinderCache<AbstractProcessingEffectDriver>* ProcessingDrivers() { return m_pProcessingDrivers; }
-	/// Gets the processing effect driver cache.
-	LEAN_INLINE const EffectBinderCache<AbstractProcessingEffectDriver>* ProcessingDrivers() const { return m_pProcessingDrivers; }
+	/// Renderable effect driver cache.
+	lean::resource_ptr< EffectDriverCache<AbstractRenderableEffectDriver> > RenderableDrivers;
+	/// Effect-driven renderable material cache.
+	lean::resource_ptr< RenderableMaterialCache > RenderableMaterials;
+	/// Effect-driven renderable mesh cache.
+	lean::resource_ptr< RenderableMeshCache > RenderableMeshes;
 
-	/// Gets the renderable effect driver cache.
-	LEAN_INLINE RenderableMaterialCache* RenderableMaterials() { return m_pRenderableMaterials; }
-	/// Gets the renderable effect driver cache.
-	LEAN_INLINE const RenderableMaterialCache* RenderableMaterials() const { return m_pRenderableMaterials; }
+	/// Light effect driver cache.
+	lean::resource_ptr< EffectDriverCache<AbstractLightEffectDriver> > LightDrivers;
+	/// Effect-driven light material cache.
+	lean::resource_ptr< LightMaterialCache > LightMaterials;
+
+	/// Commits / reacts to changes.
+	BE_SCENE_API virtual void Commit();
 };
 
 /// Creates a renderer from the given parameters.
-BE_SCENE_API lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(beGraphics::Device *pDevice);
+BE_SCENE_API lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(beGraphics::Device *device, beCore::ComponentMonitor *pMonitor);
 /// Creates a renderer from the given parameters.
-BE_SCENE_API lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer);
+BE_SCENE_API lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer, beCore::ComponentMonitor *pMonitor);
 /// Creates a renderer from the given parameters.
-BE_SCENE_API lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer,
-	PerspectiveEffectBinderPool *pPerspectivePool);
-/// Creates a renderer from the given parameters.
-BE_SCENE_API lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer,
+BE_SCENE_API lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer, beCore::ComponentMonitor *pMonitor,
 	PerspectiveEffectBinderPool *pPerspectivePool, 
-	EffectBinderCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
-	EffectBinderCache<AbstractProcessingEffectDriver> *pProcessingDrivers);
+	EffectDriverCache<AbstractProcessingEffectDriver> *pProcessingDrivers,
+	EffectDriverCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
+	EffectDriverCache<AbstractLightEffectDriver> *pLightDrivers);
 /// Creates a renderer from the given parameters.
-BE_SCENE_API lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer,
+BE_SCENE_API lean::resource_ptr<EffectDrivenRenderer, true> CreateEffectDrivenRenderer(Renderer &renderer, beCore::ComponentMonitor *pMonitor,
 	PerspectiveEffectBinderPool *pPerspectivePool, 
-	EffectBinderCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
-	EffectBinderCache<AbstractProcessingEffectDriver> *pProcessingDrivers,
-	RenderableMaterialCache *pRenderableMaterials);
+	EffectDriverCache<AbstractProcessingEffectDriver> *pProcessingDrivers,
+	EffectDriverCache<AbstractRenderableEffectDriver> *pRenderableDrivers,
+	RenderableMaterialCache *pRenderableMaterials,
+	RenderableMeshCache *pRenderableMesh,
+	EffectDriverCache<AbstractLightEffectDriver> *pLightDrivers,
+	LightMaterialCache *pLightMaterials);
 
 } // namespace
 

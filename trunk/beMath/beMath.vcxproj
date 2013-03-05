@@ -91,6 +91,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>beMathInternal/StdAfx.h</PrecompiledHeaderFile>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -173,6 +175,7 @@
     <ClInclude Include="header\beMath\beTuple.h" />
     <ClInclude Include="header\beMath\beTupleExpressions.h" />
     <ClInclude Include="header\beMath\beTupleFwd.h" />
+    <ClInclude Include="header\beMath\beUtility.h" />
     <ClInclude Include="header\beMath\beVector.h" />
     <ClInclude Include="header\beMath\beVectorDef.h" />
     <ClInclude Include="header\beMath\beVectorFwd.h" />

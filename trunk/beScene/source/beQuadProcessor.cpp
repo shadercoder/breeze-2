@@ -10,7 +10,6 @@
 #include "beScene/beAbstractProcessingEffectDriver.h"
 #include "beScene/beRenderContext.h"
 #include "beScene/beRenderingLimits.h"
-#include <beGraphics/Any/beSetup.h>
 #include <beGraphics/Any/beDevice.h>
 #include <beGraphics/Any/beDeviceContext.h>
 #include <beGraphics/Any/beStateManager.h>
@@ -24,19 +23,19 @@ struct QuadProcessor::Layer
 {
 	lean::com_ptr<ID3D11InputLayout> pInputLayout;
 	lean::resource_ptr<const AbstractProcessingEffectDriver> pEffectDriver;
-	lean::resource_ptr<const beGraphics::Any::Setup> pSetup;
+	const beg::MaterialTechnique *technique;
 
 	/// Constructor.
 	Layer(ID3D11InputLayout *pInputLayout,
 		const AbstractProcessingEffectDriver *pEffectDriver,
-		const beGraphics::Any::Setup *pSetup)
+		const beg::MaterialTechnique *technique)
 			: pInputLayout(pInputLayout),
 			pEffectDriver(pEffectDriver),
-			pSetup(pSetup) { }
+			technique(technique) { }
 };
 
 // Constructor.
-QuadProcessor::QuadProcessor(const beGraphics::Device *pDevice, EffectBinderCache<AbstractProcessingEffectDriver> *pEffectBinderCache)
+QuadProcessor::QuadProcessor(const beGraphics::Device *pDevice, EffectDriverCache<AbstractProcessingEffectDriver> *pEffectBinderCache)
 	: MaterialDriven(nullptr),
 	m_pEffectBinderCache( LEAN_ASSERT_NOT_NULL(pEffectBinderCache) ),
 	m_pDevice( LEAN_ASSERT_NOT_NULL(pDevice) ),
@@ -64,14 +63,14 @@ void QuadProcessor::Render(uint4 layerIdx, uint4 stageID, uint4 queueID, const P
 
 	const Layer &layer = m_layers[layerIdx];
 
-	const uint4 passCount = layer.pEffectDriver->GetPassCount();
+	AbstractProcessingEffectDriver::PassRange passes = layer.pEffectDriver->GetPasses();
 	bool bLayerReady = false;
 
-	for (uint4 passID = 0; passID < passCount; ++passID)
+	for (uint4 passID = 0; passID < Size(passes); ++passID)
 	{
-		const QueuedPass *pPass = layer.pEffectDriver->GetPass(passID);
+		const QueuedPass &pass = passes.Begin[passID];
 
-		if (pPass->GetStageID() == stageID && pPass->GetQueueID() == queueID)
+		if (pass.GetStageID() == stageID && pass.GetQueueID() == queueID)
 		{
 			if (!bProcessorReady)
 			{
@@ -93,14 +92,28 @@ void QuadProcessor::Render(uint4 layerIdx, uint4 stageID, uint4 queueID, const P
 			{
 				pContextDX->IASetInputLayout(layer.pInputLayout);
 
-				layer.pSetup->Apply(context.Context());
-				layer.pEffectDriver->Apply(pPerspective, context.StateManager(), context.Context());
+				layer.technique->Apply(context.Context());
+				// NOTE: Obsolete
+//				layer.pEffectDriver->Apply(pPerspective, context.StateManager(), context.Context());
 
 				bLayerReady = true;
 			}
 
-			for (uint4 i = 0; layer.pEffectDriver->ApplyPass(pPass, i, this, pPerspective, context.StateManager(), context.Context()); )
-				pContextDX->DrawIndexed(mesh.GetIndexCount(), 0, 0);
+			struct DrawJob : lean::vcallable_base<AbstractProcessingEffectDriver::DrawJobSignature, DrawJob>
+			{
+				uint4 indexCount;
+
+				void operator ()(uint4 passIdx, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context)
+				{
+					ToImpl(stateManager).Reset();
+					ToImpl(context)->DrawIndexed(indexCount, 0, 0);
+				}
+			};
+
+			DrawJob drawJob;
+			drawJob.indexCount = mesh.GetIndexCount();
+
+			layer.pEffectDriver->Render(&pass, this, pPerspective, drawJob, context.StateManager(), context.Context());
 		}
 	}
 }
@@ -142,7 +155,7 @@ void QuadProcessor::Render(uint4 layerIdx, uint4 stageID, uint4 queueID, const P
 }
 
 // Sets the processing effect.
-void QuadProcessor::SetMaterial(Material *pMaterial)
+void QuadProcessor::SetMaterial(beg::Material *pMaterial)
 {
 	if (pMaterial != m_pMaterial)
 	{
@@ -158,24 +171,28 @@ void QuadProcessor::SetMaterial(Material *pMaterial)
 
 			for (uint4 layerID = 0; layerID < layerCount; ++layerID)
 			{
-				const AbstractProcessingEffectDriver *pEffectBinder = m_pEffectBinderCache->GetEffectBinder(*pMaterial->GetTechnique(layerID));
+				const beg::MaterialTechnique *technique = pMaterial->GetTechnique(layerID);
+				const AbstractProcessingEffectDriver *pEffectBinder = m_pEffectBinderCache->GetEffectBinder(*technique->Technique);
 
-				uint4 passSignatureSize = 0;
-				const char *pPassSignature = pMaterial->GetInputSignature(passSignatureSize, layerID);
-
-				// Ignore compute-only techniques
-				if (pPassSignature)
+				if (Size(pEffectBinder->GetPasses()))
 				{
-					lean::com_ptr<ID3D11InputLayout> pInputLayout;
-					BE_THROW_DX_ERROR_MSG(
-						pDevice->CreateInputLayout(
-							mesh.GetVertexElementDescs(),
-							mesh.GetVertexElementDescCount(),
-							pPassSignature, passSignatureSize,
-							pInputLayout.rebind()),
-						"ID3D11Device::CreateInputLayout()");
+					uint4 passSignatureSize = 0;
+					const char *pPassSignature = pEffectBinder->GetPasses()[0].GetInputSignature(passSignatureSize);
 
-					m_layers.push_back( Layer(pInputLayout, pEffectBinder, ToImpl(pMaterial->GetTechniqueSetup(layerID))) );
+					// Ignore compute-only techniques
+					if (pPassSignature)
+					{
+						lean::com_ptr<ID3D11InputLayout> pInputLayout;
+						BE_THROW_DX_ERROR_MSG(
+							pDevice->CreateInputLayout(
+								mesh.GetVertexElementDescs(),
+								mesh.GetVertexElementDescCount(),
+								pPassSignature, passSignatureSize,
+								pInputLayout.rebind()),
+							"ID3D11Device::CreateInputLayout()");
+
+						m_layers.push_back( Layer(pInputLayout, pEffectBinder, technique) );
+					}
 				}
 			}
 		}

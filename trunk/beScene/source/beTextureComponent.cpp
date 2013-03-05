@@ -22,68 +22,94 @@ namespace beScene
 /// Reflects textures for use in component-based editing environments.
 class TextureReflector : public beCore::ComponentReflector
 {
-	/// Returns true, if the component can be loaded from a file.
-	bool CanBeLoaded() const
+	/// Gets principal component flags.
+	uint4 GetComponentFlags() const LEAN_OVERRIDE
 	{
-		return true;
+		return bec::ComponentFlags::Filed;
 	}
-	/// Gets a fitting file extension, if available.
-	utf8_ntr GetFileExtension() const
+	/// Gets specific component flags.
+	uint4 GetComponentFlags(const lean::any &component) const LEAN_OVERRIDE
 	{
-		return utf8_ntr("dds");
+		uint4 flags = bec::ComponentFlags::NameMutable; // | bec::ComponentFlags::FileMutable
+
+		if (const beg::TextureView *view = any_cast_default<beg::TextureView*>(component))
+			if (const beg::TextureCache *cache = view->GetCache())
+				if (const beg::Texture *texture = cache->GetTexture(view))
+					if (!cache->GetFile(texture).empty())
+						flags |= bec::ComponentState::Filed;
+
+		return flags;
 	}
-	/// Gets a component from the given file.
-	lean::cloneable_obj<lean::any, true> GetComponent(const utf8_ntri &file, const beCore::ParameterSet &parameters) const
-	{
-		SceneParameters sceneParameters = GetSceneParameters(parameters);
 
-		return lean::any_value<beGraphics::TextureView*>(
-				sceneParameters.ResourceManager->TextureCache()->GetTextureView(file) // TODO: Where to get parameters from? --> create?
-			);
+	/// Gets information on the components currently available.
+	bec::ComponentInfoVector GetComponentInfo(const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
+	{
+		return GetSceneParameters(parameters).ResourceManager->TextureCache()->GetInfo();
 	}
 
-	/// Gets the name or file of the given component.
-	beCore::Exchange::utf8_string GetNameOrFile(const lean::any &component, beCore::ComponentState::T *pState = nullptr) const
+	/// Gets the component name.
+	bec::ComponentInfo GetInfo(const lean::any &component) const LEAN_OVERRIDE
 	{
-		beCore::Exchange::utf8_string result;
+		bec::ComponentInfo result;
 
-		const beGraphics::TextureView *pTexture = any_cast<beGraphics::TextureView*>(component);
-
-		if (pTexture)
-		{
-			const beGraphics::TextureCache *pCache = pTexture->GetCache();
-			
-			if (pCache)
-			{
-				bool bFile = false;
-				result = pCache->GetFile(*pTexture, &bFile).to<beCore::Exchange::utf8_string>();
-
-				if (pState)
-				{
-					if (bFile)
-						*pState = beCore::ComponentState::Filed;
-					else if (!result.empty())
-						*pState = beCore::ComponentState::Named;
-					else
-						*pState = beCore::ComponentState::Unknown;
-				}
-			}
-			else if (pState)
-				*pState = beCore::ComponentState::Unknown;
-		}
-		else if (pState)
-			*pState = beCore::ComponentState::NotSet;
+		if (const beg::TextureView *view = any_cast_default<beg::TextureView*>(component))
+			if (const beg::TextureCache *cache = view->GetCache())
+				if (const beg::Texture *texture = cache->GetTexture(view))
+					result = cache->GetInfo(texture);
 
 		return result;
 	}
 
-	/// Gets the component type reflected.
-	utf8_ntr GetType() const
+	/// Gets a component by name.
+	lean::cloneable_obj<lean::any, true> GetComponentByName(const utf8_ntri &name, const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
 	{
-		return utf8_ntr("Texture"); 
+		SceneParameters sceneParameters = GetSceneParameters(parameters);
+
+		return bec::any_resource_t<beGraphics::TextureView>::t(
+				sceneParameters.ResourceManager->TextureCache()->GetView(
+						sceneParameters.ResourceManager->TextureCache()->GetByName(name)
+					)
+			);
+	}
+
+	/// Sets the component name.
+	void SetName(const lean::any &component, const utf8_ntri &name) const LEAN_OVERRIDE
+	{
+		if (beg::TextureView *view = any_cast_default<beg::TextureView*>(component))
+			if (beg::TextureCache *cache = view->GetCache())
+				if (beg::Texture *texture = cache->GetTexture(view))
+				{
+					cache->SetName(texture, name);
+					return;
+				}
+
+		LEAN_THROW_ERROR_CTX("Unknown texture cannot be renamed", name.c_str());
+	}
+
+	/// Gets a fitting file extension, if available.
+	utf8_ntr GetFileExtension() const LEAN_OVERRIDE
+	{
+		return utf8_ntr("dds");
+	}
+	
+	/// Gets a component from the given file.
+	lean::cloneable_obj<lean::any, true> GetComponentByFile(const utf8_ntri &file,
+		const beCore::Parameters &fileParameters, const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
+	{
+		SceneParameters sceneParameters = GetSceneParameters(parameters);
+
+		return bec::any_resource_t<beGraphics::TextureView>::t(
+				sceneParameters.ResourceManager->TextureCache()->GetViewByFile(file) // TODO: Where to get parameters from? --> create?
+			);
+	}
+
+	/// Gets the component type reflected.
+	const beCore::ComponentType* GetType() const LEAN_OVERRIDE
+	{
+		return beg::TextureView::GetComponentType(); 
 	}
 };
 
-static const beCore::ComponentTypePlugin<TextureReflector> TextureReflectorPlugin;
+static const beCore::ComponentReflectorPlugin<TextureReflector> TextureReflectorPlugin(beg::TextureView::GetComponentType());
 
 } // namespace

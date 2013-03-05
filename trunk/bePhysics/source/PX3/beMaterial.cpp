@@ -4,7 +4,6 @@
 
 #include "bePhysicsInternal/stdafx.h"
 #include "bePhysics/PX3/beMaterial.h"
-#include "bePhysics/PX3/beMaterialCache.h"
 #include "bePhysics/PX3/beDevice.h"
 
 #include "bePhysics/beMaterialSerialization.h"
@@ -46,16 +45,14 @@ physx::PxMaterial* CreateMaterial(physx::PxPhysics &physics, float staticFrictio
 }
 
 // Constructor.
-Material::Material(bePhysics::Device &device, float staticFriction, float dynamicFriction, float restitution, bePhysics::MaterialCache *pMaterialCache)
-	: m_pMaterial( CreateMaterial(*ToImpl(device), staticFriction, dynamicFriction, restitution) ),
-	m_pMaterialCache(pMaterialCache)
+Material::Material(bePhysics::Device &device, float staticFriction, float dynamicFriction, float restitution)
+	: m_pMaterial( CreateMaterial(*ToImpl(device), staticFriction, dynamicFriction, restitution) )
 {
 }
 
 // Constructor.
-Material::Material(physx::PxMaterial *material, bePhysics::MaterialCache *pMaterialCache)
-	: m_pMaterial( LEAN_ASSERT_NOT_NULL(material) ),
-	m_pMaterialCache(pMaterialCache)
+Material::Material(physx::PxMaterial *material)
+	: m_pMaterial( LEAN_ASSERT_NOT_NULL(material) )
 {
 }
 
@@ -67,26 +64,22 @@ Material::~Material()
 // Gets the reflection properties.
 Material::Properties Material::GetMaterialProperties() 
 {
-	return Properties(MaterialProperties.data(), MaterialProperties.data_end());
+	return ToPropertyRange(MaterialProperties);
 }
 
 // Gets the reflection properties.
 Material::Properties Material::GetReflectionProperties() const
 {
-	return Properties(MaterialProperties.data(), MaterialProperties.data_end());
+	return ToPropertyRange(MaterialProperties);
 }
 
 } // namespace
 
 // Creates a physics material.
-lean::resource_ptr<Material, true> CreateMaterial(Device &device, float staticFriction, float dynamicFriction, float restitution,
-	MaterialCache *pMaterialCache)
+lean::resource_ptr<Material, true> CreateMaterial(Device &device, float staticFriction, float dynamicFriction, float restitution)
 {
-	return lean::bind_resource<Material>(
-			new PX3::Material(
-				PX3::CreateMaterial(*ToImpl(device), staticFriction, dynamicFriction, restitution),
-				pMaterialCache
-			)
+	return new_resource PX3::Material(
+			PX3::CreateMaterial(*ToImpl(device), staticFriction, dynamicFriction, restitution)
 		);
 }
 
@@ -124,17 +117,17 @@ void LoadMaterial(Material &material, const utf8_ntri &file)
 }
 
 /// Loads the given material from the given XML node.
-lean::resource_ptr<Material, true> LoadMaterial(Device &device, const rapidxml::xml_node<lean::utf8_t> &node, MaterialCache *pMaterialCache)
+lean::resource_ptr<Material, true> LoadMaterial(Device &device, const rapidxml::xml_node<lean::utf8_t> &node)
 {
-	lean::resource_ptr<Material, true> material = CreateMaterial(device, 0.9f, 0.8f, 0.1f, pMaterialCache);
+	lean::resource_ptr<Material, true> material = CreateMaterial(device, 0.9f, 0.8f, 0.1f);
 	LoadMaterial(*material, node);
 	return material;
 }
 
 // Loads the given material from the given XML file.
-lean::resource_ptr<Material, true> LoadMaterial(Device &device, const utf8_ntri &file, MaterialCache *pMaterialCache)
+lean::resource_ptr<Material, true> LoadMaterial(Device &device, const utf8_ntri &file)
 {
-	lean::resource_ptr<Material, true> material = CreateMaterial(device, 0.9f, 0.8f, 0.1f, pMaterialCache);
+	lean::resource_ptr<Material, true> material = CreateMaterial(device, 0.9f, 0.8f, 0.1f);
 	LoadMaterial(*material, file);
 	return material;
 }

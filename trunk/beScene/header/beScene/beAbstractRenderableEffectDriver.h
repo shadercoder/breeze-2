@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_ABSTRACT_RENDERABLE_EFFECT_DRIVER
 #define BE_SCENE_ABSTRACT_RENDERABLE_EFFECT_DRIVER
 
@@ -10,8 +11,12 @@
 #include "bePassSequence.h"
 #include "beQueuedPass.h"
 #include "beRenderableEffectData.h"
+#include "beEffectBinderCache.h"
 #include <beGraphics/beDeviceContext.h>
 #include <beGraphics/beStateManager.h>
+#include <lean/containers/strided_ptr.h>
+
+#include <lean/functional/callable.h>
 
 namespace beScene
 {
@@ -28,39 +33,31 @@ struct AbstractRenderableDriverState
 };
 
 /// Renderable effect driver flags enumeration.
-namespace RenderableEffectDriverFlags
+struct RenderableEffectDriverFlags
 {
 	/// Enumeration.
 	enum T
 	{
 		Setup = 0x1		///< Treats effect as setup effect.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(RenderableEffectDriverFlags)
+};
 
 /// Renderable effect driver base.
-class AbstractRenderableEffectDriver : public EffectDriver, public PassSequence<QueuedPass>
+class LEAN_INTERFACE AbstractRenderableEffectDriver : public EffectDriver, public PassSequence< QueuedPass, lean::strided_ptr<const QueuedPass> >
 {
-protected:
-	LEAN_INLINE AbstractRenderableEffectDriver& operator =(const AbstractRenderableEffectDriver&) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(AbstractRenderableEffectDriver)
 
 public:
-	/// Applies the given renderable & perspective data to the effect bound by this effect driver.
-	virtual bool Apply(const RenderableEffectData *pRenderableData, const Perspective &perspective,
-		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
+	/// Signature of draw job call backed for every pass to be rendered.
+	typedef void (DrawJobSignature)(uint4 passIdx, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context);
 
-	/// Applies the given pass to the effect bound by this effect driver.
-	virtual bool ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
-		const RenderableEffectData *pRenderableData, const Perspective &perspective,
-		const LightJob *lights, const LightJob *lightsEnd,
-		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
-
-	/// Draws the given number of primitives.
-	virtual void DrawIndexed(uint4 indexCount, uint4 startIndex, int4 baseVertex,
-		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
-	/// Draws the given number of primitives and instances.
-	virtual void DrawIndexedInstanced(uint4 indexCount, uint4 instanceCount, uint4 startIndex, uint4 startInstance, int4 baseVertex,
-		AbstractRenderableDriverState &state, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
+	/// Draws the given pass.
+	virtual void Render(const QueuedPass *pass, const RenderableEffectData *pRenderableData, const Perspective &perspective,
+		lean::vcallable<DrawJobSignature> &drawJob, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
 };
+
+typedef EffectDriverCache<AbstractRenderableEffectDriver> AbstractRenderableEffectDriverCache;
 
 } // namespace
 

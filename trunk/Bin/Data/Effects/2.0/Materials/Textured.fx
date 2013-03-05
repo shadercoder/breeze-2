@@ -11,19 +11,57 @@ cbuffer SetupConstants
 	<
 		String UIName = "Diffuse";
 		String UIWidget = "Color";
-	> = float4(1.0f, 1.0f, 1.0f, 0.0f);
+	> = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	float4 SpecularColor
 	<
 		String UIName = "Specular";
 		String UIWidget = "Color";
-	> = float4(0.0f, 0.0f, 0.0f, 0.1f);
+	> = float4(0.1f, 0.1f, 0.1f, 1.0f);
+
+	float Roughness
+	<
+		String UIName = "Roughness";
+		String UIWidget = "Slider";
+		float UIMin = 0.0f;
+		float UIMax = 1.0f;
+	> = 0.2f;
+
+	float Reflectance
+	<
+		String UIName = "Reflectance";
+		String UIWidget = "Slider";
+		float UIMin = 0.0f;
+		float UIMax = 1.0f;
+	> = 0.0f;
+
+	float Metalness
+	<
+		String UIName = "Metalness";
+		String UIWidget = "Slider";
+		float UIMin = 0.0f;
+		float UIMax = 1.0f;
+	> = 0.0f;
+
+	float MetalFresnel
+	<
+		String UIName = "Metal Fresnel";
+		String UIWidget = "Slider";
+		float UIMin = 0.0f;
+		float UIMax = 1.0f;
+	> = 0.0f;
 
 	float2 TextureRepeat
 	<
 		String UIName = "Texture Repeat";
 	> = float2(1.0f, 1.0f);
+
+	#hookinsert SetupConstants
 }
+
+#hookincl "Hooks/Transform.fx"
+// NOTE: Include AFTER constant buffer to make sure constants are available
+#hookincl ...
 
 #ifndef NOCOLORMAP
 
@@ -55,6 +93,12 @@ cbuffer SetupConstants
 		bool Raw = true;
 	>;
 
+	bool PremultipliedNormal
+	<
+		string UIName = "PremultipliedNormal";
+		bool Raw = true;
+	> = false;
+
 	#define IF_NORMALMAP(x) x
 
 #else
@@ -85,7 +129,9 @@ struct Vertex
 {
 	float4 Position	: Position;
 	float3 Normal	: Normal;
+#ifndef GLOBAL_PLANE_COORDS
 	float2 TexCoord	: TexCoord;
+#endif
 
 	IF_NORMALMAP(
 		float3 Tangent	: Tangent;
@@ -123,11 +169,18 @@ struct Pixel : TransformedVertexData
 Pixel VSMain(Vertex v)
 {
 	Pixel o;
-	
-	o.Position = mul(v.Position, WorldViewProj);
-	o.NormalDepth.xyz = normalize( mul((float3x3) WorldInverse, v.Normal) );
+
+	#hookcall transformState = Transform(v);
+
+	o.Position = GetWVPPosition(transformState);
+	o.NormalDepth.xyz = GetWorldNormal(transformState);
 	o.NormalDepth.w = o.Position.w;
+
+#ifdef GLOBAL_PLANE_COORDS
+	o.TexCoord = GetWorldPosition(transformState).xz * TextureRepeat;
+#else
 	o.TexCoord = v.TexCoord * TextureRepeat;
+#endif
 
 	IF_NORMALMAP(
 		o.Tangent.xyz = mul(v.Tangent, (float3x3) World);
@@ -152,10 +205,10 @@ SamplerState LinearSampler
 float3 DecodeNormal(float3 n)
 {
 	n.xy = n.xy * 2.0f - 1.0f;
-	return n;
+	return normalize(n);
 }
 
-GeometryOutput PSGeometry(Pixel p, uint primID : SV_PrimitiveID)
+GBufferBinding PSGeometry(Pixel p, uint primID : SV_PrimitiveID)
 {
 	float4 diffuse = DiffuseColor;
 	
@@ -194,6 +247,9 @@ GeometryOutput PSGeometry(Pixel p, uint primID : SV_PrimitiveID)
 		
 		float4 normalSample = NormalTexture.Sample(LinearSampler, p.TexCoord);
 		
+		if (PremultipliedNormal)
+			normalSample.xyz /= normalSample.w;
+
 		float3 mapNormal = mul(
 				DecodeNormal( normalSample.xyz ),
 				float3x3(tangent, bitangent, normal)
@@ -208,14 +264,17 @@ GeometryOutput PSGeometry(Pixel p, uint primID : SV_PrimitiveID)
 
 		IF_NOCOLORMAP(
 			diffuse.xyz = lerp(NormalBlend.xyz, diffuse.xyz, normalSample.w);
-			specular.xyz *= normalSample.w;
+			specular.w *= pow(normalSample.w, 2);
 		)
 	)
 
 	if (isnan(normal.x))
 		normal = float3(0.0f, 1.0f, 0.0f);
 
-	return ReturnGeometry(p.NormalDepth.w, normal, diffuse, specular);
+	return BindGBuffer(
+		MakeGeometry(p.NormalDepth.w, normal),
+		MakeDiffuse(diffuse.xyz, Roughness),
+		MakeSpecular(specular.xyz, specular.w, saturate(Reflectance + diffuse.w), Metalness, MetalFresnel) );
 }
 
 technique11 Geometry <
@@ -233,8 +292,10 @@ technique11 Geometry <
 
 technique11 <
 	string IncludeEffect = "Prototypes/Shadow.fx";
+	string IncludeHooks[] = #hookarray;
 > { }
 
 technique11 <
 	string IncludeEffect = "Prototypes/Feedback.fx";
+	string IncludeHooks[] = #hookarray;
 > { }

@@ -2,9 +2,9 @@
 #include "Binders/EntityPropertyBinder.h"
 #include "Binders/GenericPropertyBinder.h"
 
-#include <QtGui/QTreeView>
+#include <QtWidgets/QTreeView>
 
-#include <beEntitySystem/beController.h>
+#include <beEntitySystem/beEntityController.h>
 
 #include "Utility/Strings.h"
 #include "Utility/Checked.h"
@@ -30,7 +30,7 @@ EntityPropertyBinder::EntityPropertyBinder(beEntitySystem::Entity *pEntity,
 		pParentItem = pModel->invisibleRootItem();
 	}
 
-	QStandardItem *pEntityItem = new QStandardItem( toQt(pEntity->GetType()) );
+	QStandardItem *pEntityItem = new QStandardItem( pEntity->GetType()->Name );
 	pEntityItem->setFlags(Qt::ItemIsEnabled);
 	pParentItem->appendRow(pEntityItem);
 	GenericPropertyBinder::fillRow(*pEntityItem);
@@ -42,12 +42,12 @@ EntityPropertyBinder::EntityPropertyBinder(beEntitySystem::Entity *pEntity,
 
 	beEntitySystem::Entity::Controllers controllers = m_pEntity->GetControllers();
 
-	for (beEntitySystem::Entity::Controllers::const_iterator it = controllers.begin();
-		it != controllers.end(); ++it)
+	for (beEntitySystem::Entity::Controllers controllers = m_pEntity->GetControllers();
+		controllers.Begin < controllers.End; ++controllers.Begin)
 	{
-		beEntitySystem::Controller *pController = *it;
+		beEntitySystem::EntityController *pController = *controllers.Begin;
 
-		QStandardItem *pControllerItem = new QStandardItem( toQt(pController->GetType()) );
+		QStandardItem *pControllerItem = new QStandardItem( pController->GetType()->Name );
 		pControllerItem->setFlags(Qt::ItemIsEnabled);
 		pParentItem->appendRow( pControllerItem );
 		GenericPropertyBinder::fillRow(*pControllerItem);

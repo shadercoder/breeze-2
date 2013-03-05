@@ -18,8 +18,7 @@ const SceneParameterIDs& GetSceneParameterIDs()
 	static SceneParameterIDs parameterIDs(
 			layout.Add("beScene.ResourceManager"),
 			layout.Add("beScene.Renderer"),
-			layout.Add("beScene.SceneController"),
-			layout.Add("beScene.Scenery")
+			layout.Add("beScene.RenderingController")
 		);
 
 	return parameterIDs;
@@ -33,8 +32,7 @@ void SetSceneParameters(beCore::ParameterSet &parameters, const SceneParameters 
 
 	parameters.SetValue(layout, parameterIDs.ResourceManager, sceneParameters.ResourceManager);
 	parameters.SetValue(layout, parameterIDs.Renderer, sceneParameters.Renderer);
-	parameters.SetValue(layout, parameterIDs.SceneController, sceneParameters.SceneController);
-	parameters.SetValue(layout, parameterIDs.Scenery, sceneParameters.Scenery);
+	parameters.SetValue(layout, parameterIDs.RenderingController, sceneParameters.RenderingController);
 }
 
 // Sets the given scene parameters in the given parameter set.
@@ -47,8 +45,7 @@ SceneParameters GetSceneParameters(const beCore::ParameterSet &parameters)
 
 	sceneParameters.ResourceManager = parameters.GetValueChecked< beScene::ResourceManager* >(layout, parameterIDs.ResourceManager);
 	sceneParameters.Renderer = parameters.GetValueChecked< EffectDrivenRenderer* >(layout, parameterIDs.Renderer);
-	sceneParameters.SceneController = parameters.GetValueChecked< SceneController* >(layout, parameterIDs.SceneController);
-	sceneParameters.Scenery = parameters.GetValueChecked< DynamicScenery* >(layout, parameterIDs.Scenery);
+	sceneParameters.RenderingController = parameters.GetValueChecked< RenderingController* >(layout, parameterIDs.RenderingController);
 
 	return sceneParameters;
 }

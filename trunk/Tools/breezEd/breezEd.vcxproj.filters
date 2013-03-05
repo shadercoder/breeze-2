@@ -5,10 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;cxx;c;def</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h</Extensions>
-    </Filter>
     <Filter Include="Form Files">
       <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
       <Extensions>ui</Extensions>
@@ -33,50 +29,23 @@
       <Extensions>cpp;moc</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
-    <Filter Include="Header Files\Windows">
-      <UniqueIdentifier>{0aec56c0-c39f-4387-ba58-8a5bbcbf0faa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Documents">
-      <UniqueIdentifier>{8532b13f-f34f-4cb1-817e-2f5b05f15864}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Plugins">
-      <UniqueIdentifier>{7429a9a1-9de9-4dec-8b94-be0f90d5477d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Documents">
       <UniqueIdentifier>{6f54c220-63f5-4540-a159-bf8c2afddc2d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Windows">
       <UniqueIdentifier>{0e13a0f7-ac27-480a-b8e2-212385aa4f79}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Views">
-      <UniqueIdentifier>{5adc4b19-c46e-43d9-b37b-41a562094a1c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Views">
       <UniqueIdentifier>{a2bbef60-0eb7-4c57-b083-a4e66f37c1a8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Modes">
-      <UniqueIdentifier>{56c9c4a9-d1d8-4757-afaf-8df264c488d6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Modes">
       <UniqueIdentifier>{dcba753b-7d9b-437a-a177-25e62085f8b2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Utility">
-      <UniqueIdentifier>{d41011da-7f5b-4e26-97ea-33dac9f070c7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Tiles">
       <UniqueIdentifier>{82613d4e-a45f-4cbb-a84e-0b5d92fc368a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Widgets">
-      <UniqueIdentifier>{a4ae770f-702f-4281-a52d-b1c2877becac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Widgets">
-      <UniqueIdentifier>{8124e487-4475-4833-a0fb-9445c57ed179}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Utility">
       <UniqueIdentifier>{187ddd8d-300a-47b7-b1e9-31cad954d8b4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Interaction">
-      <UniqueIdentifier>{c2cdf9f4-50ef-49a4-aee1-b330f846f1f3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Interaction">
       <UniqueIdentifier>{ae1b4f3e-9376-417e-854b-9d5c5bfa0d6a}</UniqueIdentifier>
@@ -84,17 +53,23 @@
     <Filter Include="Source Files\Commands">
       <UniqueIdentifier>{7e898f4b-7931-4d27-8886-631901078507}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Commands">
-      <UniqueIdentifier>{88ba11bc-77c0-4158-95c3-f662b5f2c99e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Binders">
-      <UniqueIdentifier>{e535ae1c-ddff-49fb-8869-a23ac4eb7f4a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Binders">
       <UniqueIdentifier>{313ab64e-6ed2-4212-afb9-4bf5345d8bce}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Tiles">
-      <UniqueIdentifier>{eb026d5a-2703-4341-8be5-883284f80e41}</UniqueIdentifier>
+    <Filter Include="Source Files\Plugins">
+      <UniqueIdentifier>{7429a9a1-9de9-4dec-8b94-be0f90d5477d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Widgets">
+      <UniqueIdentifier>{8124e487-4475-4833-a0fb-9445c57ed179}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Docking">
+      <UniqueIdentifier>{148fd1f4-c573-4ca3-95eb-ed3cd1543683}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualization">
+      <UniqueIdentifier>{ab4698c5-6437-47dd-85d7-5e991649f408}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Operations">
+      <UniqueIdentifier>{32a6971e-b6ef-4949-8b99-c7ce42858acb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -301,9 +276,6 @@
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_EntityModeState.cpp">
       <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Modes\EntityModeState.cpp">
-      <Filter>Source Files\Modes</Filter>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_ConsoleWidget.cpp">
       <Filter>Generated Files\Debug</Filter>
@@ -566,25 +538,46 @@
     <ClCompile Include="source\Widgets\ComponentPickerFactory.cpp">
       <Filter>Source Files\Widgets</Filter>
     </ClCompile>
+    <ClCompile Include="source\Tiles\ComponentBrowserWidget.cpp">
+      <Filter>Source Files\Tiles</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Utility\IconDockStyle.cpp">
+      <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Binders\ComponentListBinder.cpp">
+      <Filter>Source Files\Binders</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interaction\DropInteraction.cpp">
+      <Filter>Source Files\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\ComponentParameterWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Widgets\FileCollectionWidget.cpp">
+      <Filter>Source Files\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Docking\DockContainer.cpp">
+      <Filter>Source Files\Docking</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Docking\DockGroup.cpp">
+      <Filter>Source Files\Docking</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Docking\DockWidget.cpp">
+      <Filter>Source Files\Docking</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Visualization\Space.cpp">
+      <Filter>Source Files\Visualization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Operations\EntityOperations.cpp">
+      <Filter>Source Files\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Modes\EntityModeState.cpp">
+      <Filter>Source Files\Modes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
       <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="header\stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource\resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Plugins\AbstractPlugin.h">
-      <Filter>Header Files\Plugins</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Plugins\PluginManager.h">
-      <Filter>Header Files\Plugins</Filter>
-    </ClInclude>
-    <ClInclude Include="header\breezEd.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_CodeView.h">
       <Filter>Generated Files</Filter>
@@ -610,29 +603,11 @@
     <ClInclude Include="GeneratedFiles\ui_ConsoleWidget.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\DeviceManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_BrowseWidget.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_MeshImportDialog.h">
       <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Utility\Files.h">
-      <Filter>Header Files\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Utility\Strings.h">
-      <Filter>Header Files\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Interaction\DropInteraction.h">
-      <Filter>Header Files\Interaction</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Commands\CreateEntity.h">
-      <Filter>Header Files\Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Utility\Undo.h">
-      <Filter>Header Files\Utility</Filter>
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_UndoHistoryWidget.h">
       <Filter>Generated Files</Filter>
@@ -640,32 +615,8 @@
     <ClInclude Include="GeneratedFiles\ui_EntityPropertyWidget.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\Utility\AbstractItemModel.h">
-      <Filter>Header Files\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Interaction\Widgets.h">
-      <Filter>Header Files\Interaction</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Interaction\Math.h">
-      <Filter>Header Files\Interaction</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Commands\TranslateEntity.h">
-      <Filter>Header Files\Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Commands\RotateEntity.h">
-      <Filter>Header Files\Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Commands\ScaleEntity.h">
-      <Filter>Header Files\Commands</Filter>
-    </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_ShapeImportDialog.h">
       <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Commands\ChangeProperty.h">
-      <Filter>Header Files\Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Commands\SetComponent.h">
-      <Filter>Header Files\Commands</Filter>
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_EntitySelectionWidget.h">
       <Filter>Generated Files</Filter>
@@ -673,239 +624,102 @@
     <ClInclude Include="GeneratedFiles\ui_ColorPicker.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\Utility\UI.h">
-      <Filter>Header Files\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="header\Plugins\FactoryManager.h">
-      <Filter>Header Files\Plugins</Filter>
-    </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_GenericComponentPicker.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\Widgets\ComponentPickerFactory.h">
-      <Filter>Header Files\Widgets</Filter>
+    <ClInclude Include="header\breezEd.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="resource\breezEd.qrc">
-      <Filter>Resource Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\MainWindow.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Editor.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Windows\MainWindow.h">
-      <Filter>Header Files\Windows</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Documents\AbstractDocument.h">
-      <Filter>Header Files\Documents</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Documents\AbstractDocumentFactory.h">
-      <Filter>Header Files\Documents</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Views\CodeView.h">
-      <Filter>Header Files\Views</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Documents\CodeDocument.h">
-      <Filter>Header Files\Documents</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\NewDocumentDialog.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\CodeView.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Windows\NewDocumentDialog.h">
-      <Filter>Header Files\Windows</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Documents\DocumentManager.h">
-      <Filter>Header Files\Documents</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Windows\MdiDocumentWindow.h">
-      <Filter>Header Files\Windows</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Modes\DocumentModeState.h">
-      <Filter>Header Files\Modes</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Modes\ModeState.h">
-      <Filter>Header Files\Modes</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Modes\AbstractModeState.h">
-      <Filter>Header Files\Modes</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Modes\Mode.h">
-      <Filter>Header Files\Modes</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Utility\Checked.h">
-      <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Modes\CodeModeState.h">
-      <Filter>Header Files\Modes</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Modes\CodeViewModeState.h">
-      <Filter>Header Files\Modes</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Utility\CodeAutoFormatter.h">
-      <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\WindowsDialog.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Windows\WindowsDialog.h">
-      <Filter>Header Files\Windows</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Documents\SceneDocument.h">
-      <Filter>Header Files\Documents</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Modes\SceneModeState.h">
-      <Filter>Header Files\Modes</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\SceneView.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Views\SceneView.h">
-      <Filter>Header Files\Views</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\EntityBuilderWidget.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\ControllerBuilderWidget.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Tiles\EntityBuilderWidget.h">
-      <Filter>Header Files\Tiles</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Utility\DragTreeWidget.h">
-      <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\AssetBrowserWidget.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Tiles\AssetBrowserWidget.h">
-      <Filter>Header Files\Tiles</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Utility\ExclusiveActionGroup.h">
-      <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Modes\EntityModeState.h">
-      <Filter>Header Files\Modes</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\ConsoleWidget.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Tiles\ConsoleWidget.h">
-      <Filter>Header Files\Tiles</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\ControllerBuilderWidget.h">
-      <Filter>Header Files\Widgets</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\BrowseWidget.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\BrowseWidget.h">
-      <Filter>Header Files\Widgets</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\MeshImportDialog.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Windows\MeshImportDialog.h">
-      <Filter>Header Files\Windows</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\GraphicsCanvas.h">
-      <Filter>Header Files\Widgets</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Interaction\Interaction.h">
-      <Filter>Header Files\Interaction</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Interaction\FreeCamera.h">
-      <Filter>Header Files\Interaction</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Utility\InputProvider.h">
-      <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Views\AbstractView.h">
-      <Filter>Header Files\Views</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Modes\ParallelMode.h">
-      <Filter>Header Files\Modes</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\UndoHistoryWidget.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Tiles\UndoHistoryWidget.h">
-      <Filter>Header Files\Tiles</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\EntityPropertyWidget.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Tiles\EntityPropertyWidget.h">
-      <Filter>Header Files\Tiles</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Binders\EntityPropertyBinder.h">
-      <Filter>Header Files\Binders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Binders\GenericPropertyBinder.h">
-      <Filter>Header Files\Binders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Interaction\SelectInteraction.h">
-      <Filter>Header Files\Interaction</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Interaction\TranslateInteraction.h">
-      <Filter>Header Files\Interaction</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Interaction\Queries.h">
-      <Filter>Header Files\Interaction</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Interaction\ScaleInteraction.h">
-      <Filter>Header Files\Interaction</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Interaction\RotateInteraction.h">
-      <Filter>Header Files\Interaction</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\ShapeImportDialog.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Windows\ShapeImportDialog.h">
-      <Filter>Header Files\Windows</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Utility\TreeViewEx.h">
-      <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Utility\ItemDelegateEx.h">
-      <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\EntitySelectionWidget.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Tiles\EntitySelectionWidget.h">
-      <Filter>Header Files\Tiles</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Binders\FileTreeBinder.h">
-      <Filter>Header Files\Binders</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\ColorPicker.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\ColorPicker.h">
-      <Filter>Header Files\Widgets</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Utility\CanvasFrame.h">
-      <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Utility\SlotObject.h">
-      <Filter>Header Files\Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\GenericComponentPicker.h">
-      <Filter>Header Files\Widgets</Filter>
-    </CustomBuild>
-    <CustomBuild Include="ui\GenericComponentPicker.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="header\Widgets\ComponentPicker.h">
-      <Filter>Header Files\Widgets</Filter>
-    </CustomBuild>
+    <ClInclude Include="header\DeviceManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource\resource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\stdafx.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\ChangeProperty.h">
+      <Filter>Source Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\CreateEntity.h">
+      <Filter>Source Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\RotateEntity.h">
+      <Filter>Source Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\ScaleEntity.h">
+      <Filter>Source Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\SetComponent.h">
+      <Filter>Source Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\TranslateEntity.h">
+      <Filter>Source Files\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Interaction\DropInteraction.h">
+      <Filter>Source Files\Interaction</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Interaction\Math.h">
+      <Filter>Source Files\Interaction</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Interaction\Widgets.h">
+      <Filter>Source Files\Interaction</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Plugins\AbstractPlugin.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Plugins\FactoryManager.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Plugins\PluginManager.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\AbstractItemModel.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\Files.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\Strings.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\UI.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\Undo.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Widgets\ComponentPickerFactory.h">
+      <Filter>Source Files\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Documents\DocumentManager.h">
+      <Filter>Source Files\Documents</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Editor.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Interaction\Interaction.h">
+      <Filter>Source Files\Interaction</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Interaction\Queries.h">
+      <Filter>Source Files\Interaction</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\Checked.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\IconDockStyle.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Utility\MimeData.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Visualization\Space.h">
+      <Filter>Source Files\Visualization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Operations\EntityOperations.h">
+      <Filter>Source Files\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource\breezEd.rc">
@@ -916,5 +730,251 @@
     <None Include="resource\icons\app\breezEd.ico">
       <Filter>Resource Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <QtCompile Include="header\Documents\AbstractDocument.h">
+      <Filter>Source Files\Documents</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Documents\AbstractDocumentFactory.h">
+      <Filter>Source Files\Documents</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Documents\CodeDocument.h">
+      <Filter>Source Files\Documents</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Documents\SceneDocument.h">
+      <Filter>Source Files\Documents</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Binders\GenericPropertyBinder.h">
+      <Filter>Source Files\Binders</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Binders\FileTreeBinder.h">
+      <Filter>Source Files\Binders</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Binders\EntityPropertyBinder.h">
+      <Filter>Source Files\Binders</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Interaction\FreeCamera.h">
+      <Filter>Source Files\Interaction</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Interaction\TranslateInteraction.h">
+      <Filter>Source Files\Interaction</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Interaction\SelectInteraction.h">
+      <Filter>Source Files\Interaction</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Interaction\ScaleInteraction.h">
+      <Filter>Source Files\Interaction</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Interaction\RotateInteraction.h">
+      <Filter>Source Files\Interaction</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Modes\SceneModeState.h">
+      <Filter>Source Files\Modes</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Modes\ParallelMode.h">
+      <Filter>Source Files\Modes</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Modes\ModeState.h">
+      <Filter>Source Files\Modes</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Modes\Mode.h">
+      <Filter>Source Files\Modes</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Modes\EntityModeState.h">
+      <Filter>Source Files\Modes</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Modes\DocumentModeState.h">
+      <Filter>Source Files\Modes</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Modes\CodeViewModeState.h">
+      <Filter>Source Files\Modes</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Modes\CodeModeState.h">
+      <Filter>Source Files\Modes</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Modes\AbstractModeState.h">
+      <Filter>Source Files\Modes</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Tiles\UndoHistoryWidget.h">
+      <Filter>Source Files\Tiles</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Tiles\EntitySelectionWidget.h">
+      <Filter>Source Files\Tiles</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Tiles\EntityPropertyWidget.h">
+      <Filter>Source Files\Tiles</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Tiles\EntityBuilderWidget.h">
+      <Filter>Source Files\Tiles</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Tiles\ConsoleWidget.h">
+      <Filter>Source Files\Tiles</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Tiles\AssetBrowserWidget.h">
+      <Filter>Source Files\Tiles</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\TreeViewEx.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\SlotObject.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\ItemDelegateEx.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\InputProvider.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\ExclusiveActionGroup.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\DragTreeWidget.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\CodeAutoFormatter.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\CanvasFrame.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Views\AbstractView.h">
+      <Filter>Source Files\Views</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Views\CodeView.h">
+      <Filter>Source Files\Views</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Views\SceneView.h">
+      <Filter>Source Files\Views</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Widgets\BrowseWidget.h">
+      <Filter>Source Files\Widgets</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Widgets\ColorPicker.h">
+      <Filter>Source Files\Widgets</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Widgets\ComponentPicker.h">
+      <Filter>Source Files\Widgets</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Widgets\ControllerBuilderWidget.h">
+      <Filter>Source Files\Widgets</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Widgets\GenericComponentPicker.h">
+      <Filter>Source Files\Widgets</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Widgets\GraphicsCanvas.h">
+      <Filter>Source Files\Widgets</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Windows\MainWindow.h">
+      <Filter>Source Files\Windows</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Windows\MdiDocumentWindow.h">
+      <Filter>Source Files\Windows</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Windows\MeshImportDialog.h">
+      <Filter>Source Files\Windows</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Windows\NewDocumentDialog.h">
+      <Filter>Source Files\Windows</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Windows\ShapeImportDialog.h">
+      <Filter>Source Files\Windows</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Windows\WindowsDialog.h">
+      <Filter>Source Files\Windows</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Tiles\ComponentBrowserWidget.h">
+      <Filter>Source Files\Tiles</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Binders\ComponentListBinder.h">
+      <Filter>Source Files\Binders</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\InlineEditor.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\WidgetSupport.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\CollectionListWidget.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Utility\ItemDelegateProxy.h">
+      <Filter>Source Files\Utility</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Widgets\ComponentParameterWidget.h">
+      <Filter>Source Files\Widgets</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Widgets\FileCollectionWidget.h">
+      <Filter>Source Files\Widgets</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Docking\DockContainer.h">
+      <Filter>Source Files\Docking</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Docking\DockGroup.h">
+      <Filter>Source Files\Docking</Filter>
+    </QtCompile>
+    <QtCompile Include="header\Docking\DockWidget.h">
+      <Filter>Source Files\Docking</Filter>
+    </QtCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUiCompile Include="ui\AssetBrowserWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\BrowseWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\CodeView.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\ColorPicker.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\ConsoleWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\ControllerBuilderWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\EntityBuilderWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\EntityPropertyWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\EntitySelectionWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\GenericComponentPicker.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\MainWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\MeshImportDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\NewDocumentDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\SceneView.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\ShapeImportDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\UndoHistoryWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\WindowsDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+    <QtUiCompile Include="ui\ComponentBrowserWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUiCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcCompile Include="resource\breezEd.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcCompile>
   </ItemGroup>
 </Project>

@@ -40,7 +40,7 @@ PropertyDesc ReflectionPropertyProvider::GetPropertyDesc(uint4 id) const
 	if (id < properties.size())
 	{
 		const ReflectionProperty &property = properties[id];
-		desc = PropertyDesc(*property.type_info, property.count, property.typeID, property.widget);
+		desc = PropertyDesc(*property.type_info, property.count, property.widget);
 	}
 
 	return desc;
@@ -82,7 +82,7 @@ bool ReflectionPropertyProvider::GetProperty(uint4 id, const std::type_info &typ
 }
 
 /// Visits a property for modification.
-bool ReflectionPropertyProvider::WriteProperty(uint4 id, PropertyVisitor &visitor, bool bWriteOnly)
+bool ReflectionPropertyProvider::WriteProperty(uint4 id, PropertyVisitor &visitor, uint4 flags)
 {
 	Properties properties = GetReflectionProperties();
 
@@ -90,9 +90,9 @@ bool ReflectionPropertyProvider::WriteProperty(uint4 id, PropertyVisitor &visito
 	{
 		const ReflectionProperty &desc = properties[id];
 
-		if (desc.setter.valid())
+		if (desc.setter.valid() && (!(flags & PropertyVisitFlags::PersistentOnly) || desc.persistence & PropertyPersistence::Read))
 		{
-			const lean::property_type &propertyType = *desc.type_info->property_type;
+			const lean::property_type &propertyType = *desc.type_info->Info.property_type;
 			size_t size = propertyType.size(desc.count);
 
 			static const size_t StackBufferSize = 16 * 8;
@@ -105,13 +105,13 @@ bool ReflectionPropertyProvider::WriteProperty(uint4 id, PropertyVisitor &visito
 			propertyType.construct(values, desc.count);
 			lean::scoped_property_data<lean::destruct_property_data_policy> valueGuard(propertyType, values, desc.count);
 
-			if (bWriteOnly || (*desc.getter)(*this, desc.type_info->type, values, desc.count))
+			if (!(flags & PropertyVisitFlags::PartialWrite) || (*desc.getter)(*this, desc.type_info->Info.type, values, desc.count))
 			{
-				bool bModified = visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.typeID, desc.widget), values);
+				bool bModified = visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.widget), values);
 
 				if (bModified)
 				{
-					if ((*desc.setter)(*this, desc.type_info->type, values, desc.count))
+					if ((*desc.setter)(*this, desc.type_info->Info.type, values, desc.count))
 					{
 						EmitPropertyChanged();
 						return true;
@@ -126,7 +126,7 @@ bool ReflectionPropertyProvider::WriteProperty(uint4 id, PropertyVisitor &visito
 	return false;
 }
 /// Visits a property for reading.
-bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor, bool bPersistentOnly) const
+bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor, uint4 flags) const
 {
 	Properties properties = GetReflectionProperties();
 
@@ -134,9 +134,9 @@ bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor
 	{
 		const ReflectionProperty &desc = properties[id];
 
-		if (desc.getter.valid() && (!bPersistentOnly || desc.persistent))
+		if (desc.getter.valid() && (!(flags & PropertyVisitFlags::PersistentOnly) || desc.persistence & PropertyPersistence::Write))
 		{
-			const lean::property_type &propertyType = *desc.type_info->property_type;
+			const lean::property_type &propertyType = *desc.type_info->Info.property_type;
 			size_t size = propertyType.size(desc.count);
 
 			static const size_t StackBufferSize = 16 * 8;
@@ -149,10 +149,10 @@ bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor
 			propertyType.construct(values, desc.count);
 			lean::scoped_property_data<lean::destruct_property_data_policy> valueGuard(propertyType, values, desc.count);
 
-			if ((*desc.getter)(*this, desc.type_info->type, values,  desc.count))
+			if ((*desc.getter)(*this, desc.type_info->Info.type, values,  desc.count))
 			{
 				// WARNING: Call read-only overload!
-				visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.typeID, desc.widget), const_cast<const void*>(values));
+				visitor.Visit(*this, id, PropertyDesc(*desc.type_info, desc.count, desc.widget), const_cast<const void*>(values));
 				return true;
 			}
 		}
@@ -161,10 +161,9 @@ bool ReflectionPropertyProvider::ReadProperty(uint4 id, PropertyVisitor &visitor
 	return false;
 }
 
-/// Gets the type index.
-const TypeIndex* ReflectionPropertyProvider::GetPropertyTypeIndex() const
+// Overwrite to emit a property changed signal.
+void ReflectionPropertyProvider::EmitPropertyChanged() const
 {
-	return &beCore::GetTypeIndex();
 }
 
 } // namespace

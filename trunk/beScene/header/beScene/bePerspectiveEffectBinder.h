@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_PERSPECTIVE_EFFECT_BINDER
 #define BE_SCENE_PERSPECTIVE_EFFECT_BINDER
 
@@ -40,7 +41,7 @@ public:
 	typedef std::vector<Rasterizer> rasterizer_state_vector;
 
 private:
-	beGraphics::Any::Effect m_effect;
+	lean::resource_ptr<const beGraphics::Any::Effect> m_effect;
 
 	PerspectiveEffectBinderPool *m_pPool;
 
@@ -55,10 +56,10 @@ public:
 	BE_SCENE_API ~PerspectiveEffectBinder();
 
 	/// Applies the given perspective data to the effect bound by this effect binder.
-	BE_SCENE_API bool Apply(const Perspective &perspective, beGraphics::Any::StateManager& stateManager, beGraphics::Any::API::DeviceContext *pContext) const;
+	BE_SCENE_API void Apply(const Perspective &perspective, beGraphics::Any::StateManager& stateManager, beGraphics::Any::API::DeviceContext *pContext) const;
 
 	/// Gets the effect.
-	LEAN_INLINE const beGraphics::Effect& GetEffect() const { return m_effect; }
+	LEAN_INLINE const beGraphics::Effect& GetEffect() const { return *m_effect; }
 };
 
 } // namespace

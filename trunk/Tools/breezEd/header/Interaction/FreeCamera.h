@@ -5,7 +5,7 @@
 #include "Interaction.h"
 #include <QtCore/QObject>
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 
 /// Free camera interaction.
 class FreeCamera : public QObject, public Interaction
@@ -13,7 +13,7 @@ class FreeCamera : public QObject, public Interaction
 	Q_OBJECT
 
 private:
-	lean::resource_ptr<beEntitySystem::Entity> m_pEntity;
+	beEntitySystem::Entity *m_pEntity;
 
 public:
 	/// Constructor.

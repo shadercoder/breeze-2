@@ -42,10 +42,7 @@ CreateEntityCommand::~CreateEntityCommand()
 void CreateEntityCommand::undo()
 {
 	for (entity_vector::const_iterator it = m_entities.begin(); it != m_entities.end(); ++it)
-	{
-		m_pWorld->RemoveEntity(*it, true);
 		(*it)->Detach();
-	}
 
 	m_pDocument->setSelection(m_prevSelection);
 }
@@ -58,9 +55,7 @@ void CreateEntityCommand::redo()
 
 	for (entity_vector::const_iterator it = m_entities.begin(); it != m_entities.end(); ++it)
 	{
-		m_pWorld->AddEntity(*it, true);
 		(*it)->Attach();
-
 		selection.push_back(*it);
 	}
 

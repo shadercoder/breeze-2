@@ -2,6 +2,7 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_PARAMETER_SET
 #define BE_CORE_PARAMETER_SET
 
@@ -70,29 +71,26 @@ public:
 	template <class Value>
 	LEAN_INLINE void SetValue(uint4 parameterID, const Value &value)
 	{
-		typedef typename lean::rec_strip_modifiers<Value>::type parameter_type;
-		SetAnyValue( parameterID, &lean::any_value<parameter_type>( const_cast<const parameter_type&>(value) ) );
+		lean::any_value<Value> anyValue(value);
+		SetAnyValue(parameterID, &anyValue);
 	}
 	/// Gets the value of the parameter identified by the given ID.
 	template <class Value>
 	LEAN_INLINE const Value* GetValue(uint4 parameterID) const
 	{
-		typedef typename lean::rec_strip_modifiers<Value>::type parameter_type;
-		return const_cast<const Value*>( lean::any_cast<parameter_type>( GetAnyValue(parameterID) ) );
+		return lean::any_cast<Value>( GetAnyValue(parameterID) );
 	}
 	/// Gets the value of the parameter identified by the given ID.
 	template <class Value>
 	LEAN_INLINE const Value& GetValueChecked(uint4 parameterID) const
 	{
-		typedef typename lean::rec_strip_modifiers<Value>::type parameter_type;
-		return const_cast<const Value&>( lean::any_cast_checked<const parameter_type&>( GetAnyValue(parameterID) ) );
+		return lean::any_cast_checked<const Value&>( GetAnyValue(parameterID) );
 	}
 	/// Gets the value of the parameter identified by the given ID.
 	template <class Value>
 	LEAN_INLINE bool GetValue(uint4 parameterID, Value &value) const
 	{
-		typedef typename lean::strip_reference<Value>::type nonref_value_type;
-		const nonref_value_type *pValue = GetValue<nonref_value_type>(parameterID);
+		const Value *pValue = GetValue<Value>(parameterID);
 		
 		if (pValue)
 		{
@@ -164,7 +162,7 @@ public:
 	}
 	/// Gets the value of the parameter identified by the given ID.
 	template <class Value>
-	Value GetValueDefault(const ParameterLayout &layout, uint4 parameterID, const Value &defaultValue) const
+	Value GetValueDefault(const ParameterLayout &layout, uint4 parameterID, const Value &defaultValue = Value()) const
 	{
 		Value value(defaultValue);
 		GetValue(layout, parameterID, value);

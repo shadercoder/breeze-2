@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <QtRcCompileRulesPath>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</QtRcCompileRulesPath>
+    <!-- Set to high to enable, low to disable debug messages -->
+    <QtRcCompileDebugPriority>low</QtRcCompileDebugPriority>
+    <!-- Set to true to enable verbose debug messages, false otherwise -->
+    <QtRcCompileDebugVerbose>false</QtRcCompileDebugVerbose>
+    <!-- Set to true to disable command line echo -->
+    <QtRcCompileNoEcho>true</QtRcCompileNoEcho>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Include item type & build tool properties / build rule -->
+    <PropertyPageSchema Include="$(QtRcCompileRulesPath)" />
+    <!-- Make build tool / item type available & link to QtRcCompile build step / target -->
+    <AvailableItemName Include="QtRcCompile">
+      <Targets>QtRcCompile</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+
+  <!-- Construct command line task from build rule (provides automated command line construction from build rule properties) -->
+  <UsingTask TaskName="QtRcCompile" TaskFactory="XamlTaskFactory" AssemblyName="Microsoft.Build.Tasks.v4.0">
+    <Task>$(QtRcCompileRulesPath)</Task>
+  </UsingTask>
+
+  <!-- Indirection + DependsOnTargets allows _QtRcCompileFilter to check for @(_QtRcCompileFiltered) rather than unfiltered @(QtRcCompile) -->
+  <Target Name="QtRcIncludeCpp" Condition="'@(QtRcCompile)' != ''"
+          DependsOnTargets="_QtRcCompileFilter;_QtRcCompile;_QtRcIncludeCpp" BeforeTargets="ClCompile" />
+
+  <!-- Indirection + DependsOnTargets allows _QtRcCompile to check for @(_QtRcCompileFiltered) rather than unfiltered @(QtRcCompile) -->
+  <Target Name="QtRcCompile" Condition="'@(QtRcCompile)' != ''"
+          DependsOnTargets="_QtRcCompileFilter;_QtRcCompile" />
+
+  <!-- Filter QtRc files stored in list '@(QtRcCompile)', removing unselected and excluded files -->
+  <Target Name="_QtRcCompileFilter" Condition="'@(QtRcCompile)' != ''"
+          DependsOnTargets="_SelectedFiles">
+
+    <Message Text="QtRcCompileFilter ..." Importance="$(QtRcCompileDebugPriority)" />
+
+    <!-- Debug messages printing a list of files to be compiled and files to be selected -->
+    <Message Text="QtRcCompileFilter has '@(QtRcCompile)'" Importance="$(QtRcCompileDebugPriority)" Condition="$(QtRcCompileDebugVerbose)" />
+    <Message Text="QtRcCompileFilter selects '@(SelectedFiles)'" Importance="$(QtRcCompileDebugPriority)" Condition="$(QtRcCompileDebugVerbose)" />
+
+    <!-- Remove all files that have been excluded -->
+    <ItemGroup>
+      <_QtRcCompileFiltered Include="@(QtRcCompile)" Condition="'%(QtRcCompile.ExcludedFromBuild)' != 'true'" />
+    </ItemGroup>
+    <!-- Remove all files that have not been selected, _iff any selected_ -->
+    <ItemGroup Condition="'@(SelectedFiles)' != ''">
+      <!-- WARNING: Only works in this EXACT form, using unqualified '%(Identity)' reference -->
+      <!-- Actually, cross products are not supported at all, for whatever happens here ... -->
+      <_QtRcCompileFiltered Remove="@(_QtRcCompileFiltered)" Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+
+    <!-- Debug message printing files to be compiled after filtering  -->
+    <Message Text="QtRcCompileFilter now has '@(_QtRcCompileFiltered)'" Importance="$(QtRcCompileDebugPriority)" Condition="$(QtRcCompileDebugVerbose)" />
+  </Target>
+
+  <!-- Include QtRc files into C++ build step -->
+  <Target Name="_QtRcIncludeCpp" Condition="'@(_QtRcCompileFiltered)' != ''"
+          DependsOnTargets="_QtRcCompileFilter" BeforeTargets="ClCompile">
+
+    <Message Text="QtRcIncludeCpp ..." Importance="$(QtRcCompileDebugPriority)" />
+
+    <ItemGroup>
+      <!-- Include all QtRc compiler output files into C++ build step -->
+      <ClCompile Include="%(_QtRcCompileFiltered.CompilerOutput)" Condition="'%(_QtRcCompileFiltered.Link)' != 'false'">
+        <!-- Store back link to original QtRc file in item metadata -->
+        <_QtRcCompileSrc>%(_QtRcCompileFiltered.Identity)</_QtRcCompileSrc>
+      </ClCompile>
+    </ItemGroup>
+
+  </Target>
+
+  <!-- Execute QtRc compiler for all QtRc files to be compiled -->
+  <Target Name="_QtRcCompile"
+          DependsOnTargets="_QtRcCompileFilter"
+          Inputs="@(_QtRcCompileFiltered);$(MSBuildProjectFile)"
+          Outputs="@(_QtRcCompileFiltered->'%(CompilerOutput)')">
+
+    <!-- Compile QtRc files -->
+    <Message Text="QtRcCompile ..." Importance="$(QtRcCompileDebugPriority)" />
+
+    <!-- Notify that compilation is starting -->
+    <Message Text="Compiling: %(_QtRcCompileFiltered.Filename)%(_QtRcCompileFiltered.Extension) using RCC" Importance="high" />
+
+    <!-- Call imported build-rule-based command line task -->
+    <!-- CommandLineTemplate supports [AllOptions], command line construction follows the build rule property specifications -->
+    <QtRcCompile
+      CommandLineTemplate="&quot;%(_QtRcCompileFiltered.RCCPath)&quot; [AllOptions] [AdditionalOptions] &quot;%(_QtRcCompileFiltered.FullPath)&quot;"
+      CompilerOutput="%(_QtRcCompileFiltered.CompilerOutput)"
+      AdditionalOptions="%(_QtRcCompileFiltered.AdditionalOptions)"
+      StandardOutputImportance="High"
+      StandardErrorImportance="High"
+      EchoOff="$(QtRcCompileNoEcho)" />
+    <!-- / Compile QtRc files -->
+  </Target>
+
+  <Target Name="QtRcClean" AfterTargets="Clean">
+    <Delete Files="@(QtRcCompile->'%(CompilerOutput)')" />
+  </Target>
+  
+</Project>

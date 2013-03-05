@@ -26,7 +26,7 @@ private:
 
 public:
 	/// Constructor.
-	CodeView(CodeDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	CodeView(CodeDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~CodeView();
 

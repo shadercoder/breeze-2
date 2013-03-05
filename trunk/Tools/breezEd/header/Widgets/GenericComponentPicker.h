@@ -35,7 +35,7 @@ protected:
 
 public:
 	/// Constructor.
-	GenericComponentPicker(const beCore::ComponentReflector *pReflector, const lean::any *pCurrent, Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	GenericComponentPicker(const beCore::ComponentReflector *pReflector, const lean::any *pCurrent, Editor *pEditor, QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~GenericComponentPicker();
 

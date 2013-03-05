@@ -2,6 +2,7 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_TEXT_SERIALIZER
 #define BE_CORE_TEXT_SERIALIZER
 
@@ -13,10 +14,9 @@ namespace beCore
 {
 
 /// Text serializer.
-class TextSerializer
+class LEAN_INTERFACE TextSerializer
 {
-protected:
-	~TextSerializer() { }
+	LEAN_INTERFACE_BEHAVIOR(TextSerializer)
 
 public:
 	/// Gets the maximum length of the given number of values when serialized. Zero if unpredictable.

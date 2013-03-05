@@ -97,12 +97,12 @@ beMath::faab3 ComputeVertexBounds(const D3D11_INPUT_ELEMENT_DESC *pElementDescs,
 }
 
 // Constructor.
-Mesh::Mesh(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
+Mesh::Mesh(const utf8_ntri& name, const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 		uint4 vertexSize, const void *pVertices, uint4 vertexCount,
 		DXGI_FORMAT indexFormat, const void *pIndices, uint4 indexCount,
 		const beMath::faab3 &bounds,
-		ID3D11Device *pDevice, MeshCompound *pCompound)
-	: beScene::Mesh(bounds, pCompound),
+		ID3D11Device *pDevice, AssembledMesh *pCompound)
+	: beScene::Mesh(name, bounds, pCompound),
 	m_vertexElements( pElementDescs, pElementDescs + elementCount ),
 	m_vertexBuffer( GetVertexBufferDesc(vertexSize, vertexCount), pVertices, pDevice ),
 	m_indexBuffer( GetIndexBufferDesc(beGraphics::Any::SizeofFormat(indexFormat), indexCount), pIndices, pDevice ),
@@ -112,11 +112,11 @@ Mesh::Mesh(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 }
 
 // Constructor.
-Mesh::Mesh(const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
+Mesh::Mesh(const utf8_ntri& name, const D3D11_INPUT_ELEMENT_DESC *pElementDescs, uint4 elementCount,
 		uint4 vertexSize, const void *pVertices, uint4 vertexCount,
 		DXGI_FORMAT indexFormat, const void *pIndices, uint4 indexCount,
-		ID3D11Device *pDevice, MeshCompound *pCompound)
-	: beScene::Mesh( ComputeVertexBounds(pElementDescs, elementCount, vertexSize, pVertices, vertexCount), pCompound ),
+		ID3D11Device *pDevice, AssembledMesh *pCompound)
+	: beScene::Mesh( name, ComputeVertexBounds(pElementDescs, elementCount, vertexSize, pVertices, vertexCount), pCompound ),
 	m_vertexElements( pElementDescs, pElementDescs + elementCount ),
 	m_vertexBuffer( GetVertexBufferDesc(vertexSize, vertexCount), pVertices, pDevice ),
 	m_vertexSize(vertexSize),

@@ -1,10 +1,10 @@
 #ifndef CREATEENTITYCOMMAND_H
 #define CREATEENTITYCOMMAND_H
 
-#include <QtGui/QUndoCommand>
+#include <QtWidgets/QUndoCommand>
 
 #include <beEntitySystem/beWorld.h>
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 #include <lean/smart/resource_ptr.h>
 
 #include <QtCore/QVector>
@@ -15,7 +15,7 @@ class SceneDocument;
 class CreateEntityCommand : public QUndoCommand
 {
 public:
-	typedef std::vector<lean::resource_ptr<beEntitySystem::Entity>> entity_vector;
+	typedef std::vector<beEntitySystem::Entity*> entity_vector;
 
 private:
 	SceneDocument *m_pDocument;
@@ -24,10 +24,6 @@ private:
 	entity_vector m_entities;
 
 	QVector<beEntitySystem::Entity*> m_prevSelection;
-
-protected:
-	CreateEntityCommand(const CreateEntityCommand&) { }
-	CreateEntityCommand& operator =(const CreateEntityCommand&) { return *this; }
 
 public:
 	typedef lean::range<beEntitySystem::Entity *const *> EntityRange;
@@ -46,7 +42,7 @@ public:
 	void redo();
 	
 	/// Gets the entities.
-	EntityRange entities() const { return EntityRange(&m_entities[0].get(), &m_entities[0].get() + m_entities.size()); }
+	EntityRange entities() const { return EntityRange(&m_entities[0], &m_entities[0] + m_entities.size()); }
 };
 
 #endif

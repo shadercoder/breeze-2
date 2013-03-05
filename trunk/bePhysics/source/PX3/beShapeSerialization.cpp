@@ -4,12 +4,12 @@
 
 #include "bePhysicsInternal/stdafx.h"
 #include "bePhysics/PX3/beShapes.h"
-#include "bePhysics/PX3/beShapeCache.h"
+#include "bePhysics/PX3/beAssembledShape.h"
 #include "bePhysics/PX3/beMaterial.h"
 #include "bePhysics/PX3/beDevice.h"
 #include "bePhysics/beRigidActors.h"
 
-#include <lean/io/raw_file.h>
+#include <lean/io/mapped_file.h>
 
 #include <lean/logging/errors.h>
 #include <lean/logging/log.h>
@@ -23,165 +23,122 @@ namespace PX3
 namespace
 {
 
-// Adds all shapes of the given collection to the given shape compound.
-void CreateShapesFromCollection(ShapeCompound &compound, physx::PxCollection &collection, const physx::PxMaterial *pDefaultMaterial)
+/// Reads a value of the given type, incrementing the read pointer.
+template <class Data>
+LEAN_INLINE const Data& ReadData(const char *&ptr)
 {
-	const uint4 objectCount = collection.getNbObjects();
-
-	for (uint4 i = 0; i < objectCount; ++i)
-	{
-		physx::PxSerializable *pObject = collection.getObject(i);
-
-		if (pObject->getConcreteType() == physx::PxConcreteType::eSHAPE)
-		{
-			physx::PxShape *pShape = static_cast<physx::PxShape*>(pObject);
-
-			physx::PxMaterial *pMaterial = const_cast<physx::PxMaterial*>(pDefaultMaterial);
-			pShape->getMaterials(&pMaterial, 1);
-
-			switch (pShape->getGeometryType())
-			{
-			case physx::PxGeometryType::eBOX:
-				{
-					physx::PxBoxGeometry geom;
-					pShape->getBoxGeometry(geom);
-					compound.AddShape(geom, pMaterial, pShape->getLocalPose());
-				}
-				break;
-			case physx::PxGeometryType::eSPHERE:
-				{
-					physx::PxSphereGeometry geom;
-					pShape->getSphereGeometry(geom);
-					compound.AddShape(geom, pMaterial, pShape->getLocalPose());
-				}
-				break;
-			case physx::PxGeometryType::eCONVEXMESH:
-				{
-					physx::PxConvexMeshGeometry geom;
-					pShape->getConvexMeshGeometry(geom);
-					compound.AddShape(geom, pMaterial, pShape->getLocalPose());
-				}
-				break;
-			case physx::PxGeometryType::eTRIANGLEMESH:
-				{
-					physx::PxTriangleMeshGeometry geom;
-					pShape->getTriangleMeshGeometry(geom);
-					compound.AddShape(geom, pMaterial, pShape->getLocalPose());
-				}
-				break;
-			}
-		}
-	}
+	const Data &data = *reinterpret_cast<const Data*>(ptr);
+	ptr += sizeof(Data);
+	return data;
 }
 
+} // namespace
+
 /// Reads a collection of shapes from the given file.
-void LoadShapes(const utf8_ntri &file, ShapeCompound &compound, const physx::PxMaterial *pMaterial, Device &device)
+lean::resource_ptr<AssembledShape, true> LoadShape(const char *srcData, uint8 srcDataLength, const physx::PxMaterial *pMaterial, PX3::Device &device)
 {
-	// HACK: Serialization requires SOME scene
-	physx::PxScene *pScene = nullptr;
-	device->getScenes(&pScene, 1);
+	lean::resource_ptr<PX3::AssembledShape> assembledShape;
 
-	if (!pScene)
-		LEAN_THROW_ERROR_MSG("Shape deserialization requires at least one scene to exist!");
-
-	lean::raw_file shapeFile(file, lean::file::read);
-
+	// Inject external dependencies
 	scoped_pxptr_t<physx::PxUserReferences>::t references( device->createUserReferences() );
-
 	if (!references)
 		LEAN_THROW_ERROR_MSG("PxPhysics::createUserReferences()");
 
 	// Link to default material
 	if (pMaterial)
 		references->setUserData(const_cast<physx::PxMaterial*>(pMaterial), RigidActorSerializationID::DefaultMaterial);
+	
 	// NOTE: Default actor currently not supported by PhysX
 
-	char *data = nullptr;
+	const char *srcDataEnd = srcData + srcDataLength;
+	uint4 shapeSize = ReadData<uint4>(srcData);
 
-	// Deserialize mesh data
-	try
-	{
-		scoped_pxptr_t<physx::PxCollection>::t collection( device->createCollection() );
-
-		if (!collection)
-			LEAN_THROW_ERROR_MSG("PxPhysics::createCollection()");
-
-		uint4 meshSize = 0;
-		shapeFile.read( reinterpret_cast<char*>(&meshSize), sizeof(meshSize) );
-
-		// PhysX requires 128 byte alignment!
-		data = static_cast<char*>( lean::default_heap::allocate<PX_SERIAL_FILE_ALIGN>(meshSize) );
-
-		shapeFile.read(data, meshSize);
-		
-		if (!collection->deserialize(data, references, nullptr))
-			LEAN_THROW_ERROR_MSG("PxCollection::deserialize()");
-
-		device->addCollection(*collection, *pScene);
-
-		// NOTE: De-serialization works in-place, memory has to be kept until release
-		// TODO: More control on life time?
-		device.FreeOnRelease(data, PX_SERIAL_FILE_ALIGN);
-		data = nullptr;
-	}
-	catch (...)
-	{
-		lean::default_heap::free<PX_SERIAL_FILE_ALIGN>(data);
-		throw;
-	}
-
-	data = nullptr;
+	// PhysX requires 128 byte alignment!
+	char *data = static_cast<char*>( PhysXSerializationAllocate(shapeSize) );
+	bool bCollectionLost = false;
 
 	// Deserialize shape data
 	try
 	{
-		scoped_pxptr_t<physx::PxCollection>::t collection( device->createCollection() );
+		memcpy(data, srcData, srcDataEnd - srcData);
 
+		scoped_pxptr_t<physx::PxCollection>::t collection( device->createCollection() );
 		if (!collection)
 			LEAN_THROW_ERROR_MSG("PxPhysics::createCollection()");
-
-		uint4 shapesSize = 0;
-		shapeFile.read( reinterpret_cast<char*>(&shapesSize), sizeof(shapesSize) );
-
-		// PhysX requires 128 byte alignment!
-		data = static_cast<char*>( lean::default_heap::allocate<PX_SERIAL_FILE_ALIGN>(shapesSize) );
-		
-		shapeFile.read(data, shapesSize);
-
-		if (!collection->deserialize(data, nullptr, references))
+		if (!collection->deserialize(data, references.get(), references.get()))
 			LEAN_THROW_ERROR_MSG("PxCollection::deserialize()");
 
-		CreateShapesFromCollection(compound, *collection, pMaterial);
+		// NOTE: Cannot free memory until end of program once collection of unidentified objects has been loaded
+		bCollectionLost = true;
 
-		// MONITOR: WORKAROUND: Apparently, PhysX 3.2 does not fully release collections until final destruction of SDK interface object
-		// TODO: More control on life time?
-		device.FreeOnRelease(data, PX_SERIAL_FILE_ALIGN);
-//		lean::default_heap::free<PX_SERIAL_FILE_ALIGN>(data);
-		data = nullptr;
+		// Extract prototype actor
+		physx::PxRigidDynamic *actor = references->getObjectFromRef(RigidActorSerializationID::Actor)->is<physx::PxRigidDynamic>();
+		if (!actor)
+			LEAN_THROW_ERROR_MSG("Shape deserialization requires prototype actor");
+
+		// IMPORTANT: Need to release application resource references manually!
+		for (uint4 i = 0, count = actor->getNbShapes(); i < count; ++i)
+		{
+			physx::PxShape *shape = nullptr;
+			actor->getShapes(&shape, 1, i);
+			switch (shape->getGeometryType())
+			{
+			case px::PxGeometryType::eTRIANGLEMESH:
+				{
+					px::PxTriangleMeshGeometry geom;
+					shape->getTriangleMeshGeometry(geom);
+					geom.triangleMesh->release();
+				}
+				break;
+			case px::PxGeometryType::eCONVEXMESH:
+				{
+					px::PxConvexMeshGeometry geom;
+					shape->getConvexMeshGeometry(geom);
+					geom.convexMesh->release();
+				}
+				break;
+			}
+		}
+
+		// Transfer ownership of actor & data to assembled shape
+		assembledShape = new_resource AssembledShape(actor, data);
+		bCollectionLost = false;
 	}
 	catch (...)
 	{
-		lean::default_heap::free<PX_SERIAL_FILE_ALIGN>(data);
+		if (bCollectionLost)
+			device.SerializationFreeOnRelease(data);
+		else
+			PhysXSerializationFree(data);
 		throw;
 	}
+
+	return assembledShape.transfer();
 }
 
 } // namespace
 
-} // namespace
+// Creates a shape from the given shape data block.
+lean::resource_ptr<AssembledShape, lean::critical_ref> LoadShape(const void *data, uint8 dataLength, const Material *pMaterial, Device &device)
+{
+	return PX3::LoadShape(
+			reinterpret_cast<const char*>(data), dataLength, 
+			(pMaterial) ? ToImpl(pMaterial)->Get() : nullptr,
+			ToImpl(device)
+		);
+}
 
 // Creates a shape from the given shape file.
-lean::resource_ptr<ShapeCompound, true> LoadShape(const utf8_ntri &file, const Material *pMaterial, Device &device, ShapeCache *pShapeCache)
+lean::resource_ptr<AssembledShape, true> LoadShape(const utf8_ntri &file, const Material *pMaterial, Device &device)
 {
-	lean::resource_ptr<PX3::ShapeCompound> pCompound = lean::bind_resource( new PX3::ShapeCompound(pShapeCache) );
-
 	LEAN_LOG("Attempting to load shape \"" << file.c_str() << "\"");
 
-	PX3::LoadShapes(file, *pCompound, (pMaterial) ? ToImpl(pMaterial)->Get() : nullptr, ToImpl(device));
-
+	lean::rmapped_file shapeFile(file);
+	lean::resource_ptr<AssembledShape> compound = LoadShape(shapeFile.data(), shapeFile.size(), pMaterial, device);
+	
 	LEAN_LOG("Shape \"" << file.c_str() << "\" created successfully");
-
-	return pCompound.transfer();
+	
+	return compound.transfer();
 }
 
 } // namespace

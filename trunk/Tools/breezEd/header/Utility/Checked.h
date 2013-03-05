@@ -12,6 +12,6 @@ inline void checkedConnect(const QObject *sender, const char *signal, const QObj
 }
 
 // Converts exceptions to message box.
-void exceptionToMessageBox(QString text, QString title);
+void exceptionToMessageBox(const QString &title, const QString &text);
 
 #endif

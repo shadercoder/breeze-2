@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_MEMORY_DX
 #define BE_GRAPHICS_MEMORY_DX
 
@@ -19,7 +20,7 @@ namespace DX
 
 // Memory implementation.
 template <class Element>
-class Memory : public beGraphics::Memory<Element>
+class Memory : public beCore::Shared, beGraphics::Memory<Element>
 {
 private:
 	lean::com_ptr<ID3DBlob> m_pBlob;

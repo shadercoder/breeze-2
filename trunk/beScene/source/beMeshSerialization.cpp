@@ -44,7 +44,7 @@ LEAN_INLINE const char* GetAttributeSemantic(MeshVertexAttributes::T attribute)
 	}
 
 	LEAN_THROW_ERROR_MSG("Unknown vertex attribute");
-	LEAN_ASSERT(false);
+	LEAN_ASSERT_UNREACHABLE();
 }
 
 /// Reads the vertex description.
@@ -159,7 +159,7 @@ void ReadIndices(DXGI_FORMAT &indexFormat, uint4 &indexCount,
 }
 
 /// Reads a subset.
-lean::resource_ptr<Mesh, true> ReadSubset(const char *subsetData, const char* subsetDataEnd, const beGraphics::Device &device, MeshCompound *pCompound)
+lean::resource_ptr<Mesh, true> ReadSubset(const char *subsetData, const char* subsetDataEnd, const beGraphics::Device &device, AssembledMesh *pCompound)
 {
 	utf8_string subsetName;
 
@@ -194,21 +194,20 @@ lean::resource_ptr<Mesh, true> ReadSubset(const char *subsetData, const char* su
 		offset = data + header.ChunkSize;
 	}
 
-	return lean::bind_resource(
-		new DX11::Mesh(
-				&vertexElementDescs[0], static_cast<uint4>(vertexElementDescs.size()),
-				static_cast<uint4>(static_cast<size_t>(verticesEnd - vertices) / vertexCount),
-				vertices, vertexCount,
-				indexFormat,
-				indices, indexCount,
-				ToImpl(device),
-				pCompound
-			)
+	return new_resource DX11::Mesh(
+			subsetName,
+			&vertexElementDescs[0], static_cast<uint4>(vertexElementDescs.size()),
+			static_cast<uint4>(static_cast<size_t>(verticesEnd - vertices) / vertexCount),
+			vertices, vertexCount,
+			indexFormat,
+			indices, indexCount,
+			ToImpl(device),
+			pCompound
 		);
 }
 
 /// Reads all subsets.
-void ReadSubsets(MeshCompound &compound, const char *subsetData, const char* subsetDataEnd, const beGraphics::Device &device, MeshCompound *pCompound)
+void ReadSubsets(AssembledMesh &compound, const char *subsetData, const char* subsetDataEnd, const beGraphics::Device &device, AssembledMesh *pCompound)
 {
 	uint4 subsetCount = 0;
 
@@ -224,7 +223,8 @@ void ReadSubsets(MeshCompound &compound, const char *subsetData, const char* sub
 			break;
 
 		case MeshDataChunk::Data:
-			compound.AddSubset( ReadSubset(data, data + header.ChunkSize, device, pCompound).get() );
+			// TODO: Read LOD from somewhere?
+			compound.AddMeshWithMaterial( ReadSubset(data, data + header.ChunkSize, device, pCompound).get(), nullptr, 0 );
 			break;
 		}
 
@@ -235,7 +235,7 @@ void ReadSubsets(MeshCompound &compound, const char *subsetData, const char* sub
 } // namespace
 
 // Loads a mesh compound from the given memory.
-lean::resource_ptr<MeshCompound, true> LoadMeshes(const char *meshData, uint8, const beGraphics::Device &device, MeshCache *pCache)
+lean::resource_ptr<AssembledMesh, true> LoadMeshes(const char *meshData, uint8, beGraphics::Device &device)
 {
 	// Read spanning header
 	const MeshDataChunkHeader &header = ToChunkHeader(meshData);
@@ -244,7 +244,7 @@ lean::resource_ptr<MeshCompound, true> LoadMeshes(const char *meshData, uint8, c
 
 	meshData += sizeof(MeshDataChunkHeader);
 
-	lean::resource_ptr<MeshCompound> pCompound = lean::bind_resource( new MeshCompound(pCache) );
+	lean::resource_ptr<AssembledMesh> pCompound = new_resource AssembledMesh();
 	utf8_string meshName;
 	utf8_string meshSource;
 
@@ -277,14 +277,14 @@ lean::resource_ptr<MeshCompound, true> LoadMeshes(const char *meshData, uint8, c
 }
 
 // Loads a mesh compound from the given file.
-lean::resource_ptr<MeshCompound, true> LoadMeshes(const utf8_ntri &file, const beGraphics::Device &device, MeshCache *pCache)
+lean::resource_ptr<AssembledMesh, true> LoadMeshes(const utf8_ntri &file, beGraphics::Device &device)
 {
-	lean::resource_ptr<MeshCompound, true>  pMesh;
+	lean::resource_ptr<AssembledMesh, true>  pMesh;
 
 	LEAN_LOG("Attempting to load mesh \"" << file.c_str() << "\"");
 
 	lean::rmapped_file meshFile(file);
-	pMesh = LoadMeshes(reinterpret_cast<const char*>(meshFile.data()), file.size(), device, pCache);
+	pMesh = LoadMeshes(reinterpret_cast<const char*>(meshFile.data()), file.size(), device);
 
 	LEAN_LOG("Mesh \"" << file.c_str() << "\" created successfully");
 

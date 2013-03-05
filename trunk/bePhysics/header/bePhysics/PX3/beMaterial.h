@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_MATERIAL_PX
 #define BE_PHYSICS_MATERIAL_PX
 
@@ -27,20 +28,17 @@ namespace PX3
 BE_PHYSICS_PX_API physx::PxMaterial* CreateMaterial(physx::PxPhysics &physics, float staticFriction, float dynamicFriction, float restitution);
 
 /// Physics scene implementation.
-class Material : public lean::noncopyable_chain< beCore::TransitiveWrapper<physx::PxMaterial, Material> >, public bePhysics::Material
+class Material : public lean::noncopyable_chain< beCore::TransitiveWrapper<physx::PxMaterial, Material> >,
+	public beCore::ResourceToRefCounted< Material, beCore::PropertyFeedbackProvider<bePhysics::Material> >
 {
 private:
 	scoped_pxptr_t<physx::PxMaterial>::t m_pMaterial;
 
-	bePhysics::MaterialCache *m_pMaterialCache;
-
 public:
 	/// Constructor.
-	BE_PHYSICS_PX_API Material(bePhysics::Device &device, float staticFriction, float dynamicFriction, float restitution,
-		bePhysics::MaterialCache *pMaterialCache = nullptr);
+	BE_PHYSICS_PX_API Material(bePhysics::Device &device, float staticFriction, float dynamicFriction, float restitution);
 	/// Constructor.
-	BE_PHYSICS_PX_API Material(physx::PxMaterial *material,
-		bePhysics::MaterialCache *pMaterialCache = nullptr);
+	BE_PHYSICS_PX_API Material(physx::PxMaterial *material);
 	/// Destructor.
 	BE_PHYSICS_PX_API ~Material();
 
@@ -73,9 +71,6 @@ public:
 	LEAN_INLINE const physx::PxMaterial*const& GetInterface() const { return m_pMaterial.get(); }
 	/// Gets the PhysX interface.
 	LEAN_INLINE physx::PxMaterial*const& GetScene() { return m_pMaterial.get(); }
-
-	/// Gets the material cache.
-	bePhysics::MaterialCache* GetCache() const { return m_pMaterialCache; };
 };
 
 template <> struct ToImplementationPX<bePhysics::Material> { typedef Material Type; };

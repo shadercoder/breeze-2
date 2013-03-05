@@ -5,7 +5,7 @@
 #include <QtCore/QString>
 
 #include <QtCore/QSettings>
-#include <QtGui/QFileDialog>
+#include <QtWidgets/QFileDialog>
 
 /// Gets the path to the given directory or the directory containing the given file.
 QString absolutePathToDir(const QString &dirOrFile);

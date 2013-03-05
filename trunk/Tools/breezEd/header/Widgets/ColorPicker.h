@@ -1,7 +1,7 @@
 #ifndef COLORPICKER_H
 #define COLORPICKER_H
 
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include "ui_ColorPicker.h"
 
 #include "Utility/UI.h"

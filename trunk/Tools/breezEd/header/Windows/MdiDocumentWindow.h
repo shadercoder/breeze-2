@@ -1,7 +1,7 @@
 #ifndef MDIDOCUMENTWINDOW_H
 #define MDIDOCUMENTWINDOW_H
 
-#include <QtGui/QMdiSubWindow>
+#include <QtWidgets/QMdiSubWindow>
 
 #include "Documents/AbstractDocument.h"
 
@@ -18,7 +18,7 @@ protected:
 
 public:
 	/// Constructor.
-	MdiDocumentWindow(AbstractDocument *pDocument, QWidget *pParent = nullptr , Qt::WFlags flags = 0);
+	MdiDocumentWindow(AbstractDocument *pDocument, QWidget *pParent = nullptr , Qt::WindowFlags flags = 0);
 	/// Destructor.
 	virtual ~MdiDocumentWindow();
 

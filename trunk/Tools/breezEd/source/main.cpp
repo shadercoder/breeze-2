@@ -2,14 +2,17 @@
 #include "Editor.h"
 
 #include "Windows/MainWindow.h"
-#include <QtGui/QApplication>
-#include <QtGui/QWindowsVistaStyle.h>
+#include <QtWidgets/QApplication>
 
 #include <beLauncher/beInitEngine.h>
 #include <beCore/beFileSystem.h>
 
+#include <beAssets/beAssets.h>
+
 int main(int argc, char *argv[])
 {
+	beAssets::Link();
+
 	QApplication a(argc, argv);
 
 #ifdef QT_STYLE_WINDOWSVISTA
@@ -38,6 +41,7 @@ int main(int argc, char *argv[])
 		beCore::FileSystem::Get().AddPath("Maps", "Data/Maps");
 
 	Editor e;
+	QObject::connect(&a, &QApplication::focusChanged, e.mainWindow(), &MainWindow::focusChanged);
 	e.mainWindow()->show();
 	
 	return a.exec();

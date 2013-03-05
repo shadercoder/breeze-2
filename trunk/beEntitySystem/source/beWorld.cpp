@@ -4,11 +4,14 @@
 
 #include "beEntitySystemInternal/stdafx.h"
 #include "beEntitySystem/beWorld.h"
-#include "beEntitySystem/beEntity.h"
+#include "beEntitySystem/beEntities.h"
+
+#include "beEntitySystem/beWorldControllers.h"
+
+#include "beEntitySystem/beSimulation.h"
 
 #include "beEntitySystem/beEntitySerialization.h"
 #include "beEntitySystem/beSerializationParameters.h"
-#include "beEntitySystem/beSerializationJob.h"
 #include "beEntitySystem/beSerializationTasks.h"
 
 #include <lean/functional/algorithm.h>
@@ -23,16 +26,20 @@ namespace beEntitySystem
 {
 
 // Creates an empty world.
-World::World(const utf8_ntri &name, const WorldDesc &desc)
+World::World(const utf8_ntri &name, lean::move_ptr<WorldControllers> pTmpControllers, const WorldDesc &desc)
 	: m_name(name.to<utf8_string>()),
-	m_desc(desc)
+	m_desc(desc),
+	m_entities( CreateEntities(&m_persistentIDs) ),
+	m_controllers( (pTmpControllers.peek()) ? pTmpControllers.transfer() : new WorldControllers() )
 {
 }
 
 // Loads the world from the given file.
-World::World(const utf8_ntri &name, const utf8_ntri &file, beCore::ParameterSet &parameters, const WorldDesc &desc)
+World::World(const utf8_ntri &name, const utf8_ntri &file, beCore::ParameterSet &parameters, lean::move_ptr<WorldControllers> pTmpControllers, const WorldDesc &desc)
 	: m_name(name.to<utf8_string>()),
-	m_desc(desc)
+	m_desc(desc),
+	m_entities( CreateEntities(&m_persistentIDs) ),
+	m_controllers( (pTmpControllers.peek()) ? pTmpControllers.transfer() : new WorldControllers() )
 {
 	lean::xml_file<lean::utf8_t> xml(file);
 	rapidxml::xml_node<lean::utf8_t> *root = xml.document().first_node("world");
@@ -44,9 +51,11 @@ World::World(const utf8_ntri &name, const utf8_ntri &file, beCore::ParameterSet 
 }
 
 // Loads the world from the given XML node.
-World::World(const utf8_ntri &name, const rapidxml::xml_node<lean::utf8_t> &node, beCore::ParameterSet &parameters, const WorldDesc &desc)
+World::World(const utf8_ntri &name, const rapidxml::xml_node<lean::utf8_t> &node, beCore::ParameterSet &parameters, lean::move_ptr<WorldControllers> pTmpControllers, const WorldDesc &desc)
 	: m_name(name.to<utf8_string>()),
-	m_desc(desc)
+	m_desc(desc),
+	m_entities( CreateEntities(&m_persistentIDs) ),
+	m_controllers( (pTmpControllers.peek()) ? pTmpControllers.transfer() : new WorldControllers() )
 {
 	LoadWorld(node, parameters);
 }
@@ -56,117 +65,11 @@ World::~World()
 {
 }
 
-// Adds the given entity to this world.
-void World::AddEntity(Entity *pEntity, bool bKeepPersistentID)
+// Checks for and commits all changes.
+void World::Commit()
 {
-	if (!pEntity)
-	{
-		LEAN_LOG_ERROR_MSG("pEntity may not be nullptr");
-		return;
-	}
-
-	uint4 entityID = static_cast<uint4>( m_entities.size() );
-	m_entities.push_back(pEntity);
-
-	try
-	{
-		// Either insert or add persistent ID
-		if (bKeepPersistentID && pEntity->GetPersistentID() != beCore::PersistentIDs::InvalidID)
-		{
-			if (!m_persistentIDs.SetReference(pEntity->GetPersistentID(), pEntity, true))
-				LEAN_THROW_ERROR_CTX("Persistent entity ID collision", pEntity->GetName().c_str());
-		}
-		else
-			pEntity->SetPersistentID( m_persistentIDs.AddReference(pEntity) );
-	}
-	catch (...)
-	{
-		m_entities.pop_back();
-		throw;
-	}
-
-	// Update entity ID
-	pEntity->SetID(entityID);
-}
-
-// Removes the given entity from this world.
-bool World::RemoveEntity(Entity *pEntity, bool bKeepPersistentID)
-{
-	bool bRemoved = false;
-
-	// Remove entity
-	// NOTE: Ordered more expensive, but keeps changes trackable in textual diffs
-	{
-		entity_vector::iterator itEntity = m_entities.begin();
-
-		// Skip unaffected range
-		while (itEntity != m_entities.end() && *itEntity != pEntity)
-			++itEntity;
-
-		while (itEntity != m_entities.end())
-		{
-			// Remove entity from list
-			if (*itEntity == pEntity)
-			{
-				itEntity = m_entities.erase(itEntity);
-				bRemoved = true;
-			}
-			// Update IDs of subsequent entities
-			else
-			{
-				(*itEntity)->SetID( static_cast<uint4>(itEntity - m_entities.begin()) );
-				++itEntity;
-			}
-		}
-
-	}
-
-	if (bRemoved)
-	{
-		// Invalidate entity ID
-		pEntity->SetID(Entity::InvalidID);
-
-		uint8 persistentID = pEntity->GetPersistentID();
-
-		// Invalidate persistent ID
-		if (!bKeepPersistentID)
-			pEntity->SetPersistentID(beCore::PersistentIDs::InvalidID);
-
-		// Unset persistent reference
-		m_persistentIDs.UnsetReference(persistentID, !bKeepPersistentID);
-	}
-
-	return bRemoved;
-}
-
-// Gets the number of entities.
-uint4 World::GetEntityCount() const
-{
-	return static_cast<uint4>( m_entities.size() );
-}
-
-// Gets the n-th entity.
-const Entity* World::GetEntity(uint4 id) const
-{
-	return (id < m_entities.size())
-		? m_entities[id]
-		: nullptr;
-}
-
-// Attaches all entities to their simulations.
-void World::Attach() const
-{
-	for (entity_vector::const_iterator itEntity = m_entities.begin();
-		itEntity != m_entities.end(); itEntity++)
-		(*itEntity)->Attach();
-}
-
-// Detaches all entities from their simulations.
-void World::Detach() const
-{
-	for (entity_vector::const_iterator itEntity = m_entities.begin();
-		itEntity != m_entities.end(); itEntity++)
-		(*itEntity)->Detach();
+	m_entities->Commit();
+	bees::Commit(m_controllers->GetControllers());
 }
 
 // Saves the world to the given file.
@@ -205,9 +108,10 @@ void World::SaveWorld(rapidxml::xml_node<utf8_t> &worldNode) const
 	GetResourceSaveTasks().Save(worldNode, parameters);
 	GetWorldSaveTasks().Save(worldNode, parameters);
 	
-	SaveQueue saveJobs;
+	beCore::SaveJobs saveJobs;
 
-	SaveEntities(&m_entities[0].get(), static_cast<uint4>(m_entities.size()), worldNode, &parameters, &saveJobs);
+	Entities::ConstRange entities = m_entities->GetEntities();
+	SaveEntities(&entities[0], Size4(entities), worldNode, &parameters, &saveJobs);
 
 	// Execute any additionally scheduled save jobs
 	saveJobs.Save(worldNode, parameters);
@@ -221,31 +125,18 @@ void World::LoadWorld(const rapidxml::xml_node<lean::utf8_t> &worldNode, beCore:
 	// NOTE: Never re-use persistent IDs again
 	m_persistentIDs.SkipIDs( lean::get_int_attribute<utf8_t>(worldNode, "nextPersistentID", m_persistentIDs.GetNextID()) );
 
+	// NOTE: Caller has no way of setting this right!
+	SetEntitySystemParameters(
+			parameters,
+			EntitySystemParameters(this)
+		);
+
 	// Execute generic load tasks first
 	GetResourceLoadTasks().Load(worldNode, parameters);
 	GetWorldLoadTasks().Load(worldNode, parameters);
 
-	LoadQueue loadJobs;
-
-	struct WorldInserter : public EntityInserter
-	{
-		World *world;
-
-		WorldInserter(World &world)
-			: world(&world) { }
-		
-		void GrowEntities(uint4 count)
-		{
-			world->m_entities.reserve( world->m_entities.size() + count );
-		}
-		
-		void AddEntity(Entity *pEntity)
-		{
-			world->AddEntity(pEntity, true);
-		}
-	} inserter(*this);
-
-	LoadEntities(inserter, worldNode, parameters, &loadJobs);
+	beCore::LoadJobs loadJobs;
+	LoadEntities(m_entities.get(), worldNode, parameters, &loadJobs);
 
 	// Execute any additionally scheduled load jobs
 	loadJobs.Load(worldNode, parameters);
@@ -255,6 +146,32 @@ void World::LoadWorld(const rapidxml::xml_node<lean::utf8_t> &worldNode, beCore:
 void World::SetName(const utf8_ntri &name)
 {
 	m_name.assign(name.begin(), name.end());
+}
+
+// Attaches the given collection of entitites.
+void Attach(World *world, Simulation *simulation)
+{
+	Attach(world->Entities(), simulation);
+	Attach(world->Controllers().GetControllers(), simulation);
+}
+
+// Detaches the given collection of entitites.
+void Detach(World *world, Simulation *simulation)
+{
+	Detach(world->Controllers().GetControllers(), simulation);
+	Detach(world->Entities(), simulation);
+}
+
+// Attaches the given collection of simulation controllers.
+void Attach(Entities *entities, Simulation *simulation)
+{
+	simulation->AddSynchronized(entities, SynchronizedFlags::Flush);
+}
+
+// Detaches the given collection of simulation controllers.
+void Detach(Entities *entities, Simulation *simulation)
+{
+	simulation->RemoveSynchronized(entities, SynchronizedFlags::All);
 }
 
 } // namespace

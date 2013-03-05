@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS
 #define BE_GRAPHICS
 
@@ -70,6 +71,8 @@
 /// Main namespace of the beGraphics library.
 namespace beGraphics
 {
+	namespace thisspace = beGraphics;
+
 	// Import important types
 	using namespace lean::types;
 	LEAN_REIMPORT_NUMERIC_TYPES;
@@ -109,8 +112,13 @@ namespace beGraphics
 /// Shorthand namespace.
 namespace breeze
 {
-	/// Graphics namespace alias.
+#ifndef DOXYGEN_READ_THIS
+	/// beGraphics namespace alias.
 	namespace beg = ::beGraphics;
+#else
+	/// beGraphics namespace alias.
+	namespace beg { using namespace ::beGraphics; }
+#endif
 }
 
 /// @}

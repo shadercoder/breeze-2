@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_DX11
 #define BE_GRAPHICS_DX11
 
@@ -24,6 +25,9 @@ namespace beGraphics
 /// Main namespace of the DX11 implementation.
 namespace DX11
 {
+	namespace parentspace = beGraphics;
+	namespace thisspace = DX11;
+
 	/// Checks whether the given object belongs to the DX11 implementation.
 	LEAN_INLINE bool IsDX11(const Implementation *pImpl)
 	{

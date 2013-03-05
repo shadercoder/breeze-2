@@ -2,6 +2,7 @@
 /* breeze Engine Math Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_MATH_MATRIX_DEF
 #define BE_MATH_MATRIX_DEF
 
@@ -39,6 +40,7 @@ private:
 		Component,
 		RowCount * ColumnCount> base_type;
 
+public:
 	union
 	{
 		Component c[RowCount * ColumnCount];
@@ -46,7 +48,6 @@ private:
 		Component r[RowCount][ColumnCount];
 	};
 
-public:
 	/// Component type.
 	typedef Component component_type;
 	/// Size type.

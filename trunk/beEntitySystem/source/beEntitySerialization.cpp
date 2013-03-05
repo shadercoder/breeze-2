@@ -4,40 +4,23 @@
 
 #include "beEntitySystemInternal/stdafx.h"
 #include "beEntitySystem/beEntitySerialization.h"
-#include "beEntitySystem/beEntity.h"
+#include "beEntitySystem/beEntities.h"
 #include "beEntitySystem/beEntitySerializer.h"
 
 #include "beEntitySystem/beSerializationParameters.h"
-#include "beEntitySystem/beSerializationJob.h"
+#include "beEntitySystem/beSerialization.h"
 #include "beEntitySystem/beSerializationTasks.h"
 
 #include <lean/xml/utility.h>
-
 #include <lean/smart/scoped_ptr.h>
-
 #include <lean/logging/errors.h>
 
 namespace beEntitySystem
 {
-	// Instantiate entity serialization
-	template class Serialization<Entity, EntitySerializer>;
-}
-// Link entity serialization
-#include "beSerialization.cpp"
-
-namespace beEntitySystem
-{
-
-// Gets the entity serialization register.
-EntitySerialization& GetEntitySerialization()
-{
-	static EntitySerialization manager;
-	return manager;
-}
 
 // Saves the given number of entities to the given xml node.
-void SaveEntities(const Entity * const* entities, uint4 entityCount, rapidxml::xml_node<utf8_t> &parentNode, 
-	beCore::ParameterSet *pParameters, SaveQueue *pQueue)
+void SaveEntities(const Entity *const *entities, uint4 entityCount, rapidxml::xml_node<utf8_t> &parentNode, 
+				  beCore::ParameterSet *pParameters, beCore::SaveJobs *pQueue)
 {
 	rapidxml::xml_document<utf8_t> &document = *parentNode.document();
 
@@ -48,24 +31,33 @@ void SaveEntities(const Entity * const* entities, uint4 entityCount, rapidxml::x
 	lean::scoped_ptr<beCore::ParameterSet> pPrivateParameters;
 
 	if (!pParameters)
-		pParameters = pPrivateParameters = new beCore::ParameterSet(&GetSerializationParameters());
+	{
+		pPrivateParameters = new beCore::ParameterSet(&GetSerializationParameters());
+		pParameters = pPrivateParameters.get();
+	}
 
-	lean::scoped_ptr<SaveQueue> pPrivateSaveJobs;
+	lean::scoped_ptr<beCore::SaveJobs> pPrivateSaveJobs;
 
 	if (!pQueue)
-		pQueue = pPrivateSaveJobs = new SaveQueue();
+	{
+		pPrivateSaveJobs = new beCore::SaveJobs();
+		pQueue = pPrivateSaveJobs.get();
+	}
 
 	const EntitySerialization &entitySerialization = GetEntitySerialization();
 
-	for (uint4 i = 0; i < entityCount; ++i)
+	for (const Entity *const *itEntity = entities, *const *itEntityEnd = entities + entityCount; itEntity < itEntityEnd; ++itEntity)
 	{
-		const Entity *pEntity = entities[i];
+		const Entity *entity = *itEntity;
 
-		rapidxml::xml_node<utf8_t> &entityNode = *lean::allocate_node<utf8_t>(document, "e");
-		// ORDER: Append FIRST, otherwise parent document == nullptr
-		entitiesNode.append_node(&entityNode);
+		if (entity->IsAttached() && entity->IsSerialized())
+		{
+			rapidxml::xml_node<utf8_t> &entityNode = *lean::allocate_node<utf8_t>(document, "e");
+			// ORDER: Append FIRST, otherwise parent document == nullptr
+			entitiesNode.append_node(&entityNode);
 
-		entitySerialization.Save(pEntity, entityNode, *pParameters, *pQueue);
+			entitySerialization.Save(entity, entityNode, *pParameters, *pQueue);
+		}
 	}
 
 	// Execute any additionally scheduled save jobs
@@ -74,28 +66,40 @@ void SaveEntities(const Entity * const* entities, uint4 entityCount, rapidxml::x
 }
 
 // Loads all entities from the given xml node.
-void LoadEntities(EntityInserter &collection, const rapidxml::xml_node<lean::utf8_t> &parentNode,
-	beCore::ParameterSet &parameters, LoadQueue *pQueue)
+void LoadEntities(Entities *entities, const rapidxml::xml_node<lean::utf8_t> &parentNode,
+				  beCore::ParameterSet &parameters, beCore::LoadJobs *pQueue, EntityInserter *pInserter)
 {
-	lean::scoped_ptr<LoadQueue> pPrivateLoadJobs;
+	lean::scoped_ptr<beCore::LoadJobs> pPrivateLoadJobs;
 
 	if (!pQueue)
-		pQueue = pPrivateLoadJobs = new LoadQueue();
+	{
+		pPrivateLoadJobs = new beCore::LoadJobs();
+		pQueue = pPrivateLoadJobs.get();
+	}
 
 	const EntitySerialization &entitySerialization = GetEntitySerialization();
 
 	for (const rapidxml::xml_node<utf8_t> *pEntitiesNode = parentNode.first_node("entities");
 		pEntitiesNode; pEntitiesNode = pEntitiesNode->next_sibling("entities"))
 	{
-		collection.GrowEntities( lean::node_count(*pEntitiesNode) );
+		uint4 predictedCount = lean::node_count(*pEntitiesNode);
+		entities->Reserve(predictedCount);
+		if (pInserter)
+			pInserter->Reserve(predictedCount);
 
 		for (const rapidxml::xml_node<utf8_t> *pEntityNode = pEntitiesNode->first_node();
 			pEntityNode; pEntityNode = pEntityNode->next_sibling())
 		{
-			lean::resource_ptr<Entity> pEntity = entitySerialization.Load(*pEntityNode, parameters, *pQueue);
+			lean::scoped_ptr<Entity> pEntity = entitySerialization.Load(*pEntityNode, parameters, *pQueue);
 
 			if (pEntity)
-				collection.AddEntity(pEntity);
+			{
+				if (pInserter)
+					pInserter->Add(pEntity);
+
+				// Success
+				pEntity.detach();
+			}
 			else
 				LEAN_LOG_ERROR_CTX("LoadEntities()", EntitySerializer::GetName(*pEntityNode));
 		}

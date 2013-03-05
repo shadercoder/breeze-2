@@ -18,7 +18,7 @@ private:
 	QString m_type;
 	QString m_name;
 	QString m_file;
-
+	
 	bool m_bChanged;
 
 	int m_references;

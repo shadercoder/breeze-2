@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_PIPELINE_PROCESSOR
 #define BE_SCENE_PIPELINE_PROCESSOR
 

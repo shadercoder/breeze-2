@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Utility/InputProvider.h"
 
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 
 namespace
 {

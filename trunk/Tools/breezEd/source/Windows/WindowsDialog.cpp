@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "Windows/WindowsDialog.h"
 
-#include <QtGui/QMdiSubWindow>
+#include <QtWidgets/QMdiSubWindow>
 #include "Windows/MdiDocumentWindow.h"
 
 #include "Utility/Checked.h"
 
 // Constructor.
-WindowsDialog::WindowsDialog(const QList<QWidget*> &windows, QWidget *pParent, Qt::WFlags flags)
+WindowsDialog::WindowsDialog(const QList<QWidget*> &windows, QWidget *pParent, Qt::WindowFlags flags)
 	: QDialog(pParent, flags)
 {
 	ui.setupUi(this);

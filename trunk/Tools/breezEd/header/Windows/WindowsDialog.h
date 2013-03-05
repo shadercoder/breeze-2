@@ -1,7 +1,7 @@
 #ifndef WINDOWSDIALOG_H
 #define WINDOWSDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_WindowsDialog.h"
 
 class WindowsDialog : public QDialog
@@ -15,7 +15,7 @@ private:
 
 public:
 	/// Constructor.
-	WindowsDialog(const QList<QWidget*> &windows, QWidget *pParent = nullptr , Qt::WFlags flags = 0);
+	WindowsDialog(const QList<QWidget*> &windows, QWidget *pParent = nullptr , Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~WindowsDialog();
 

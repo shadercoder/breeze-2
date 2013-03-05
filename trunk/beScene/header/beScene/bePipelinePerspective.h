@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_PIPELINE_PERSPECTIVE
 #define BE_SCENE_PIPELINE_PERSPECTIVE
 
@@ -10,168 +11,121 @@
 #include "beRenderingLimits.h"
 #include <vector>
 #include <lean/containers/simple_vector.h>
-#include <lean/containers/accumulation_vector.h>
-#include "beRenderJob.h"
 #include "beRenderable.h"
 #include <lean/smart/resource_ptr.h>
+#include <beCore/beMany.h>
+#include <lean/tags/handle.h>
 
 namespace beScene
 {
 	
 // Prototypes
-class Scenery;
-class Renderable;
-class Light;
-struct LightJob;
 class Pipe;
-class RenderingPipeline;
 class RenderContext;
 class PipelineProcessor;
+class Renderable;
+
+struct OrderedRenderJob
+{
+	const Renderable *Renderable;
+	uint4 ID;
+	uint4 SortIndex;
+
+	OrderedRenderJob() { }
+	OrderedRenderJob(const class Renderable *renderable, uint4 id, uint4 sortIndex)
+		: Renderable(renderable),
+		ID(id),
+		SortIndex(sortIndex) { }
+
+	friend bool operator <(OrderedRenderJob left, OrderedRenderJob right)
+	{
+		return (left.SortIndex < right.SortIndex);
+	}
+};
 
 /// Rendering perspective.
 class PipelinePerspective : public Perspective
 {
 public:
-	/// Queued render job.
-	struct QueuedRenderJob
+	/// Ordered render queue
+	struct OrderedQueue
 	{
-		uint4 sortIndex;				///< Sort index.
-		uint4 depth;					///< Camera depth.
-		RenderJob data;					///< Render job.
+		PipelineQueueID ID;
+
+		typedef lean::simple_vector<OrderedRenderJob, lean::simple_vector_policies::pod> jobs_t;
+		jobs_t jobs;
+
+		OrderedQueue(PipelineQueueID id)
+			: ID(id) { }
+
+		friend PipelineQueueID GetID(const OrderedQueue &queue) { return queue.ID; }
 	};
 
-	/// Render queue.
-	struct Queue
-	{ 
-		typedef lean::simple_vector<QueuedRenderJob, lean::simple_vector_policies::pod> render_job_vector;
-		render_job_vector renderJobs;
-
-		typedef lean::simple_vector<uint4> sorted_job_vector;
-		sorted_job_vector sortedJobs;
-	};
-
-	/// Pipeline stage.
-	struct Stage
-	{
-		typedef Queue queue_vector[MaxRenderQueueCount];
-		queue_vector queues;
-		uint2 minQueueID;
-		uint2 maxQueueID;
-		uint2 minQueueSlot;
-		uint2 maxQueueSlot;
-		uint2 firstQueueID;
-		uint2 lastQueueID;
-
-		/// Constructor.
-		LEAN_INLINE Stage()
-			: minQueueID(MaxRenderQueueCount),
-			maxQueueID(0),
-			minQueueSlot(MaxRenderQueueCount),
-			maxQueueSlot(0),
-			firstQueueID(InvalidRenderQueue),
-			lastQueueID(InvalidRenderQueue) { }
-	};
-
-	/// Perspective data.
-	struct RenderablePerspectiveData
-	{
-		const Renderable *renderable;
-		void *pPerspectiveData;
-
-		/// NON-INITIALIZING constructor.
-		RenderablePerspectiveData() { }
-		/// Constructor.
-		RenderablePerspectiveData(const Renderable *renderable, void *pPerspectiveData)
-			: renderable(renderable),
-			pPerspectiveData(pPerspectiveData) { }
-	};
-
-	/// Renderables.
-	struct Renderables
-	{
-		typedef Stage stage_vector[MaxPipelineStageCount];
-		stage_vector stages;
-		uint2 minStageID;
-		uint2 maxStageID;
-		uint2 firstStageID;
-		uint2 lastStageID;
-
-		PipelineStageMask stageMask;
-
-		typedef lean::simple_vector<RenderablePerspectiveData> perspective_data_vector;
-		perspective_data_vector perspectiveData;
-
-		/// Constructor.
-		LEAN_INLINE Renderables(PipelineStageMask stageMask)
-			: minStageID(MaxPipelineStageCount),
-			maxStageID(0),
-			firstStageID(InvalidPipelineStage),
-			lastStageID(InvalidPipelineStage),
-			stageMask(stageMask) { }
-	};
-
-	typedef lean::simple_vector<const Light*, lean::simple_vector_policies::pod> light_vector;
+	typedef lean::simple_vector<lean::com_ptr<PipelinePerspective>, lean::containers::vector_policies::semipod> perspectives_t;
+	typedef lean::simple_vector<OrderedQueue, lean::containers::vector_policies::semipod> queues_t;
 
 private:
-	RenderingPipeline *m_pPipeline;
+	perspectives_t m_children;
 
-	Renderables m_renderables;
-	light_vector m_lights;
+	queues_t m_orderedQueues;
+	uint4 m_activeOrderedQueues;
 
-	Pipe *m_pPipe;
+	uint4 m_stageMask;
+	lean::resource_ptr<Pipe> m_pPipe;
+	lean::resource_ptr<PipelineProcessor> m_pProcessor;
 
-	PipelineProcessor *m_pProcessor;
+	/// Resets this perspective after all temporary data has been discarded.
+	BE_SCENE_API virtual void ResetReleased() LEAN_OVERRIDE;
 
 public:
 	/// Constructor.
-	BE_SCENE_API PipelinePerspective(RenderingPipeline *pPipeline, const PerspectiveDesc &desc, Pipe *pPipe, PipelineProcessor *pProcessor, PipelineStageMask stageMask);
+	BE_SCENE_API PipelinePerspective(Pipe *pPipe, PipelineProcessor *pProcessor, PipelineStageMask stageMask);
 	/// Destructor.
 	BE_SCENE_API ~PipelinePerspective();
 
+	using Perspective::Reset;
 	/// Sets the perspective description and resets all contents.
 	BE_SCENE_API void Reset(const PerspectiveDesc &desc, Pipe *pPipe, PipelineProcessor *pProcessor, PipelineStageMask stageMask);
+	/// Sets the perspective description and resets all contents.
+	BE_SCENE_API void Reset(Pipe *pPipe, PipelineProcessor *pProcessor, PipelineStageMask stageMask);
 	/// Releases shared references held.
-	BE_SCENE_API void Release();
+	BE_SCENE_API void ReleaseIntermediate() LEAN_OVERRIDE;
 
-	/// Adds all visible renderables in the given scenery to this perspective.
-	BE_SCENE_API void AddRenderables(const Scenery& scenery);
-	/// Adds the given renderable to this perspective.
-	BE_SCENE_API void AddRenderables(const Renderable *pRenderable, const RenderableData &renderableData);
+	/// Sets the pipe.
+	BE_SCENE_API void SetPipe(Pipe *pPipe);
+	/// Sets the processor.
+	BE_SCENE_API void SetProcessor(PipelineProcessor *pProcessor);
+	/// Sets the stage mask.
+	BE_SCENE_API void SetStageMask(PipelineStageMask stageMask);
 
-	/// Adds all visible lights in the given scenery to this perspective.
-	BE_SCENE_API void AddLights(const Scenery& scenery);
-	/// Adds the given light to this perspective.
-	BE_SCENE_API void AddLight(const Light *pLight);
+	typedef beCore::Range<PipelinePerspective*const*> PerspectiveRange;
 
-	/// Queues all renderables into their render queues and pipeline stages
-	BE_SCENE_API void Enqueue();
-	/// Clears all pipeline stages and render queues.
-	BE_SCENE_API void Dequeue();
+	/// Adds the given perspective.
+	BE_SCENE_API void AddPerspective(PipelinePerspective *perspective);
+	/// Gets the perspectives.
+	LEAN_INLINE PerspectiveRange GetPerspectives() const { return beCore::MakeRangeN(&m_children[0].get(), m_children.size()); } 
 
-	/// Prepares rendering of all stages and queues.
-	BE_SCENE_API void Prepare();
-	/// Prepares rendering of the given stage.
-	BE_SCENE_API void Prepare(uint2 stageID);
-	/// Prepares rendering of the given stage and render queue.
-	BE_SCENE_API void Prepare(uint2 stageID, uint2 queueID);
+	/// Queue of render jobs.
+	typedef lean::handle<OrderedQueue*, PipelinePerspective> QueueHandle;
+	/// Gets an ordered queue that allows for the addition of render jobs.
+	BE_SCENE_API QueueHandle QueueRenderJobs(PipelineQueueID queueID);
+	/// Adds a render job to an ordered queue.
+	BE_SCENE_API void AddRenderJob(QueueHandle queue, const OrderedRenderJob &renderJob);
+	// Clears all pipeline stages and render queues.
+	BE_SCENE_API void ClearRenderJobs();
 
-	/// Optimizes rendering of all stages and queues.
-	BE_SCENE_API void Optimize();
-	/// Prepares rendering of the given stage.
-	BE_SCENE_API void Optimize(uint2 stageID);
-	/// Prepares rendering of the given stage and render queue.
-	BE_SCENE_API void Optimize(uint2 stageID, uint2 queueID);
-
-	/// Renders the given stage.
-	BE_SCENE_API void Render(uint2 stageID, const RenderContext &context) const;
-	/// Renders the given stage & render queue.
-	BE_SCENE_API void Render(uint2 stageID, uint2 queueID, const RenderContext &context) const;
+	/// Prepares the given ordered queue.
+	BE_SCENE_API void Prepare(PipelineQueueID queueID);
+	/// Renders the given ordered queue.
+	BE_SCENE_API void Render(PipelineQueueID queueID, const RenderContext &context) const;
+	/// Processes the given queue.
+	BE_SCENE_API void Process(PipelineQueueID queueID, const RenderContext &context) const;
 
 	/// Optionally gets a pipe.
-	LEAN_INLINE Pipe* GetPipe() const { return m_pPipe; }
+	Pipe* GetPipe() const LEAN_OVERRIDE { return m_pPipe; }
 
 	/// Gets a stage mask.
-	LEAN_INLINE PipelineStageMask GetStageMask() const { return m_renderables.stageMask; }
+	LEAN_INLINE PipelineStageMask GetStageMask() const { return m_stageMask; }
 };
 
 } // namespace

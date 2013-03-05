@@ -2,6 +2,7 @@
 /* breeze Engine Core Module     (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_CORE_PATH_RESOLVER
 #define BE_CORE_PATH_RESOLVER
 
@@ -13,11 +14,9 @@ namespace beCore
 {
 
 /// Path resolver interface.
-class PathResolver : public lean::cloneable
+class LEAN_INTERFACE PathResolver : public lean::cloneable
 {
-protected:
-	LEAN_INLINE PathResolver& operator =(const PathResolver&) { return *this; }
-	LEAN_INLINE ~PathResolver() throw() { }
+	LEAN_INTERFACE_BEHAVIOR(PathResolver)
 
 public:
 	/// Resolves the given file name.

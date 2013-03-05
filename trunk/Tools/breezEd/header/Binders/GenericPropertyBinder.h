@@ -5,26 +5,29 @@
 #include <lean/tags/noncopyable.h>
 
 #include <beCore/beReflectedComponent.h>
-#include <beCore/bePropertyListener.h>
+#include <beCore/beComponentObservation.h>
 
 class QTreeView;
 class QStandardItem;
 class QStandardItemModel;
 
+class ItemDelegateEx;
+
 class SceneDocument;
 
 /// Create entity command class.
-class GenericPropertyBinder : public QObject, public beCore::PropertyListener, public lean::noncopyable
+class GenericPropertyBinder : public QObject, public beCore::ComponentObserver, public lean::noncopyable
 {
 	Q_OBJECT
 
 private:
-	beCore::PropertyProvider *m_pPropertyProvider;
+	lean::com_ptr<beCore::PropertyProvider> m_pPropertyProvider;
 	beCore::ReflectedComponent *m_pComponent;
 
 	SceneDocument *m_pDocument;
 
 	QTreeView *m_pTree;
+	ItemDelegateEx *m_pDelegate;
 	QStandardItem *m_pParentItem;
 
 	int m_propertyStartIdx, m_propertyEndIdx;
@@ -51,8 +54,14 @@ public:
 	/// Destructor.
 	virtual ~GenericPropertyBinder();
 
-	/// Called when the given propery might have changed.
-	virtual void PropertyChanged(const beCore::PropertyProvider &provider);
+	/// Called when properties in the given provider might have changed.
+	void PropertyChanged(const beCore::PropertyProvider &provider) LEAN_OVERRIDE;
+	/// Called when child components in the given provider might have changed.
+	void ChildChanged(const beCore::ReflectedComponent &provider) LEAN_OVERRIDE;
+	/// Called when the structure of the given component has changed.
+	void StructureChanged(const beCore::Component &provider) LEAN_OVERRIDE;
+	/// Called when the given component has been replaced.
+	void ComponentReplaced(const beCore::Component &previous) LEAN_OVERRIDE;
 
 	/// Sets the given item model up for property display.
 	static void setupModel(QStandardItemModel &model);

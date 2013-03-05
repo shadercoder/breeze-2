@@ -13,22 +13,6 @@ namespace beCore
 namespace
 {
 
-struct ReferenceComparison
-{
-	LEAN_INLINE bool operator ()(const PersistentIDs::Reference &left, const PersistentIDs::Reference &right) const
-	{
-		return left.id == right.id;
-	}
-	LEAN_INLINE bool operator ()(uint8 leftID, const PersistentIDs::Reference &right) const
-	{
-		return leftID == right.id;
-	}
-	LEAN_INLINE bool operator ()(const PersistentIDs::Reference &left, uint8 rightID) const
-	{
-		return left.id == rightID;
-	}
-};
-
 struct ReferenceOrder
 {
 	LEAN_INLINE bool operator ()(const PersistentIDs::Reference &left, const PersistentIDs::Reference &right) const
@@ -109,7 +93,7 @@ bool PersistentIDs::SetReference(uint8 id, void *ptr, const std::type_info &type
 	{
 		ref_vector::iterator itReference = lean::find_sorted(
 				m_references.begin(), m_references.end(),
-				id, ReferenceOrder(), ReferenceComparison()
+				id, ReferenceOrder()
 			);
 
 		// Update
@@ -121,7 +105,7 @@ bool PersistentIDs::SetReference(uint8 id, void *ptr, const std::type_info &type
 				itReference->type = &type;
 			}
 			else
-				return false;
+				return (itReference->pointer == ptr);
 		}
 		// Insert
 		else
@@ -136,7 +120,7 @@ void* PersistentIDs::GetReference(uint8 id, const std::type_info &type) const
 {
 	ref_vector::const_iterator itReference = lean::find_sorted(
 			m_references.begin(), m_references.end(),
-			id, ReferenceOrder(), ReferenceComparison()
+			id, ReferenceOrder()
 		);
 
 	return (itReference != m_references.end() && *itReference->type == type)
@@ -145,14 +129,14 @@ void* PersistentIDs::GetReference(uint8 id, const std::type_info &type) const
 }
 
 // Unsets a reference.
-void PersistentIDs::UnsetReference(uint8 id, bool bErase)
+void PersistentIDs::UnsetReference(uint8 id, const void *ptr, bool bErase)
 {
 	ref_vector::iterator itReference = lean::find_sorted(
 			m_references.begin(), m_references.end(),
-			id, ReferenceOrder(), ReferenceComparison()
+			id, ReferenceOrder()
 		);
 
-	if (itReference != m_references.end())
+	if (itReference != m_references.end() && (!ptr || itReference->pointer == ptr))
 	{
 		if (bErase)
 			m_references.erase(itReference);

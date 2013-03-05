@@ -12,8 +12,10 @@
 #include "Utility/InputProvider.h"
 
 #include <beScene/bePipe.h>
+#include <beScene/bePerspectivePool.h>
 #include <beScene/beRenderingPipeline.h>
 #include <beScene/beRenderer.h>
+#include <beScene/beRenderContext.h>
 #include <beGraphics/beTextureTargetPool.h>
 
 #include "Interaction/Interaction.h"
@@ -37,7 +39,7 @@ lean::resource_ptr<beGraphics::SwapChain, true> createSwapChain(QWidget &widget,
 
 	beGraphics::SwapChainDesc desc;
 
-	desc.Window = widget.winId();
+	desc.Window = (HWND) widget.winId();
 	desc.Windowed = true;
 
 	desc.Display.Width = widget.width();
@@ -49,18 +51,20 @@ lean::resource_ptr<beGraphics::SwapChain, true> createSwapChain(QWidget &widget,
 }
 
 /// Creates a camera for the given document.
-beScene::CameraController* createCamera(beEntitySystem::Entity &entity, SceneDocument &document)
+beScene::CameraController* createCamera(beEntitySystem::Entity &entity, beScene::Renderer &renderer, SceneDocument &document)
 {
-	lean::resource_ptr<beScene::CameraController> pCamera =
-		lean::bind_resource( new beScene::CameraController(&entity, document.scene()) );
-
-	entity.AddController(pCamera);
+	lean::resource_ptr<beScene::CameraController> pCamera = new_resource beScene::CameraController(document.scene());
+	pCamera->SetPerspective( renderer.PerspectivePool()->GetPerspective(nullptr, nullptr, beScene::NormalPipelineStages) );
+	entity.AddControllerKeep(pCamera);
+	
 	return pCamera;
 }
 
 /// Resizes the given swap chain.
-void resizePipe(beScene::Pipe &pipe, beGraphics::SwapChain &chain, uint4 width, uint4 height)
+void resizePipe(beScene::Pipe &pipe, beScene::RenderContext &context, beGraphics::SwapChain &chain, uint4 width, uint4 height)
 {
+	context.StateManager().ClearBindings();
+	context.Context().ClearState();
 	pipe.SetFinalTarget(nullptr);
 
 	try
@@ -75,52 +79,64 @@ void resizePipe(beScene::Pipe &pipe, beGraphics::SwapChain &chain, uint4 width, 
 	pipe.SetFinalTarget(beGraphics::GetBackBuffer(chain).get());
 }
 
+/// Adds the given effect to the given processing pipeline
+beg::Material* addEffect(const utf8_ntri &file, const utf8_ntri &args, beScene::ProcessingPipeline &pipeline,
+	beScene::EffectDrivenRenderer &renderer, beScene::ResourceManager &resourceManager)
+{
+	lean::resource_ptr<beGraphics::Effect> processingEffect =
+		resourceManager.EffectCache()->GetByFile(file, args, "");
+
+	lean::resource_ptr<beg::Material> processingMaterial = beg::CreateMaterial(
+			&processingEffect.get(), 1,
+			*resourceManager.EffectCache()
+		);
+
+	lean::resource_ptr<beScene::QuadProcessor> processor = new_resource beScene::QuadProcessor(
+			renderer.Device(),
+			renderer.ProcessingDrivers()
+		);
+	processor->SetMaterial(processingMaterial);
+
+	pipeline.Add(processor);
+
+	return processingMaterial;
+}
+
 /// Sets the given swap chain for the given camera.
 void setSwapChain(beScene::CameraController &camera, beGraphics::SwapChain *pSwapChain, SceneDocument &document)
 {
 	// Swap chain
-	camera.SetPipe(
+	camera.GetPerspective()->SetPipe(
 			beScene::CreatePipe(
 					*beGraphics::GetBackBuffer(*pSwapChain),
 					document.renderer()->TargetPool()
 			).get()
 		);
 
-	// Pipeline
-	camera.SetScheduler(document.renderer()->Pipeline());
-
 	// Tonemapping
-	lean::resource_ptr<beScene::ProcessingPipeline> pProcessing = lean::bind_resource( new beScene::ProcessingPipeline("PostProcessing") );
+	lean::resource_ptr<beScene::ProcessingPipeline> processing = lean::bind_resource( new beScene::ProcessingPipeline("PostProcessing") );
 
 	// TODO: NO HARDCODED PATHS
-	beScene::ResourceManager &resources = *document.editor()->deviceManager()->graphicsResources();
-	beScene::Material *pTonemapping = resources.MaterialCache()->GetMaterial(
-		resources.EffectCache()->GetEffect("Processing/SimpleTonemap.fx", nullptr, 0),
-		"Default" );
-
-	lean::resource_ptr<beScene::QuadProcessor> pProcessor = lean::bind_resource(
-		new beScene::QuadProcessor(
-			document.renderer()->Device(), document.renderer()->ProcessingDrivers() )
-		);
-	pProcessor->SetMaterial(pTonemapping);
-	pProcessing->Add(pProcessor);
-
-	camera.SetProcessor(pProcessing);
+	addEffect("Processing/SimpleTonemap.fx", "BE_LDR_PROCESSING", *processing, *document.renderer(), *document.graphicsResources());
+	addEffect("Processing/FXAA.fx", "", *processing, *document.renderer(), *document.graphicsResources());
+	
+	camera.GetPerspective()->SetProcessor(processing);
 }
 
 } // namespace
 
 // Constructor.
-SceneView::SceneView(SceneDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+SceneView::SceneView(SceneDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: AbstractView(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
 	m_pDocument( LEAN_ASSERT_NOT_NULL(pDocument) ),
 	m_pViewMode( new Mode(LEAN_ASSERT_NOT_NULL(pDocumentMode)) ),
 	
 	m_pInputProvider(),
-	m_pCamera( lean::bind_resource( new beEntitySystem::Entity("Camera") ) ),
-	m_pCameraController( createCamera(*m_pCamera, *m_pDocument) ),
-	m_pCameraInteraction()
+	m_pCamera( m_pDocument->world()->Entities()->AddEntity("Camera", bees::Entities::AnonymousPersistentID) ),
+	m_pCameraController( createCamera(*m_pCamera, *m_pDocument->renderer(), *m_pDocument) ),
+	m_pCameraInteraction(),
+	m_pDropInteraction()
 {
 	ui.setupUi(this);
 
@@ -130,8 +146,7 @@ SceneView::SceneView(SceneDocument *pDocument, Mode *pDocumentMode, Editor *pEdi
 
 	// View camera
 	setSwapChain(*m_pCameraController, pSwapChain, *m_pDocument);
-	m_pCamera->Attach();
-	m_pCameraInteraction = new FreeCamera(m_pCamera, this);
+	m_pCameraInteraction = new FreeCamera(m_pCamera.get(), this);
 
 	// Track canvas input
 	m_pInputProvider = new InputProvider(ui.canvas, ui.canvas);
@@ -146,11 +161,16 @@ SceneView::SceneView(SceneDocument *pDocument, Mode *pDocumentMode, Editor *pEdi
 	// Set up (default) view mode
 //	m_pViewMode->addState( new SceneViewModeState(this, m_pEditor, m_pViewMode) );
 	pDocumentMode->setDefaultChildMode(m_pViewMode);
+
+	// ORDER: Be sure initialization has been successful
+	m_pDocument->scene()->AddPerspective(m_pCameraController->GetPerspective());
 }
 
 // Destructor.
 SceneView::~SceneView()
 {
+	// ORDER: Make sure perspective is removed straight away
+	m_pDocument->scene()->RemovePerspective(m_pCameraController->GetPerspective());
 }
 
 // Activates this view.
@@ -170,6 +190,7 @@ void SceneView::step(float timeStep)
 {
 	if (m_pDocument->isPrimary(this))
 	{
+		m_pDocument->commit();
 		m_pDocument->simulation()->Fetch();
 		
 		const QVector<Interaction*> &interactions = m_pDocument->interactions();
@@ -218,18 +239,27 @@ void SceneView::canvasResized(int width, int height)
 	m_pCameraController->SetAspect( (float) width / height );
 
 	// Resize buffers & flush target pool (most sizes will have changed)
-	resizePipe(*m_pCameraController->GetPipe(), *ui.canvas->swapChain(), width, height);
+	resizePipe(*m_pCameraController->GetPerspective()->GetPipe(), *this->m_pDocument->scene()->GetRenderContext(), *ui.canvas->swapChain(), width, height);
 	m_pDocument->renderer()->TargetPool()->ResetUsage();
 }
 
 // Handles drag&drop events.
 void SceneView::dragEnterEvent(QDragEnterEvent *pEvent)
 {
-	DropInteraction *pDragDrop = m_pDocument->dropInteraction();
+	DropInteraction *pDragDrop = interactionFromMimeData(pEvent->mimeData());
 
 	// Pass on to drop interaction
 	if (pDragDrop)
+	{
 		pDragDrop->accept(*pEvent);
+
+		// IMPORTANT: Only accepted operations continue to be tracked
+		if (pEvent->isAccepted())
+		{
+			m_pDocument->pushInteraction(pDragDrop);
+			m_pDropInteraction = pDragDrop;
+		}
+	}
 
 	ui.canvas->setFocus();
 	setPrimary();
@@ -246,11 +276,13 @@ void SceneView::dragMoveEvent(QDragMoveEvent *pEvent)
 // Handles drag&drop events.
 void SceneView::dragLeaveEvent(QDragLeaveEvent *pEvent)
 {
-	DropInteraction *pDragDrop = m_pDocument->dropInteraction();
-
 	// Pass on to drop interaction
-	if (pDragDrop)
-		pDragDrop->cancel();
+	if (m_pDropInteraction)
+	{
+		m_pDropInteraction->cancel();
+		m_pDocument->removeInteraction(m_pDropInteraction);
+		m_pDropInteraction = nullptr;
+	}
 
 	// NOTE: We won't get any release events
 	m_pInputProvider->release();
@@ -259,11 +291,13 @@ void SceneView::dragLeaveEvent(QDragLeaveEvent *pEvent)
 // Handles drag&drop events.
 void SceneView::dropEvent(QDropEvent *pEvent)
 {
-	DropInteraction *pDragDrop = m_pDocument->dropInteraction();
-
 	// Pass on to drop interaction
-	if (pDragDrop)
-		pDragDrop->complete(*pEvent);
+	if (m_pDropInteraction)
+	{
+		m_pDropInteraction->complete(*pEvent);
+		m_pDocument->removeInteraction(m_pDropInteraction);
+		m_pDropInteraction = nullptr;
+	}
 
 	// NOTE: We won't get any release events
 	m_pInputProvider->release();

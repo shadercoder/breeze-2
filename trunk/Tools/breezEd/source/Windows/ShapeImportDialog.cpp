@@ -7,7 +7,7 @@
 #include "Editor.h"
 #include "Windows/MainWindow.h"
 
-#include <QtGui/QFileDialog>
+#include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
 
 #include "Utility/Files.h"
@@ -56,7 +56,7 @@ QString outputFromInput(const QString &input, const QString &prevInput, const QS
 } // namespace
 
 // Constructor.
-ShapeImportDialog::ShapeImportDialog(Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+ShapeImportDialog::ShapeImportDialog(Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: QDialog(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) )
 {
@@ -150,12 +150,13 @@ void ShapeImportDialog::accept()
 	rcCommand << inputFile;
 	rcCommand << outputFile;
 
-	m_pEditor->write( "berc\n\t" + rcCommand.join("\n\t") );
+	QString berc = (ui.x64CheckBox->isChecked()) ? "berc_x64" : "berc";
+	m_pEditor->write( berc + "\n\t" + rcCommand.join("\n\t") );
 
 	// Run resource compiler
 	QProcess rc;
 	checkedConnect(&rc, SIGNAL(readyReadStandardOutput()), this, SLOT(forwardConsoleOutput()));
-	rc.start("berc", rcCommand);
+	rc.start(berc, rcCommand);
 	
 	// Allow for interruption
 	while (!rc.waitForFinished(10000))
@@ -271,6 +272,8 @@ QString browseForShape(const QString &currentPath, Editor &editor, QWidget *pPar
 #include "Widgets/ComponentPickerFactory.h"
 #include "Plugins/FactoryManager.h"
 
+#include <bePhysics/beAssembledShape.h>
+
 namespace
 {
 
@@ -280,13 +283,13 @@ struct ShapeComponentPickerPlugin : public ComponentPickerFactory
 	/// Constructor.
 	ShapeComponentPickerPlugin()
 	{
-		getComponentPickerFactories().addFactory("Shape", this);
+		getComponentPickerFactories().addFactory(bepx::AssembledShape::GetComponentType()->Name, this);
 	}
 
 	/// Destructor.
 	~ShapeComponentPickerPlugin()
 	{
-		getComponentPickerFactories().removeFactory("Shape");
+		getComponentPickerFactories().removeFactory(bepx::AssembledShape::GetComponentType()->Name);
 	}
 
 	/// Creates a component picker.

@@ -21,7 +21,7 @@ const EntitySystemParameterIDs& GetEntitySystemParameterIDs()
 	beCore::ParameterLayout &layout = GetSerializationParameters();
 
 	static EntitySystemParameterIDs parameterIDs(
-			layout.Add("beEntitySystem.Simulation"),
+			layout.Add("beEntitySystem.World"),
 			layout.Add("beEntitySystem.Entity"),
 			layout.Add("beEntitySystem.NoOverwrite")
 		);
@@ -35,7 +35,7 @@ void SetEntitySystemParameters(beCore::ParameterSet &parameters, const EntitySys
 	const beCore::ParameterLayout &layout = GetSerializationParameters();
 	const EntitySystemParameterIDs& parameterIDs = GetEntitySystemParameterIDs();
 
-	parameters.SetValue(layout, parameterIDs.Simulation, entitySystemParameters.Simulation);
+	parameters.SetValue(layout, parameterIDs.World, entitySystemParameters.World);
 	parameters.SetValue(layout, parameterIDs.Entity, entitySystemParameters.Entity);
 }
 
@@ -47,7 +47,7 @@ EntitySystemParameters GetEntitySystemParameters(const beCore::ParameterSet &par
 	const beCore::ParameterLayout &layout = GetSerializationParameters();
 	const EntitySystemParameterIDs& parameterIDs = GetEntitySystemParameterIDs();
 
-	entitySystemParameters.Simulation = parameters.GetValueChecked< Simulation* >(layout, parameterIDs.Simulation);
+	entitySystemParameters.World = parameters.GetValueChecked< World* >(layout, parameterIDs.World);
 	entitySystemParameters.Entity = parameters.GetValueChecked< Entity* >(layout, parameterIDs.Entity);
 
 	return entitySystemParameters;

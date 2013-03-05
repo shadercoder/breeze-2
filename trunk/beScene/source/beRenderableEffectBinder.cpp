@@ -63,7 +63,7 @@ RenderableEffectBinder::~RenderableEffectBinder()
 }
 
 // Applies the given renderable & perspective data to the effect bound by this effect driver.
-bool RenderableEffectBinder::Apply(const RenderableEffectData *pRenderableData, const Perspective &perspective,
+void RenderableEffectBinder::Apply(const RenderableEffectData *pRenderableData, const Perspective &perspective,
 		beGraphics::Any::StateManager& stateManager, ID3D11DeviceContext *pContext) const
 {
 	// Make renderable optional

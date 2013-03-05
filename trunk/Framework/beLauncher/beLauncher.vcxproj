@@ -102,6 +102,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>beLauncherInternal/StdAfx.h</PrecompiledHeaderFile>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -201,6 +203,7 @@ copy    "$(IntDir)beLauncher.res"    "$(SolutionDir)global\beLauncher.res"</Comm
     <ClInclude Include="header\beLauncher\beAppWindow.h" />
     <ClInclude Include="header\beLauncher\beGraphicsConfig.h" />
     <ClInclude Include="header\beLauncher\beInitEngine.h" />
+    <ClInclude Include="header\beLauncher\beInput.h" />
     <ClInclude Include="header\beLauncher\beLauncher.h" />
     <ClInclude Include="header\beLauncherInternal\stdafx.h" />
     <ClInclude Include="header\beLauncherInternal\targetver.h" />
@@ -210,6 +213,7 @@ copy    "$(IntDir)beLauncher.res"    "$(SolutionDir)global\beLauncher.res"</Comm
     <ClCompile Include="source\beAppWindow.cpp" />
     <ClCompile Include="source\beGraphicsConfig.cpp" />
     <ClCompile Include="source\beInitEngine.cpp" />
+    <ClCompile Include="source\beInput.cpp" />
     <ClCompile Include="source\beLauncher.cpp" />
     <ClCompile Include="source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

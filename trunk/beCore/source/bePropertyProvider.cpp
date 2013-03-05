@@ -5,7 +5,7 @@
 #include "beCoreInternal/stdafx.h"
 #include "beCore/bePropertyProvider.h"
 
-#include "beCore/bePropertyListener.h"
+#include "beCore/beComponentObservation.h"
 
 #include "beCore/bePropertyVisitor.h"
 #include <lean/functional/predicates.h>
@@ -13,33 +13,96 @@
 namespace beCore
 {
 
+struct ComponentObserverCollection::ListenerEntry
+{
+	ComponentObserver *listener;
+	listeners_t next;
+
+	ListenerEntry(ComponentObserver *listener)
+		: listener(listener) { }
+};
+
 // Constructor.
-PropertyListenerCollection::PropertyListenerCollection()
+ComponentObserverCollection::ComponentObserverCollection()
 {
 }
 
+// Copies the given collection.
+ComponentObserverCollection::ComponentObserverCollection(const ComponentObserverCollection &right)
+{
+	listeners_t *listPtr = &m_listeners;
+
+	for (const ListenerEntry *it = right.m_listeners; it; it = it->next)
+	{
+		*listPtr = new ListenerEntry(it->listener);
+		listPtr = &(**listPtr).next;
+	}
+}
+
+#ifndef LEAN0X_NO_RVALUE_REFERENCES
+// Takes over the given collection.
+ComponentObserverCollection::ComponentObserverCollection(ComponentObserverCollection &&right)
+	: m_listeners( std::move(right.m_listeners) )
+{
+}
+#endif
+
 // Destructor.
-PropertyListenerCollection::~PropertyListenerCollection()
+ComponentObserverCollection::~ComponentObserverCollection()
 {
 }
 
 // Adds a property listener.
-void PropertyListenerCollection::AddPropertyListener(PropertyListener *listener)
+void ComponentObserverCollection::AddObserver(ComponentObserver *listener)
 {
-	m_listeners.push_front( LEAN_ASSERT_NOT_NULL(listener) );
+	listeners_t *listEndPtr = &m_listeners;
+
+	for (; *listEndPtr; listEndPtr = &(**listEndPtr).next)
+		if ((**listEndPtr).listener == listener)
+			return;
+
+	*listEndPtr = new ListenerEntry( LEAN_ASSERT_NOT_NULL(listener) );
 }
 
 // Removes a property listener.
-void PropertyListenerCollection::RemovePropertyListener(PropertyListener *pListener)
+void ComponentObserverCollection::RemoveObserver(ComponentObserver *pListener)
 {
-	m_listeners.remove(pListener);
+	listeners_t *listPtr = &m_listeners;
+
+	for (ListenerEntry *it = m_listeners; it; listPtr = &it->next, it = *listPtr)
+		if (it->listener == pListener)
+		{
+			*listPtr = it->next.detach();
+			return;
+		}
 }
 
-// Calls all property listeners.
-void PropertyListenerCollection::EmitPropertyChanged(const PropertyProvider &provider) const
+// Calls all listeners.
+void ComponentObserverCollection::EmitPropertyChanged(const PropertyProvider &provider) const
 {
-	for (listener_list::const_iterator it = m_listeners.begin(); it != m_listeners.end(); ++it)
-		(*it)->PropertyChanged(provider);
+	for (const ListenerEntry *it = m_listeners; it; it = it->next)
+		it->listener->PropertyChanged(provider);
+}
+
+// Calls all listeners.
+void ComponentObserverCollection::EmitChildChanged(const ReflectedComponent &provider) const
+{
+	for (const ListenerEntry *it = m_listeners; it; it = it->next)
+		it->listener->ChildChanged(provider);
+}
+
+// Calls all listeners.
+void ComponentObserverCollection::EmitStructureChanged(const Component &provider) const
+{
+	for (const ListenerEntry *it = m_listeners; it; it = it->next)
+		it->listener->StructureChanged(provider);
+}
+
+// Calls all listeners.
+void ComponentObserverCollection::EmitComponentReplaced(const Component &previous) const
+{
+	for (const ListenerEntry *it = m_listeners; it; it = it->next)
+		it->listener->ComponentReplaced(previous);
 }
 
 namespace
@@ -55,7 +118,7 @@ struct PropertyTransfer : public PropertyVisitor
 
 	void Visit(const PropertyProvider &provider, uint4 propertyID, const PropertyDesc &desc, const void *values)
 	{
-		dest->SetProperty(destID, desc.TypeInfo->type, values, desc.Count);
+		dest->SetProperty(destID, desc.TypeDesc->Info.type, values, desc.Count);
 	}
 };
 

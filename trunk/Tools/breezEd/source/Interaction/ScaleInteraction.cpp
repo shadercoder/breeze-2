@@ -10,7 +10,8 @@
 
 #include "DeviceManager.h"
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
+#include <beEntitySystem/beWorldControllers.h>
 #include "Interaction/Widgets.h"
 #include "Interaction/Math.h"
 
@@ -21,8 +22,6 @@
 
 #include <lean/logging/errors.h>
 
-static const uint4 ScaleAxisWidgetIDs[3] = { reserveWidgetID(), reserveWidgetID(), reserveWidgetID() };
-
 // Constructor.
 ScaleInteraction::ScaleInteraction(SceneDocument *pDocument, QObject *pParent)
 	: QObject( pParent ),
@@ -31,12 +30,15 @@ ScaleInteraction::ScaleInteraction(SceneDocument *pDocument, QObject *pParent)
 	m_axisID( InvalidAxisID )
 {
 	// TODO: NO HARD-CODED PATHS
-	m_axes[0] = createWidgetMesh(ScaleAxisWidgetIDs[0], "Static/UI/ScaleWidget.mesh", beMath::vec(1.0f, 0.1f, 0.0f, 0.7f),
-		m_pDocument->scene(), *m_pDocument->deviceManager()->graphicsResources(), *m_pDocument->renderer());
-	m_axes[1] = createWidgetMesh(ScaleAxisWidgetIDs[1], "Static/UI/ScaleWidget.mesh", beMath::vec(0.0f, 1.0f, 0.1f, 0.7f),
-		m_pDocument->scene(), *m_pDocument->deviceManager()->graphicsResources(), *m_pDocument->renderer());
-	m_axes[2] = createWidgetMesh(ScaleAxisWidgetIDs[2], "Static/UI/ScaleWidget.mesh", beMath::vec(0.1f, 0.0f, 1.0f, 0.7f),
-		m_pDocument->scene(), *m_pDocument->deviceManager()->graphicsResources(), *m_pDocument->renderer());
+	m_axes[0] = createWidgetMesh("Static/UI/ScaleWidget.mesh", beMath::vec(0.7f, 0.1f, 0.0f, 0.5f), "",
+		*m_pDocument->world()->Entities(), *m_pDocument->world()->Controllers().GetController<besc::MeshControllers>(),
+		*m_pDocument->graphicsResources(), *m_pDocument->renderer());
+	m_axes[1] = createWidgetMesh("Static/UI/ScaleWidget.mesh", beMath::vec(0.0f, 0.7f, 0.1f, 0.5f), "",
+		*m_pDocument->world()->Entities(), *m_pDocument->world()->Controllers().GetController<besc::MeshControllers>(),
+		*m_pDocument->graphicsResources(), *m_pDocument->renderer());
+	m_axes[2] = createWidgetMesh("Static/UI/ScaleWidget.mesh", beMath::vec(0.1f, 0.0f, 0.7f, 0.5f), "",
+		*m_pDocument->world()->Entities(), *m_pDocument->world()->Controllers().GetController<besc::MeshControllers>(),
+		*m_pDocument->graphicsResources(), *m_pDocument->renderer());
 }
 
 // Destructor.
@@ -49,7 +51,7 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 {
 	using namespace beMath;
 
-	// TODO: Change-based update?
+	// NOTE: Make sure widgets are up to date *before* editing has started
 	updateWidgets();
 
 	uint4 axisID = InvalidAxisID;
@@ -65,7 +67,7 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 			uint4 objectID = objectIDUnderCursor(*m_pDocument->renderer(), *m_pDocument->scene(), input.relativePosition(), perspective);
 
 			for (int i = 0; i < 3; ++i)
-				if (objectID == ScaleAxisWidgetIDs[i])
+				if (objectID == m_axes[i]->GetCustomID())
 					axisID = i;
 		}
 
@@ -78,12 +80,8 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 
 	if (axisID < 3)
 	{
-		// NOTE: Make sure widgets are up to date *before* editing has started
-		if (m_axisID == InvalidAxisID)
-			updateWidgets();
-
-		fvec3 axisOrig = m_axes[axisID]->GetPosition();
-		fvec3 axisDir = m_axes[axisID]->GetOrientation()[2];
+		fvec3 axisOrig = (m_axisID != InvalidAxisID) ? m_axisCenter : m_axes[axisID]->GetPosition();
+		fvec3 axisDir = (m_axisID != InvalidAxisID) ? m_axisDir : m_axes[axisID]->GetOrientation()[2];
 
 		fvec3 rayOrig, rayDir;
 		camRayDirUnderCursor(rayOrig, rayDir, toQt(input.relativePosition()), perspective.ViewProjMat);
@@ -115,10 +113,9 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 					
 //					(*itEntity)->SetPosition(position);
 					(*itEntity)->SetScaling(scaling);
-					(*itEntity)->Synchronize();
+					(*itEntity)->NeedSync();
 				}
 				
-				m_axisStop = nextAxisStop;
 				m_pCommand->capture();
 				updateWidgets();
 			}
@@ -129,9 +126,12 @@ void ScaleInteraction::step(float timeStep, InputProvider &input, const beScene:
 			m_pCommand = new ScaleEntityCommand(m_selection);
 			m_pDocument->undoStack()->push(m_pCommand);
 
-			m_axisStop = nextAxisStop;
 			m_axisID = axisID;
 		}
+
+		m_axisCenter = axisOrig;
+		m_axisStop = nextAxisStop;
+		m_axisDir = axisDir;
 	}
 }
 

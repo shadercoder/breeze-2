@@ -2,6 +2,7 @@
 /* breeze Engine Entity System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM
 #define BE_ENTITYSYSTEM
 
@@ -74,8 +75,13 @@ namespace beEntitySystem
 /// Shorthand namespace.
 namespace breeze
 {
-	/// Entity system namespace alias.
+#ifndef DOXYGEN_READ_THIS
+	/// beEntitySystem namespace alias.
 	namespace bees = ::beEntitySystem;
+#else
+	/// beEntitySystem namespace alias.
+	namespace bees { using namespace ::beEntitySystem; }
+#endif
 }
 
 /// @}

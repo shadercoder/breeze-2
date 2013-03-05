@@ -3,7 +3,7 @@
 
 #include "ui_EntityPropertyWidget.h"
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 
 class QTimer;
 
@@ -32,7 +32,7 @@ private:
 
 public:
 	/// Constructor.
-	EntityPropertyWidget(Editor *pEditor, QWidget *pParent = nullptr , Qt::WFlags flags = 0);
+	EntityPropertyWidget(Editor *pEditor, QWidget *pParent = nullptr , Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~EntityPropertyWidget();
 

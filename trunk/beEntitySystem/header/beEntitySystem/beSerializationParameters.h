@@ -2,6 +2,7 @@
 /* breeze Engine Entity System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM_SERIALIZATION_PARAMETERS
 #define BE_ENTITYSYSTEM_SERIALIZATION_PARAMETERS
 
@@ -15,21 +16,21 @@ namespace beEntitySystem
 BE_ENTITYSYSTEM_API beCore::ParameterLayout& GetSerializationParameters();
 
 // Prototypes
-class Simulation;
+class World;
 class Entity;
 
 /// Scene parameter IDs.
 struct EntitySystemParameterIDs
 {
-	uint4 Simulation;
+	uint4 World;
 	uint4 Entity;
 	uint4 NoOverwrite;
 
 	/// Non-initializing constructor.
 	EntitySystemParameterIDs() { }
 	/// Constructor.
-	EntitySystemParameterIDs(uint4 simulationID, uint4 entityID, uint4 noOverwriteID)
-			: Simulation(simulationID),
+	EntitySystemParameterIDs(uint4 worldID, uint4 entityID, uint4 noOverwriteID)
+			: World(worldID),
 			Entity(entityID),
 			NoOverwrite(noOverwriteID) { }
 };
@@ -37,16 +38,16 @@ struct EntitySystemParameterIDs
 /// Scene parameters.
 struct EntitySystemParameters
 {
-	Simulation *Simulation;
+	World *World;
 	Entity *Entity;
 
 	/// Default constructor.
 	EntitySystemParameters()
-		: Simulation(), Entity() { }
+		: World(), Entity() { }
 	/// Constructor.
-	EntitySystemParameters(class Simulation *pSimulation,
+	EntitySystemParameters(class World *world,
 		class Entity *pEntity = nullptr)
-			: Simulation(pSimulation),
+			: World(world),
 			Entity(pEntity) { }
 };
 

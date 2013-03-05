@@ -3,10 +3,13 @@
 
 #include "Documents/AbstractDocument.h"
 
+#include "Utility/IconDockStyle.h"
 #include "Utility/Checked.h"
 
+#include <lean/smart/scoped_ptr.h>
+
 // Constructor.
-UndoHistoryWidget::UndoHistoryWidget(QWidget *pParent, Qt::WFlags flags)
+UndoHistoryWidget::UndoHistoryWidget(QWidget *pParent, Qt::WindowFlags flags)
 	: QWidget(pParent, flags)
 {
 	ui.setupUi(this);
@@ -47,6 +50,7 @@ const QUndoStack* UndoHistoryWidget::undoStack() const
 #include "Plugins/AbstractPlugin.h"
 #include "Plugins/PluginManager.h"
 #include "Windows/MainWindow.h"
+#include "Docking/DockContainer.h"
 
 namespace
 {
@@ -67,19 +71,28 @@ struct UndoHistoryWidgetPlugin : public AbstractPlugin<MainWindow*>
 	}
 
 	/// Initializes the plugin.
-	void initialize(MainWindow *pMainWindow) const
+	void initialize(MainWindow *mainWindow) const
 	{
-		QDockWidget *pDock = new QDockWidget(pMainWindow);
-		pDock->setObjectName("UndoHistoryWidget");
-		pDock->setWidget( new UndoHistoryWidget(pDock) );
-		pDock->setWindowTitle(pDock->widget()->windowTitle());
-		pDock->setWindowIcon(pDock->widget()->windowIcon());
-		
-		// Visible by default
-		pMainWindow->addDockWidget(Qt::BottomDockWidgetArea, pDock);
+/*		lean::scoped_ptr<QDockWidget> dock( new QDockWidget(mainWindow) );
+		dock->setObjectName("UndoHistoryWidget");
+		dock->setStyle( new IconDockStyle(dock, dock->style()) );
 
-		checkedConnect(pMainWindow->widgets().actionUndo_History, SIGNAL(triggered()), pDock, SLOT(show()));
-		checkedConnect(pMainWindow, SIGNAL(documentChanged(AbstractDocument*)), pDock->widget(), SLOT(setDocument(AbstractDocument*)));
+		dock->setWidget( new UndoHistoryWidget(dock) );
+		dock->setWindowTitle(dock->widget()->windowTitle());
+		dock->setWindowIcon(dock->widget()->windowIcon());
+*/
+		lean::scoped_ptr<UndoHistoryWidget> undoHistory( new UndoHistoryWidget() );
+		lean::scoped_ptr<DockWidget> dock( DockWidget::wrap(undoHistory) );
+
+		// Visible by default
+		mainWindow->dock()->addDock(dock, DockPlacement::Emplace, DockOrientation::Vertical);
+//		pMainWindow->addDockWidget(Qt::BottomDockWidgetArea, dock);
+
+		QObject::connect(mainWindow->widgets().actionUndo_History, &QAction::triggered, dock, &DockWidget::showAndRaise);
+		QObject::connect(mainWindow, &MainWindow::documentChanged, undoHistory, &UndoHistoryWidget::setDocument);
+
+		undoHistory.detach();
+		dock.detach();
 	}
 	/// Finalizes the plugin.
 	void finalize(MainWindow *pWindow) const { }

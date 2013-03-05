@@ -64,12 +64,16 @@ SamplerState LinearSampler
 	AddressV = WRAP;
 };
 
-GeometryOutput PSGeometry(Pixel p)
+GBufferBinding PSGeometry(Pixel p)
 {
 	float3 normal = normalize(p.NormalDepth.xyz);
 	float4 diffuse = DiffuseColor;
 	diffuse.xyz *= DiffuseTexture.Sample(LinearSampler, p.TexCoord).xyz;
-	return ReturnGeometry(p.NormalDepth.w, normal, diffuse, SpecularColor);
+
+	return BindGBuffer(
+		MakeGeometry(p.NormalDepth.w, normal),
+		MakeDiffuse(diffuse.xyz, 1.0f - SpecularColor.w),
+		MakeSpecular(SpecularColor.xyz, 1.0f, diffuse.w) );
 }
 
 technique11 Geometry <

@@ -2,6 +2,7 @@
 /* breeze Framework Launch Lib  (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_LAUNCHER_APPWINDOW
 #define BE_LAUNCHER_APPWINDOW
 
@@ -12,10 +13,9 @@ namespace beLauncher
 {
 
 /// Application window interface.
-class ApplicationWindow
+class LEAN_INTERFACE ApplicationWindow
 {
-protected:
-	~ApplicationWindow() { }
+	LEAN_INTERFACE_BEHAVIOR(ApplicationWindow)
 
 public:
 	/// Called when the window has been created.

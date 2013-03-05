@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_CHARACTERSCENECONTROLLER
 #define BE_PHYSICS_CHARACTERSCENECONTROLLER
 
@@ -23,17 +24,17 @@ class CharacterSceneController : public beEntitySystem::SimulationController,
 	public beEntitySystem::SynchronizedHost, public beEntitySystem::AnimatedHost
 {
 private:
-	bool m_bActive;
+	SceneController *m_scene;
 
-	lean::resource_ptr<SceneController> m_pScene;
+	lean::resource_ptr<CharacterScene> m_characterScene;
 
-	lean::resource_ptr<CharacterScene> m_pCharacterScene;
+	beEntitySystem::Simulation *m_pAttachedTo;
 
 public:
 	/// Constructor.
-	BE_PHYSICS_API CharacterSceneController(beEntitySystem::Simulation *pSimulation, SceneController *pScene, CharacterScene *pCharacters);
+	BE_PHYSICS_API CharacterSceneController(SceneController *pScene, CharacterScene *pCharacters);
 	/// Constructor.
-	BE_PHYSICS_API CharacterSceneController(beEntitySystem::Simulation *pSimulation, SceneController *pScene);
+	BE_PHYSICS_API CharacterSceneController(SceneController *pScene);
 	/// Destructor.
 	BE_PHYSICS_API ~CharacterSceneController();
 
@@ -46,9 +47,9 @@ public:
 	BE_PHYSICS_API void Step(float timeStep);
 
 	/// Attaches this controller to its simulation(s) / data source(s).
-	BE_PHYSICS_API void Attach();
+	BE_PHYSICS_API void Attach(beEntitySystem::Simulation *simulation);
 	/// Detaches this controller from its simulation(s) / data source(s).
-	BE_PHYSICS_API void Detach();
+	BE_PHYSICS_API void Detach(beEntitySystem::Simulation *simulation);
 
 	/// Gets the character scene.
 	BE_PHYSICS_API CharacterScene* GetScene();
@@ -56,9 +57,9 @@ public:
 	BE_PHYSICS_API const CharacterScene* GetScene() const;
 
 	/// Gets the controller type.
-	BE_PHYSICS_API static utf8_ntr GetControllerType();
+	BE_PHYSICS_API static const beCore::ComponentType* GetComponentType();
 	/// Gets the controller type.
-	utf8_ntr GetType() const { return GetControllerType(); }
+	BE_PHYSICS_API const beCore::ComponentType* GetType() const;
 };
 
 } // nmaespace

@@ -2,6 +2,7 @@
 /* breeze Engine Math Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_MATH_VECTOR
 #define BE_MATH_VECTOR
 
@@ -85,6 +86,13 @@ LEAN_INLINE vector<Element, Dimension> nvec(size_t n, Element value)
 	vector<Element, Dimension> result;
 	result[n] = value;
 	return result;
+}
+
+/// Generates a perpendicular vector.
+template <class Class, class Component>
+inline vector<Component, 3> perpendicular(const tuple<Class, Component, 3> &vector)
+{
+	return cross( unit<3, float>(abs(vector[0]) > abs(vector[1])) , vector );
 }
 
 namespace Types

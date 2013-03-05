@@ -2,6 +2,7 @@
 /* breeze Engine Math Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_MATH_VECTOR_DEF
 #define BE_MATH_VECTOR_DEF
 
@@ -12,30 +13,27 @@
 namespace beMath
 {
 
-// Named debug info.
+/// Vector data.
 template <class Component, size_t Dimension>
-struct vector_components { };
+struct vector_data
+{
+	Component c[Dimension];
+};
 template <class Component>
-struct vector_components<Component, 1> { Component x; };
+struct vector_data<Component, 1> { union { Component x; Component c[1]; }; };
 template <class Component>
-struct vector_components<Component, 2> { Component x, y; };
+struct vector_data<Component, 2> { union { struct { Component x, y; }; Component c[2]; }; };
 template <class Component>
-struct vector_components<Component, 3> { Component x, y, z; };
+struct vector_data<Component, 3> { union { struct { Component x, y, z; }; Component c[3]; }; };
 template <class Component>
-struct vector_components<Component, 4> { Component x, y, z, w; };
+struct vector_data<Component, 4> { union { struct { Component x, y, z, w; }; Component c[4]; }; };
 
 /// Vector class.
 template <class Component, size_t Dimension>
-class vector : public tuple< vector<Component, Dimension>, Component, Dimension >
+class vector : public tuple< vector<Component, Dimension>, Component, Dimension >, public vector_data<Component, Dimension>
 {
 private:
 	typedef tuple< vector<Component, Dimension>, Component, Dimension > base_type;
-
-	union
-	{
-		vector_components<Component, Dimension> n;
-		Component c[Dimension];
-	};
 
 public:
 	/// Component type.
@@ -48,8 +46,7 @@ public:
 	typedef component_type compatible_type;
 
 	/// Creates a default-initialized vector.
-	LEAN_INLINE vector()
-		: c() { }
+	LEAN_INLINE vector() { memset(this->c, 0, sizeof(Component) * Dimension); }
 	/// Creates an uninitialized vector.
 	LEAN_INLINE vector(uninitialized_t) { }
 	/// Initializes all components with the given value.

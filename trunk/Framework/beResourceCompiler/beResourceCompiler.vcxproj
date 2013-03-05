@@ -126,6 +126,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BERESOURCECOMPILER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>beResourceCompilerInternal/StdAfx.h</PrecompiledHeaderFile>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -195,7 +197,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp_x64.lib;PhysX3CookingCHECKED_x64.lib;PhysX3CHECKED_x64.lib;PhysX3CommonCHECKED_x64.lib;bePhysics_x64.lib;beGraphics_x64.lib;beCore_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp_x64.lib;PhysX3Cooking_x64.lib;PhysX3_x64.lib;PhysX3Common_x64.lib;bePhysics_x64.lib;beGraphics_x64.lib;beCore_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy    "$(TargetPath)"    "$(SolutionDir)Bin\$(TargetFileName)"

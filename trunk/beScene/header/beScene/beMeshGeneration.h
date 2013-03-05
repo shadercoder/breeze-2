@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_MESH_GENERATION
 #define BE_SCENE_MESH_GENERATION
 
@@ -15,7 +16,7 @@ namespace beScene
 {
 
 /// Mesh flag enumeration.
-namespace MeshGenFlags
+struct MeshGenFlags
 {
 	/// Enumeration
 	enum T
@@ -31,7 +32,8 @@ namespace MeshGenFlags
 
 		WideIndex = 0x10000	///< Generate wide indices.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(MeshGenFlags)
+};
 
 /// Mesh generation vertex base.
 template <bool>

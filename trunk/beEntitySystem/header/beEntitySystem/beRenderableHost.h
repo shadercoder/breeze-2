@@ -2,6 +2,7 @@
 /* breeze Engine Entity System Module  (c) Tobias Zirr 2011 */
 /************************************************************/
 
+#pragma once
 #ifndef BE_ENTITYSYSTEM_RENDERABLEHOST
 #define BE_ENTITYSYSTEM_RENDERABLEHOST
 
@@ -29,9 +30,9 @@ public:
 	BE_ENTITYSYSTEM_API void Render();
 
 	/// Adds a renderable controller.
-	BE_ENTITYSYSTEM_API void AddRenderable(Renderable *pRenderable);
+	BE_ENTITYSYSTEM_API void AddRenderable(Renderable *renderable);
 	/// Removes a renderable controller.
-	BE_ENTITYSYSTEM_API void RemoveRenderable(Renderable *pRenderable);
+	BE_ENTITYSYSTEM_API void RemoveRenderable(Renderable *renderable);
 };
 
 } // namespace

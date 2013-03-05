@@ -5,14 +5,17 @@
 #include "beGraphicsInternal/stdafx.h"
 #include "beGraphics/DX11/beTextureCache.h"
 #include "beGraphics/DX11/beTexture.h"
+#include "beGraphics/DX11/beD3D11.h"
 #include "beGraphics/DX11/beDevice.h"
 
 #include <lean/smart/cloneable_obj.h>
 #include <lean/smart/com_ptr.h>
-#include <unordered_map>
+#include <lean/containers/simple_queue.h>
+#include <deque>
 
+#include <beCore/beResourceManagerImpl.hpp>
+#include <beCore/beResourceIndex.h>
 #include <beCore/beFileWatch.h>
-#include <beCore/beDependenciesImpl.h>
 
 #include <lean/io/filesystem.h>
 
@@ -25,67 +28,52 @@ namespace DX11
 {
 
 /// Texture cache implementation
-struct TextureCache::M
+struct TextureCache::M : public beCore::FileObserver
 {
 	lean::cloneable_obj<beCore::PathResolver> resolver;
 	lean::cloneable_obj<beCore::ContentProvider> provider;
 
-	lean::com_ptr<ID3D11Device> pDevice;
+	TextureCache *cache;
+	lean::com_ptr<api::Device> device;
 
-	/// Texture
-	struct ObservedTexture : public beCore::FileObserver
+	struct Info
 	{
-		lean::resource_ptr<Texture> pTexture;
+		lean::resource_ptr<Texture> texture;
 		lean::resource_ptr<TextureView> pTextureView;
 
-		TextureCache *pCache;
-		const utf8_string *file;
 		bool bSRGB;
 
-		beCore::Dependency<beGraphics::Texture*> *dependency;
-
 		/// Constructor.
-		ObservedTexture(lean::resource_ptr<Texture> pTexture, bool bSRGB, TextureCache *pCache)
-			: pTexture(pTexture.transfer()),
-			pCache(pCache),
-			file(),
-			bSRGB(bSRGB),
-			dependency() { }
-
-		/// Method called whenever an observed texture has changed.
-		void FileChanged(const lean::utf8_ntri &file, lean::uint8 revision);
+		Info(Texture *texture, bool bSRGB)
+			: texture(texture),
+			bSRGB(bSRGB) { }
 	};
 
-	typedef std::unordered_map<utf8_string, ObservedTexture> texture_map;
-	texture_map textures;
-
-	typedef std::unordered_map<ID3D11Resource*, ObservedTexture*> texture_info_map;
-	texture_info_map textureInfo;
+	typedef beCore::ResourceIndex<API::Resource, Info> resources_t;
+	resources_t resourceIndex;
 
 	beCore::FileWatch fileWatch;
-
-	beCore::DependenciesImpl<beGraphics::Texture*> dependencies;
+	typedef lean::simple_queue< std::deque< std::pair< lean::resource_ptr<Texture>, lean::resource_ptr<Texture> > > > replace_queue_t;
+	replace_queue_t replaceQueue;
+	lean::resource_ptr<beCore::ComponentMonitor> pComponentMonitor;
 
 	/// Constructor.
-	M(ID3D11Device *pDevice, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
-		: pDevice(pDevice),
+	M(TextureCache *cache, api::Device *device, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
+		: cache(cache),
+		device(device),
 		resolver(resolver),
 		provider(contentProvider)
 	{
-		LEAN_ASSERT(pDevice != nullptr);
+		LEAN_ASSERT(device != nullptr);
 	}
+
+	/// Method called whenever an observed texture has changed.
+	void FileChanged(const lean::utf8_ntri &file, lean::uint8 revision) LEAN_OVERRIDE;
 };
 
-// Loads a texture from the given file.
-lean::com_ptr<ID3D11Resource, true> LoadTexture(TextureCache::M &m, const lean::utf8_ntri &file, bool bSRGB)
-{
-	lean::com_ptr<beCore::Content> content = m.provider->GetContent(file);
-	return DX11::LoadTexture(m.pDevice, content->Bytes(), static_cast<uint4>(content->Size()), nullptr, bSRGB);
-}
-
 // Constructor.
-TextureCache::TextureCache(ID3D11Device *pDevice, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
-	: m( new M(pDevice, resolver, contentProvider) )
+TextureCache::TextureCache(api::Device *device, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
+	: m( new M(this, device, resolver, contentProvider) )
 {
 }
 
@@ -94,150 +82,208 @@ TextureCache::~TextureCache()
 {
 }
 
-// Gets a texture from the given file.
-beGraphics::Texture* TextureCache::GetTexture(const lean::utf8_ntri &unresolvedFile, bool bSRGB)
+/// Constructs a new resource info for the given texture.
+LEAN_INLINE TextureCache::M::Info MakeResourceInfo(TextureCache::M &m, beg::Texture *texture, TextureCache*)
 {
+	return TextureCache::M::Info(ToImpl(texture), false);
+}
+
+/// Gets the resource from the given resource index iterator.
+template <class Iterator>
+LEAN_INLINE Texture* GetResource(const TextureCache::M&, Iterator it)
+{
+	return it->texture;
+}
+
+/// Sets the resource for the given resource index iterator.
+template <class Iterator>
+LEAN_INLINE void SetResource(TextureCache::M &m, Iterator it, beg::Texture *resource)
+{
+	LEAN_FREE_PIMPL(TextureCache);
+
+	M::Info &info = *it;
+	info.texture = ToImpl(resource);
+
+	// IMPORTANT: Keep texture view in sync
+	if (info.pTextureView)
+	{
+		if (info.pTextureView->ref_count() > 1)
+		{
+			lean::resource_ptr<TextureView> newView = new_resource TextureView(info.texture->GetResource(), nullptr, m.device);
+			newView->SetCache(m.cache);
+			info.pTextureView->SetSuccessor(newView);
+			info.pTextureView = newView;
+		}
+		else
+			info.pTextureView = nullptr;
+	}
+}
+
+/// Gets the resource key for the given resource.
+LEAN_INLINE API::Resource* GetResourceKey(const TextureCache::M&, const beg::Texture *pResource)
+{
+	return (pResource) ? ToImpl(pResource)->GetResource() : nullptr;
+}
+
+/// Default resource change monitoring implementation. Replace using ADL.
+template <class Iterator>
+LEAN_INLINE void ResourceChanged(TextureCache::M &m, Iterator it)
+{
+	if (m.pComponentMonitor)
+		m.pComponentMonitor->Replacement.AddChanged(beg::TextureView::GetComponentType());
+}
+
+/// Default resource management change monitoring implementation. Replace using ADL.
+template <class Iterator>
+LEAN_INLINE void ResourceManagementChanged(TextureCache::M &m, Iterator it)
+{
+	if (m.pComponentMonitor)
+		m.pComponentMonitor->Management.AddChanged(beg::TextureView::GetComponentType());
+}
+
+// Loads a texture from the given file.
+lean::com_ptr<ID3D11Resource, true> LoadTexture(TextureCache::M &m, const lean::utf8_ntri &file, bool bSRGB)
+{
+	lean::com_ptr<beCore::Content> content = m.provider->GetContent(file);
+	return DX11::LoadTexture(m.device, content->Bytes(), static_cast<uint4>(content->Size()), nullptr, bSRGB);
+}
+
+// Gets a texture from the given file.
+beGraphics::Texture* TextureCache::GetByFile(const lean::utf8_ntri &unresolvedFile, bool bSRGB)
+{
+	LEAN_PIMPL();
+
 	// Get absolute path
-	beCore::Exchange::utf8_string excPath = m->resolver->Resolve(unresolvedFile, true);
+	beCore::Exchange::utf8_string excPath = m.resolver->Resolve(unresolvedFile, true);
 	utf8_string path(excPath.begin(), excPath.end());
 
-	// Try to find cached texture
-	M::texture_map::iterator itTexture = m->textures.find(path);
+	// Try to find cached resource
+	M::resources_t::file_iterator it = m.resourceIndex.FindByFile(path);
 
-	if (itTexture == m->textures.end())
+	if (it == m.resourceIndex.EndByFile())
 	{
-		// WARNING: Resource pointer invalid after transfer
-		{
-			LEAN_LOG("Attempting to load texture \"" << path << "\"");
+		LEAN_LOG("Attempting to load texture \"" << path << "\"");
+		lean::resource_ptr<Texture> pTexture = CreateTexture( LoadTexture(m, path, bSRGB).get() );
+		LEAN_LOG("Texture \"" << unresolvedFile.c_str() << "\" created successfully");
 
-			lean::resource_ptr<Texture> pTexture = ToImpl( CreateTexture( LoadTexture(*m, path, bSRGB).get(), this ).get() );
-
-			LEAN_LOG("Texture \"" << unresolvedFile.c_str() << "\" created successfully");
-
-			// Insert texture into cache
-			itTexture = m->textures.insert(
-					M::texture_map::value_type(
-						path,
-						M::ObservedTexture(
-							pTexture.transfer(),
-							bSRGB,
-							this
-						)
-					)
-				).first;
-			itTexture->second.file = &itTexture->first;
-		}
+		// Insert texture into cache
+		M::resources_t::iterator rit = m.resourceIndex.Insert(
+				pTexture->GetResource(),
+				m.resourceIndex.GetUniqueName(lean::get_stem<utf8_string>(unresolvedFile)),
+				M::Info(pTexture, bSRGB)
+			);
+		pTexture->SetCache(this);
+		it = m.resourceIndex.SetFile(rit, path);
 		
-		// Link back to texture info
-		m->textureInfo[itTexture->second.pTexture->GetResource()] = &itTexture->second;
-
-		// Allow for monitoring of dependencies
-		itTexture->second.dependency = m->dependencies.AddDependency(itTexture->second.pTexture);
-
 		// Watch texture changes
-		m->fileWatch.AddObserver(path, &itTexture->second);
+		m.fileWatch.AddObserver(path, &m);
 	}
 
-	return itTexture->second.pTexture;
+	return it->texture;
+}
+
+/// The file associated with the given resource has changed.
+LEAN_INLINE void ResourceFileChanged(TextureCache::M &m, TextureCache::M::resources_t::iterator it, const utf8_ntri &newFile, const utf8_ntri &oldFile)
+{
+	// Watch texture changes
+	if (!oldFile.empty())
+		m.fileWatch.RemoveObserver(oldFile, &m);
+	if (!newFile.empty())
+		m.fileWatch.AddObserver(newFile, &m);
+}
+
+// Gets a texture for the given texture view.
+beGraphics::Texture* TextureCache::GetTexture(const beGraphics::TextureView *pView) const
+{
+	LEAN_PIMPL_CONST();
+
+	API::Resource *pTextureDX = (pView) ? ToImpl(pView)->GetResource() : nullptr;
+	M::resources_t::const_iterator it = m.resourceIndex.Find(pTextureDX);
+
+	return (it != m.resourceIndex.End())
+		? it->texture
+		: nullptr;
 }
 
 // Gets a texture view for the given texture.
-beGraphics::TextureView* TextureCache::GetTextureView(const beGraphics::Texture &texture)
+beGraphics::TextureView* TextureCache::GetView(const beGraphics::Texture *pTexture)
 {
+	LEAN_PIMPL();
 	TextureView *pView = nullptr;
 
-	ID3D11Resource *pResource = ToImpl(texture).GetResource();
-	M::texture_info_map::const_iterator itInfo = m->textureInfo.find(pResource);
+	API::Resource *pTextureDX = (pTexture) ? ToImpl(pTexture)->GetResource() : nullptr;
+	M::resources_t::iterator it = m.resourceIndex.Find(pTextureDX);
 
-	if (itInfo != m->textureInfo.end())
+	if (it != m.resourceIndex.End())
 	{
-		if (!itInfo->second->pTextureView)
-			itInfo->second->pTextureView = lean::new_resource<TextureView>(pResource, nullptr, m->pDevice, this);
+		if (!it->pTextureView)
+		{
+			it->pTextureView = new_resource TextureView(pTextureDX, nullptr, m.device);
+			it->pTextureView->SetCache(this);
+		}
 
-		pView = itInfo->second->pTextureView;
+		pView = it->pTextureView;
 	}
 
 	return pView;
 }
 
-namespace
+// Gets whether the given texture is an srgb texture.
+bool TextureCache::IsSRGB(const beGraphics::Texture *pTexture) const
 {
+	LEAN_PIMPL_CONST();
+	M::resources_t::const_iterator it = m.resourceIndex.Find((pTexture) ? ToImpl(pTexture)->GetResource() : nullptr);
 
-/// Gets the file (or name) of the given texture.
-LEAN_INLINE utf8_ntr GetFile(const TextureCache::M &m, ID3D11Resource *pResource, bool *pIsFile)
+	return (it != m.resourceIndex.End())
+		? it->bSRGB
+		: false;
+}
+
+// Sets the component monitor.
+void TextureCache::SetComponentMonitor(beCore::ComponentMonitor *componentMonitor)
 {
-	utf8_ntr file("");
+	m->pComponentMonitor = componentMonitor;
+}
 
-	TextureCache::M::texture_info_map::const_iterator itInfo = m.textureInfo.find(pResource);
+// Gets the component monitor.
+beCore::ComponentMonitor* TextureCache::GetComponentMonitor() const
+{
+	return m->pComponentMonitor;
+}
 
-	if (itInfo != m.textureInfo.end())
+// Commits changes / reacts to changes.
+void TextureCache::Commit()
+{
+	LEAN_PIMPL();
+
+	bool bHasChanges = !m.replaceQueue.empty();
+
+	while (!m.replaceQueue.empty())
 	{
-		file = utf8_ntr(*itInfo->second->file);
-
-		if (pIsFile)
-			// Back pointer only valid for files
-			*pIsFile = (itInfo->second->pCache != nullptr);
+		M::replace_queue_t::value_type replacePair = m.replaceQueue.pop_front();
+		Replace(replacePair.first, replacePair.second);
 	}
 
-	return file;
-}
-
-} // namespace
-
-// Gets the file (or name) of the given texture.
-utf8_ntr TextureCache::GetFile(const beGraphics::Texture &texture, bool *pIsFile) const
-{
-	return DX11::GetFile(*m, ToImpl(texture).GetResource(), pIsFile);
-}
-
-// Gets the file (or name) of the given texture.
-utf8_ntr TextureCache::GetFile(const beGraphics::TextureView &texture, bool *pIsFile) const
-{
-	return DX11::GetFile(*m, ToImpl(texture).GetResource(), pIsFile);
-}
-
-// Notifies dependent listeners about dependency changes.
-void TextureCache::NotifyDependents()
-{
-	m->dependencies.NotifiyAllSyncDependents();
-}
-
-namespace
-{
-
-/// Gets the file (or name) of the given texture.
-LEAN_INLINE beCore::Dependency<beGraphics::Texture*>* GetDependencies(TextureCache::M &m, ID3D11Resource *pResource)
-{
-	TextureCache::M::texture_info_map::iterator itTexture = m.textureInfo.find(pResource);
-
-	return (itTexture != m.textureInfo.end())
-		? itTexture->second->dependency
-		: nullptr;
-}
-
-} // namespace
-
-// Gets the dependencies registered for the given texture.
-beCore::Dependency<beGraphics::Texture*>* TextureCache::GetDependencies(const beGraphics::Texture &texture)
-{
-	return DX11::GetDependencies( *m, ToImpl(texture).GetResource() );
-}
-
-// Gets the dependencies registered for the given texture.
-beCore::Dependency<beGraphics::Texture*>* TextureCache::GetDependencies(const beGraphics::TextureView &texture)
-{
-	return DX11::GetDependencies( *m, ToImpl(texture).GetResource() );
+	// Notify dependents
+	if (bHasChanges && m.pComponentMonitor)
+		m.pComponentMonitor->Replacement.AddChanged(TextureView::GetComponentType());
 }
 
 // Method called whenever an observed texture has changed.
-void TextureCache::M::ObservedTexture::FileChanged(const lean::utf8_ntri &file, lean::uint8 revision)
+void TextureCache::M::FileChanged(const lean::utf8_ntri &file, lean::uint8 revision)
 {
-	// MONITOR: Non-atomic asynchronous assignment!
-	this->pTexture = ToImpl( CreateTexture( LoadTexture(*this->pCache->m, *this->file, this->bSRGB).get(), this->pCache ).get() );
-	this->pTextureView = nullptr;
-	
-	// Notify dependent listeners
-	this->pCache->m->dependencies.DependencyChanged(this->dependency, this->pTexture);
+	LEAN_STATIC_PIMPL();
+
+	M::resources_t::file_iterator it = m.resourceIndex.FindByFile(file.to<utf8_string>());
+
+	if (it != m.resourceIndex.EndByFile())
+	{
+		M::Info &info = *it;
+
+		lean::resource_ptr<Texture> newTexture = CreateTexture( LoadTexture(m, file, info.bSRGB).get() );
+		
+		m.replaceQueue.push_back( std::make_pair(info.texture, newTexture) );
+	}
 }
 
 /// Gets the path resolver.
@@ -251,13 +297,7 @@ const beCore::PathResolver& TextureCache::GetPathResolver() const
 // Creates a new texture cache.
 lean::resource_ptr<TextureCache, true> CreateTextureCache(const Device &device, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
 {
-	return lean::bind_resource<TextureCache>(
-			new DX11::TextureCache(
-				ToImpl(device),
-				resolver,
-				contentProvider
-			)
-		);
+	return new_resource DX11::TextureCache(ToImpl(device), resolver, contentProvider);
 }
 
 } // namespace

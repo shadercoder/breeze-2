@@ -1,10 +1,11 @@
 #include "stdafx.h"
 #include "Widgets/GenericComponentPicker.h"
 
-#include <QtGui/QFileDialog>
+#include <QtWidgets/QFileDialog>
 #include <QtCore/QDir>
 
 #include <beCore/beComponentTypes.h>
+#include <beCore/beReflectionTypes.h>
 
 #include "Documents/SceneDocument.h"
 
@@ -70,8 +71,10 @@ void adaptUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, c
 {
 	int optionCount = 0;
 
+	uint4 componentFlags = reflector.GetComponentFlags();
+
 	// Remove file option, if not available
-	if (!reflector.CanBeLoaded())
+	if (~componentFlags & bec::ComponentFlags::Filed)
 	{
 		hideAndRemove(*ui.fileButton);
 		hideAndRemove(*ui.browseWidget);
@@ -89,7 +92,7 @@ void adaptUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, c
 	}
 
 	// Remove name option, if not available
-	if (!reflector.HasName())
+	if (false)
 	{
 		hideAndRemove(*ui.nameButton);
 		hideAndRemove(*ui.nameEdit);
@@ -107,7 +110,7 @@ void adaptUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, c
 	}
 
 	// Recursively build parameter list
-	if (reflector.CanBeCreated())
+	if (componentFlags & bec::ComponentFlags::Creatable)
 	{
 		QWidget *firstParameterWidget = nullptr;
 
@@ -119,7 +122,7 @@ void adaptUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, c
 			QVBoxLayout *layout = new QVBoxLayout(parameterGroup);
 			layout->setMargin(6);
 
-			if (bHasPrototype && it->Deducible || it->Optional)
+			if (bHasPrototype && (it->Flags & bec::ComponentParameterFlags::Deducible) || it->Flags & bec::ComponentParameterFlags::Optional)
 			{
 				parameterGroup->setCheckable(true);
 				parameterGroup->setChecked(true);
@@ -127,7 +130,7 @@ void adaptUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, c
 
 			QWidget *parameterWidget;
 
-			if (it->Type == "String")
+			if (bec::GetReflectionType(it->Type) == bec::ReflectionType::String)
 			{
 				parameterWidget = new QLineEdit(parameterGroup);
 				parameterWidget->installEventFilter(&selector);
@@ -139,7 +142,7 @@ void adaptUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, c
 				if (pReflector)
 				{
 					const ComponentPickerFactory &componentPickerFactory = *LEAN_ASSERT_NOT_NULL(
-							getComponentPickerFactories().getFactory( toQt(pReflector->GetType()) )
+							getComponentPickerFactories().getFactory( pReflector->GetType()->Name )
 						);
 
 					ComponentPicker *parameterPicker = componentPickerFactory.createComponentPicker(pReflector, nullptr, pEditor, parameterGroup);
@@ -148,7 +151,7 @@ void adaptUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, c
 				}
 				else
 					parameterWidget = new QLabel(
-							GenericComponentPicker::tr("Unknown type '%1'").arg( toQt(it->Type) ),
+							GenericComponentPicker::tr("Unknown type '%1'").arg( toQt(it->Type->Name) ),
 							parameterGroup
 						);
 			}
@@ -195,7 +198,7 @@ void adaptUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, c
 /// Makes a component selector setting string.
 QString makeSettingString(const beCore::ComponentReflector &reflector, const QString &setting)
 {
-	return QString("componentSelectorWidget/%1/%2").arg(toQt(reflector.GetType())).arg(setting);
+	return QString("componentSelectorWidget/%1/%2").arg(reflector.GetType()->Name).arg(setting);
 }
 
 // Initialize the UI from current element or from the stored configuration.
@@ -204,25 +207,24 @@ void initUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, co
 	bool bFileInitialized = false;
 	bool bNameInitialized = false;
 
-	if (!pCurrent)
+	if (!pCurrent || ~reflector.GetComponentFlags() & bec::ComponentFlags::Cloneable)
 		ui.cloneCheckBox->hide();
 
-	if (pCurrent && (reflector.HasName() || reflector.CanBeLoaded()))
+	if (pCurrent)
 	{
-		beCore::ComponentState::T state = beCore::ComponentState::Unknown;
-		QString name = toQt(reflector.GetNameOrFile(*pCurrent, &state));
+		bec::ComponentInfo info = reflector.GetInfo(*pCurrent);
 
-		if (state == beCore::ComponentState::Filed)
+		if (!info.File.empty())
 		{
-			ui.browseWidget->setPath(name);
+			ui.browseWidget->setPath(toQt(info.File));
 			bFileInitialized = true;
 
 			ui.fileButton->setChecked(true);
 			selector.setFocusProxy(ui.browseWidget);
 		}
-		else if (state == beCore::ComponentState::Named)
+		else
 		{
-			ui.nameEdit->setText(name);
+			ui.nameEdit->setText(toQt(info.Name));
 			bNameInitialized = true;
 
 			ui.nameButton->setChecked(true);
@@ -239,7 +241,7 @@ void initUI(GenericComponentPicker &selector, Ui::GenericComponentPicker &ui, co
 } // namespace
 
 // Constructor.
-GenericComponentPicker::GenericComponentPicker(const beCore::ComponentReflector *pReflector, const lean::any *pCurrent, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+GenericComponentPicker::GenericComponentPicker(const beCore::ComponentReflector *pReflector, const lean::any *pCurrent, Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: ComponentPicker(pParent, flags),
 	ui( this ),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
@@ -264,7 +266,7 @@ GenericComponentPicker::~GenericComponentPicker()
 void GenericComponentPicker::browse()
 {
 	const ComponentPickerFactory &componentPickerFactory = *LEAN_ASSERT_NOT_NULL(
-			getComponentPickerFactories().getFactory( toQt(m_pReflector->GetType()) )
+			getComponentPickerFactories().getFactory( m_pReflector->GetType()->Name )
 		);
 
 	// Browse for component using type-specific functionality
@@ -289,7 +291,7 @@ lean::cloneable_obj<lean::any> GenericComponentPicker::acquireComponent(SceneDoc
 		if (!path.isEmpty())
 			m_pEditor->settings()->setValue(makeSettingString(*m_pReflector, "file"), path);
 
-		return *m_pReflector->GetComponent( toUtf8Range(path), parameters );
+		return *m_pReflector->GetComponentByFile( toUtf8Range(path), beCore::Parameters(), parameters );
 	}
 	else if (ui.nameButton->isChecked())
 	{
@@ -332,7 +334,10 @@ lean::cloneable_obj<lean::any> GenericComponentPicker::acquireComponent(SceneDoc
 			}
 		}
 
-		return *m_pReflector->CreateComponent( creationParameters, parameters, ui.cloneCheckBox->isChecked() ? m_pCurrent : nullptr );
+		return *m_pReflector->CreateComponent( toUtf8Range(ui.newNameEdit->text()),
+					creationParameters, parameters,
+					ui.cloneCheckBox->isChecked() ? m_pCurrent : nullptr
+				);
 	}
 }
 
@@ -385,10 +390,10 @@ struct GenericComponentPickerPlugin : public ComponentPickerFactory
 
 		// Open either breeze mesh or importable 3rd-party mesh format
 		return QFileDialog::getOpenFileName( pParent,
-			GenericComponentPicker::tr("Select a ''%1' resource").arg( toQt(reflector.GetType()) ),
+			GenericComponentPicker::tr("Select a ''%1' resource").arg( reflector.GetType()->Name ),
 				location,
 				QString("%1 %2 (*.%3);;%4 (*.*)")
-					.arg( toQt(reflector.GetType()) )
+					.arg( reflector.GetType()->Name )
 					.arg( GenericComponentPicker::tr("Files") )
 					.arg( toQt(reflector.GetFileExtension()) )
 					.arg( GenericComponentPicker::tr("All Files") )

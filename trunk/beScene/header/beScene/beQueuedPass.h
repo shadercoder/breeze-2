@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_QUEUED_PASS
 #define BE_SCENE_QUEUED_PASS
 
@@ -11,11 +12,9 @@ namespace beScene
 {
 
 /// Queued effect binder pass.
-class QueuedPass
+class LEAN_INTERFACE QueuedPass
 {
-protected:
-	LEAN_INLINE QueuedPass& operator =(const QueuedPass&) { return *this; }
-	LEAN_INLINE ~QueuedPass() throw() { }
+	LEAN_INTERFACE_BEHAVIOR(QueuedPass)
 
 public:
 	/// Gets the stage ID.

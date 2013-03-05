@@ -1,10 +1,11 @@
 #include "stdafx.h"
 #include "Binders/GenericPropertyBinder.h"
 
-#include <QtGui/QTreeView>
+#include <QtWidgets/QTreeView>
 
 #include <beCore/bePropertyVisitor.h>
-#include <beCore/beTextSerialization.h>
+#include <beCore/beValueType.h>
+#include <beCore/beTextSerializer.h>
 #include <sstream>
 
 #include "Commands/ChangeProperty.h"
@@ -12,6 +13,9 @@
 
 #include <beCore/beComponentTypes.h>
 #include "Commands/SetComponent.h"
+
+#include "Editor.h" // Dependencies?!!
+#include "Tiles/ComponentBrowserWidget.h"
 
 #include "Widgets/ComponentPicker.h"
 #include "Widgets/ComponentPickerFactory.h"
@@ -27,6 +31,7 @@
 #include <lean/io/filesystem.h>
 
 #include "Utility/SlotObject.h"
+#include "Utility/InlineEditor.h"
 
 #include "Utility/Undo.h"
 #include "Utility/Strings.h"
@@ -44,15 +49,15 @@ struct PropertyValueReader : public beCore::DataVisitor
 	QVector<QString> components;
 
 	/// Visits the given values.
-	void Visit(uint4 typeID, const lean::type_info &typeInfo, const void *values, size_t count)
+	void Visit(const bec::ValueTypeDesc &typeDesc, const void *values, size_t count) LEAN_OVERRIDE
 	{
-		const beCore::TextSerializer *pSerializer = beCore::GetTextSerialization().GetSerializer(typeID);
+		const beCore::TextSerializer *pSerializer = typeDesc.Text;
 
 		if (pSerializer)
 		{
 			std::stringstream str;
 			
-			value = (pSerializer->Write(str, typeInfo.type, values, count))
+			value = (pSerializer->Write(str, typeDesc.Info.type, values, count))
 				?  toQt( str.str() )
 				: GenericPropertyBinder::tr("<error>");
 
@@ -65,7 +70,7 @@ struct PropertyValueReader : public beCore::DataVisitor
 					std::stringstream str;
 
 					components.push_back( 
-						(pSerializer->Write(str, typeInfo.type, lean::get_element(typeInfo.size, values, i), 1))
+						(pSerializer->Write(str, typeDesc.Info.type, lean::get_element(typeDesc.Info.size, values, i), 1))
 							?  toQt( str.str() )
 							: GenericPropertyBinder::tr("<error>")
 						);
@@ -89,11 +94,11 @@ struct PropertyValueWriter : public beCore::DataVisitor
 		componentIdx(componentIdx) { }
 
 	/// Visits the given values.
-	bool Visit(uint4 typeID, const lean::type_info &typeInfo, void *values, size_t count)
+	bool Visit(const bec::ValueTypeDesc &typeDesc, void *values, size_t count) LEAN_OVERRIDE
 	{
 		bool success = false;
 
-		const beCore::TextSerializer *pSerializer = beCore::GetTextSerialization().GetSerializer(typeID);
+		const beCore::TextSerializer *pSerializer = typeDesc.Text;
 
 		if (pSerializer)
 		{
@@ -102,12 +107,12 @@ struct PropertyValueWriter : public beCore::DataVisitor
 			if (componentIdx < count)
 				success = pSerializer->Read(
 						valueStream,
-						typeInfo.type, lean::get_element(typeInfo.size, values, componentIdx), 1
+						typeDesc.Info.type, lean::get_element(typeDesc.Info.size, values, componentIdx), 1
 					);
 			else
 				success = pSerializer->Read(
 						valueStream,
-						typeInfo.type, values, count
+						typeDesc.Info.type, values, count
 					);
 
 			if (!success)
@@ -121,7 +126,7 @@ struct PropertyValueWriter : public beCore::DataVisitor
 			QMessageBox::critical(
 					nullptr,
 					GenericPropertyBinder::tr("Serializer unavailable"),
-					GenericPropertyBinder::tr("No serializer available for property type '%1'.").arg( toQt(beCore::GetTypeIndex().GetName(typeID)) )
+					GenericPropertyBinder::tr("No serializer available for property type '%1'.").arg( toQt(typeDesc.Name) )
 				);
 
 		return success;
@@ -139,15 +144,12 @@ QString getComponentValue(const beCore::ReflectedComponent &reflectedComponent, 
 
 	if (pReflector)
 	{
-		beCore::ComponentState::T state;
-		name = toQt( pReflector->GetNameOrFile(*reflectedComponent.GetComponent(componentIdx), &state) );
-
-		if (state == beCore::ComponentState::Unknown)
-			name = GenericPropertyBinder::tr("<Internal>");
-		else if (state == beCore::ComponentState::NotSet)
-			name = GenericPropertyBinder::tr("<Not set>");
-		else if (state == beCore::ComponentState::Filed)
-			name = lean::get_stem<QString>(name);
+		beCore::ComponentInfo info = pReflector->GetInfo(*reflectedComponent.GetComponent(componentIdx));
+		
+		if (!info.Name.empty())
+			name = toQt(info.Name);
+		else
+			name = GenericPropertyBinder::tr("<Not set / Internal>");
 	}
 	else
 		name = GenericPropertyBinder::tr("<Unknown type>");
@@ -239,8 +241,10 @@ void addComponents(beCore::ReflectedComponent &reflectedComponent, QStandardItem
 			parentItem.appendRow( QList<QStandardItem*>() << pNameItem << pValueItem );
 		}
 
-		beCore::PropertyProvider *pChildProvider = reflectedComponent.GetPropertyProvider(i);
-		beCore::ReflectedComponent *pChildComponent = reflectedComponent.GetReflectedComponent(i);
+		lean::com_ptr<beCore::ReflectedComponent> pChildComponent = reflectedComponent.GetReflectedComponent(i);
+		// NOTE: Make sure we use the same reflection object
+		lean::com_ptr<beCore::PropertyProvider> pChildProvider = pChildComponent;
+		if (!pChildProvider) pChildProvider = reflectedComponent.GetPropertyProvider(i);
 
 		// WARNING: May be null
 		if (pChildProvider)
@@ -252,43 +256,10 @@ void addComponents(beCore::ReflectedComponent &reflectedComponent, QStandardItem
 
 			pNameItem->setData( QVariant::fromValue(pChildBinder) );
 
-			tree.expand( pNameItem->index() );
+			if (reflectedComponent.IsComponentEssential(i) && componentCount <= 3)
+				tree.expand( pNameItem->index() );
 		}
 	}
-}
-
-/// Creates a custom overlay editor.
-QFrame* createOverlayEditor(QWidget *parent)
-{
-	// Create editor panel (opaque for focus, mouse & eyes)
-	QFrame *editor = new QFrame(parent);
-	editor->setAttribute(Qt::WA_NoMousePropagation);
-	editor->setAutoFillBackground(true);
-	editor->setFrameShape(QFrame::StyledPanel);
-
-	editor->setObjectName("CustomPropertyEditor");
-
-	return editor;
-}
-
-/// Checks if the given widget is a custom editor.
-bool isOverlayEditor(QWidget &editor)
-{
-	return editor.objectName() == "CustomPropertyEditor";
-}
-
-/// Sets the given central widget for the given editor.
-QFrame* setEditorWidget(QFrame *editor, QWidget *widget)
-{
-	QVBoxLayout *layout = new QVBoxLayout(editor);
-	layout->addWidget(widget);
-		
-	editor->setLayout(layout);
-	editor->setFocusProxy(widget);
-
-	editor->adjustSize();
-
-	return editor;
 }
 
 } // namespace
@@ -310,6 +281,8 @@ GenericPropertyBinder::GenericPropertyBinder(beCore::PropertyProvider *pProperty
 	m_componentStartIdx(),
 	m_componentEndIdx()
 {
+	LEAN_ASSERT(!m_pComponent || m_pComponent == m_pPropertyProvider);
+
 	// Create new empty model, if none to be extended
 	if (!m_pParentItem)
 	{
@@ -324,14 +297,14 @@ GenericPropertyBinder::GenericPropertyBinder(beCore::PropertyProvider *pProperty
 	}
 
 	// Get extended item delegate
-	ItemDelegateEx *pDelegate = qobject_cast<ItemDelegateEx*>( m_pTree->itemDelegate() );
+	m_pDelegate = qobject_cast<ItemDelegateEx*>( m_pTree->itemDelegate() );
 
 	// Catch trees not properly set up
-	if (!pDelegate)
+	if (!m_pDelegate)
 	{
 		qWarning("GenericPropertyBinder: Extendend item delegate missing, overriding now");
 		setupTree(*m_pTree);
-		pDelegate = qobject_cast<ItemDelegateEx*>( m_pTree->itemDelegate() );
+		m_pDelegate = qobject_cast<ItemDelegateEx*>( m_pTree->itemDelegate() );
 	}
 
 	// Properties
@@ -349,35 +322,35 @@ GenericPropertyBinder::GenericPropertyBinder(beCore::PropertyProvider *pProperty
 
 	// WARNING: Direct connection is dangerous, crashes everything on inferred editor focus loss
 	checkedConnect(
-			pDelegate, SIGNAL(dataUpdated(QAbstractItemModel*, const QModelIndex&)),
+			m_pDelegate, SIGNAL(dataUpdated(QAbstractItemModel*, const QModelIndex&)),
 			this, SLOT(dataUpdated(QAbstractItemModel*, const QModelIndex&)),
 			Qt::QueuedConnection
 		);
 
 	// WARNING: Signals require IMMEDIATE feedback (due to 'handled' parameters)
 	checkedConnect(
-			pDelegate, SIGNAL(startEditing(QWidget*, const QStyleOptionViewItem&, const QModelIndex&, QWidget*&, bool&)),
+			m_pDelegate, SIGNAL(startEditing(QWidget*, const QStyleOptionViewItem&, const QModelIndex&, QWidget*&, bool&)),
 			this, SLOT(startEditing(QWidget*, const QStyleOptionViewItem&, const QModelIndex&, QWidget*&, bool&)),
 			Qt::DirectConnection
 		);
 	checkedConnect(
-			pDelegate, SIGNAL(updateEditor(QWidget*, const QModelIndex&, bool&)),
+			m_pDelegate, SIGNAL(updateEditor(QWidget*, const QModelIndex&, bool&)),
 			this, SLOT(updateEditor(QWidget*, const QModelIndex&, bool&)),
 			Qt::DirectConnection
 		);
 	checkedConnect(
-			pDelegate, SIGNAL(updateData(QWidget*, QAbstractItemModel*, const QModelIndex&, bool&)),
+			m_pDelegate, SIGNAL(updateData(QWidget*, QAbstractItemModel*, const QModelIndex&, bool&)),
 			this, SLOT(updateData(QWidget*, QAbstractItemModel*, const QModelIndex&, bool&)),
 			Qt::DirectConnection
 		);
 	checkedConnect(
-			pDelegate, SIGNAL(updateEditorGeometry(QWidget*, const QStyleOptionViewItem&, const QModelIndex&, bool&)),
+			m_pDelegate, SIGNAL(editorGeometryChanged(QWidget*, const QStyleOptionViewItem&, const QModelIndex&, bool&)),
 			this, SLOT(updateEditorGeometry(QWidget*, const QStyleOptionViewItem&, const QModelIndex&, bool&)),
 			Qt::DirectConnection
 		);
 
 	// ORDER: Always last, afterwards destructor HAS TO BE CALLED
-	m_pPropertyProvider->AddPropertyListener(this);
+	m_pPropertyProvider->AddObserver(this);
 }
 
 // Destructor.
@@ -386,7 +359,7 @@ GenericPropertyBinder::~GenericPropertyBinder()
 	disconnect(this, SLOT(updateProperties()));
 	disconnect(this, SIGNAL(propertiesChanged()));
 
-	m_pPropertyProvider->RemovePropertyListener(this);
+	m_pPropertyProvider->RemoveObserver(this);
 }
 
 // Check for property changes.
@@ -418,6 +391,8 @@ void GenericPropertyBinder::updateProperties()
 			}
 		}
 
+		// IMPORTANT TODO: Update component count?!?!
+
 		// Update components
 		for (int row = m_componentStartIdx; row < m_componentEndIdx; ++row)
 		{
@@ -437,7 +412,9 @@ void GenericPropertyBinder::updateProperties()
 			GenericPropertyBinder *pChildBinder = pComponentItem->data().value<GenericPropertyBinder*>();
 			const beCore::PropertyProvider *pPreviousChildProvider = (pChildBinder) ? pChildBinder->propertyProvider() : nullptr;
 			
-			beCore::PropertyProvider *pChildProvider = m_pComponent->GetPropertyProvider(componentIdx);
+			lean::com_ptr<beCore::ReflectedComponent> pChildComponent = m_pComponent->GetReflectedComponent(componentIdx);
+			lean::com_ptr<beCore::PropertyProvider> pChildProvider = pChildComponent;
+			if (!pChildProvider) pChildProvider = m_pComponent->GetPropertyProvider(componentIdx);
 
 			// Component change results in sub-tree rebuild
 			// -> Only update if actually changed
@@ -450,8 +427,6 @@ void GenericPropertyBinder::updateProperties()
 				// Clear component sub-tree
 				pComponentItem->setData( QVariant::fromValue(pChildBinder) );
 				pComponentItem->setRowCount(0);
-
-				beCore::ReflectedComponent *pChildComponent = m_pComponent->GetReflectedComponent(componentIdx);
 
 				// Replace with sub-tree of new child component
 				pChildBinder = new GenericPropertyBinder(pChildProvider, pChildComponent, m_pDocument, m_pTree, pComponentItem, this);
@@ -468,12 +443,30 @@ void GenericPropertyBinder::updateProperties()
 	Q_EMIT propagateUpdateProperties();
 }
 
-// Called when the given propery might have changed.
+// Called when properties in the given provider might have changed.
 void GenericPropertyBinder::PropertyChanged(const beCore::PropertyProvider &provider)
 {
 	m_bPropertiesChanged = true;
-
 	Q_EMIT propertiesChanged();
+}
+
+// Called when child components in the given provider might have changed.
+void GenericPropertyBinder::ChildChanged(const beCore::ReflectedComponent &provider)
+{
+	m_bPropertiesChanged = true;
+	Q_EMIT propertiesChanged();
+}
+
+// Called when the structure of the given component has changed.
+void GenericPropertyBinder::StructureChanged(const beCore::Component &provider)
+{
+	// TODO
+}
+
+// Called when the given component has been replaced.
+void GenericPropertyBinder::ComponentReplaced(const beCore::Component &previous)
+{
+	// TODO
 }
 
 // Data has changed.
@@ -494,7 +487,8 @@ void GenericPropertyBinder::dataUpdated(QAbstractItemModel *model, const QModelI
 			beCore::PropertyDesc desc = m_pPropertyProvider->GetPropertyDesc(propertyID);
 
 			// Only accept vector string changes for raw values
-			if (desc.Widget == beCore::Widget::Raw)
+			if (desc.Widget == beCore::Widget::Raw || desc.Widget == beCore::Widget::Slider)
+			// TODO: NEED some form of text editing support!
 			{
 				QStandardItem *pValueItem = m_pParentItem->child(row, 1);
 
@@ -528,7 +522,7 @@ void GenericPropertyBinder::dataUpdated(QAbstractItemModel *model, const QModelI
 
 			// Read single component back & write to property provider
 			PropertyValueWriter propertyWriter(pValueItem->text(), component);
-			m_pPropertyProvider->WriteProperty(propertyID, beCore::PropertyDataVisitor(propertyWriter), false);
+			m_pPropertyProvider->WriteProperty(propertyID, beCore::PropertyDataVisitor(propertyWriter), bec::PropertyVisitFlags::PartialWrite);
 			
 			// Capture new property value
 			command->capture();
@@ -540,40 +534,20 @@ void GenericPropertyBinder::dataUpdated(QAbstractItemModel *model, const QModelI
 namespace
 {
 
-/// Live editing interface.
-class LiveEditing : public SlotObject
-{
-public:
-	/// Constructor.
-	LiveEditing(QObject *parent)
-		: SlotObject(parent)
-	{
-		this->setObjectName("LiveEditing");
-	}
-
-	/// Accepts the editing results.
-	virtual void accept() = 0;
-};
-
-LiveEditing* getLiveEditing(QObject &parent)
-{
-	return static_cast<LiveEditing*>( parent.findChild<SlotObject*>("LiveEditing") );
-}
-
-class ColorEditing : public LiveEditing
+class InlineColorEditor : public InlineEditor
 {
 private:
-	ColorPicker *m_picker;
-
 	SceneDocument *m_document;
 	beCore::PropertyProvider *m_propertyProvider;
 	uint4 m_propertyID;
+
+	ColorPicker *m_picker;
 
 	ChangePropertyCommand *m_pCommand;
 
 protected:
 	/// Updates the color property being edited.
-	void slot()
+	void colorChanged()
 	{
 		if (!m_pCommand)
 		{
@@ -592,30 +566,31 @@ protected:
 	}
 
 public:
-	/// Constructor.
-	ColorEditing(ColorPicker *picker, SceneDocument *document, beCore::PropertyProvider *provider, uint4 propertyID)
-		: LiveEditing(picker),
-		m_picker( LEAN_ASSERT_NOT_NULL(picker) ),
+	InlineColorEditor(SceneDocument *document, beCore::PropertyProvider *provider, uint4 propertyID, QWidget *pParent)
+		: InlineEditor(true, pParent),
 		m_document( LEAN_ASSERT_NOT_NULL(document) ),
 		m_propertyProvider( LEAN_ASSERT_NOT_NULL(provider) ),
 		m_propertyID( propertyID ),
 		m_pCommand()
 	{
-		checkedConnect(m_picker, SIGNAL(colorChanged(const beMath::fvec4&)), this, SLOT(slot()));
+		m_picker = new ColorPicker(1.0e6f, this);
+		this->setWidget(m_picker);
 
-		/// Initialize picker color
+		/// Initialize color
 		beMath::fvec4 color;
 		m_propertyProvider->GetProperty(m_propertyID, color.data(), 4);
 		m_picker->setColor(color);
+
+		connect(m_picker, &ColorPicker::colorChanged, this, &InlineColorEditor::colorChanged);
 	}
 	/// Discards unaccepted editing results.
-	~ColorEditing()
+	~InlineColorEditor()
 	{
 		cancel();
 	}
 
 	/// Accepts the editing results.
-	void accept()
+	void accept() LEAN_OVERRIDE
 	{
 		if (m_pCommand)
 		{
@@ -623,7 +598,88 @@ public:
 			m_pCommand = nullptr;
 		}
 	}
+	/// Discards the editing results.
+	void cancel()
+	{
+		if (m_pCommand)
+			undoIfMostRecent(*m_document->undoStack(), *m_pCommand);
+	}
+};
 
+class InlineComponentEditor : public InlineEditor
+{
+private:
+	SceneDocument *m_document;
+	beCore::ReflectedComponent *m_componentProvider;
+	uint4 m_componentID;
+
+	ComponentSelectorWidget *m_selector;
+
+	SetComponentCommand *m_pCommand;
+
+protected:
+	/// Updates the color property being edited.
+	void componentChanged(const lean::any *pComponent)
+	{
+		cancel();
+
+		if (pComponent)
+		{
+			// Capture current property value & start editing
+			m_pCommand = new SetComponentCommand(m_componentProvider, m_componentID, *pComponent, m_document->graphicsResources()->Monitor());
+			m_document->undoStack()->push(m_pCommand);
+		}
+	}
+
+public:
+	InlineComponentEditor(const beCore::ComponentTypeDesc *typeDesc, QAbstractItemDelegate *delegate, SceneDocument *document,
+						  beCore::ReflectedComponent *componentProvider, uint4 componentID, QWidget *pParent)
+		: InlineEditor(false, pParent),
+		m_document( LEAN_ASSERT_NOT_NULL(document) ),
+		m_componentProvider( LEAN_ASSERT_NOT_NULL(componentProvider) ),
+		m_componentID( componentID ),
+		m_pCommand()
+	{
+		lean::cloneable_obj<lean::any, lean::ptr_sem> pComponent = m_componentProvider->GetComponent(m_componentID);
+
+		// Open component browser
+		bool bLayoutChanged = true;
+		ComponentBrowserWidget *browser = retrieveBrowser(typeDesc, m_document->editor()->mainWindow(), pParent, &bLayoutChanged);
+
+		// Move cursor to current item
+		if (!bLayoutChanged)
+			browser->moveToCurrent();
+
+		// ORDER: Initialize browser
+		if (pComponent)
+			browser->selectComponent(pComponent);
+
+		// ORDER: Link to browser
+		m_selector = new ComponentSelectorWidget(browser, this);
+		this->setWidget(m_selector);
+
+		if (pComponent)
+			m_selector->setComponent(pComponent, toQt(typeDesc->Reflector->GetInfo(*pComponent).Name));
+
+		this->connectToDelegate(delegate);
+		connect(m_selector, &ComponentSelectorWidget::selectionFinished, this, &InlineEditor::commitAndClose);
+		connect(m_selector, &ComponentSelectorWidget::componentChanged, this, &InlineComponentEditor::componentChanged);
+	}
+	/// Discards unaccepted editing results.
+	~InlineComponentEditor()
+	{
+		cancel();
+	}
+
+	/// Accepts the editing results.
+	void accept() LEAN_OVERRIDE
+	{
+		if (m_pCommand)
+		{
+			redoIfMostRecent(*m_document->undoStack(), *m_pCommand);
+			m_pCommand = nullptr;
+		}
+	}
 	/// Discards the editing results.
 	void cancel()
 	{
@@ -651,48 +707,25 @@ void GenericPropertyBinder::startEditing(QWidget *parent, const QStyleOptionView
 
 			// Open color picker
 			if (desc.Widget == beCore::Widget::Color)
-			{
-				QFrame *editor = createOverlayEditor(parent);
-				ColorPicker *picker = new ColorPicker(1.0e6f, editor);
-				setEditorWidget(editor, picker);
-
-				new ColorEditing(picker, m_pDocument, m_pPropertyProvider, propertyID);
-
-				pEditor = editor;
-			}
+				pEditor = new InlineColorEditor(m_pDocument, m_pPropertyProvider, propertyID, parent);
 		}
 		// Component
 		else if (m_componentStartIdx <= row && row < m_componentEndIdx)
 		{
 			uint4 componentIdx = static_cast<uint4>( row - m_componentStartIdx );
 
-			beCore::Exchange::utf8_string componentType = m_pComponent->GetComponentType(componentIdx);
+			const beCore::ComponentType *componentType = m_pComponent->GetComponentType(componentIdx);
+			const beCore::ComponentTypeDesc *pComponentTypeDesc = beCore::GetComponentTypes().GetDesc(componentType);
 			
-			const beCore::ComponentReflector *pReflector = beCore::GetComponentTypes().GetReflector(componentType);
-
-			if (pReflector)
-			{
-				const ComponentPickerFactory &componentPickerFactory = *LEAN_ASSERT_NOT_NULL(
-						getComponentPickerFactories().getFactory( toQt(pReflector->GetType()) )
-					);
-
-				// Create component editor
-				QFrame *editor = createOverlayEditor(parent);
-				ComponentPicker *componentPicker = componentPickerFactory.createComponentPicker(
-						pReflector, m_pComponent->GetComponent(componentIdx),
-						m_pDocument->editor(),
-						editor
-					);
-				setEditorWidget(editor, componentPicker);
-
-				pEditor = editor;
-			}
+			if (pComponentTypeDesc && pComponentTypeDesc->Reflector)
+				pEditor = new InlineComponentEditor(pComponentTypeDesc, m_pDelegate, m_pDocument, m_pComponent, componentIdx, parent);
 			else
 				QMessageBox::critical(nullptr,
 						tr("Unknown component type"),
-						tr("Component type '%1' is unknown.").arg( toQt(componentType) )
+						tr("Component type '%1' is unknown.").arg( componentType->Name )
 					);
 
+			// NOTE: Also handled if no editor has been created
 			bHandled = true;
 		}
 	}
@@ -701,7 +734,7 @@ void GenericPropertyBinder::startEditing(QWidget *parent, const QStyleOptionView
 // Data currently being edited has changed.
 void GenericPropertyBinder::updateEditor(QWidget *editor, const QModelIndex &index, bool &bHandled)
 {
-	if (isOverlayEditor(*editor))
+	if (qobject_cast<InlineEditor*>(editor))
 	{
 		editor->setFocus();
 		bHandled = true;
@@ -713,70 +746,39 @@ void GenericPropertyBinder::updateEditor(QWidget *editor, const QModelIndex &ind
 // Editor data is requested.
 void GenericPropertyBinder::updateData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index, bool &bHandled)
 {
-	if (isOverlayEditor(*editor))
+	if (InlineEditor *inlineEditor = qobject_cast<InlineEditor*>(editor))
 	{
 		// Never let custom editors leak garbage via default editor handling
 		bHandled = true;
 
 		// Finish live editing
-		if (LiveEditing *editing = getLiveEditing(*editor))
-			editing->accept();
-	}
-
-	if (index.parent() == m_pParentItem->index())
-	{
-		int row = index.row();
-
-		if (m_componentStartIdx <= row && row < m_componentEndIdx)
-		{
-			uint4 componentIdx = static_cast<uint4>(row - m_componentStartIdx);
-
-			ComponentPicker *pComponentPicker = editor->findChild<ComponentPicker*>();
-
-			if (pComponentPicker)
-			{
-				try
-				{
-					// Capture current component
-					lean::scoped_ptr<SetComponentCommand> command(
-							new SetComponentCommand(
-								m_pComponent, componentIdx,
-								pComponentPicker->acquireComponent(*m_pDocument)
-							)
-						);
-
-					// Set new component
-					m_pDocument->undoStack()->push( command.detach() );
-				}
-				catch (...)
-				{
-					exceptionToMessageBox(
-							GenericPropertyBinder::tr("Error setting component"),
-							GenericPropertyBinder::tr("An unexpected error occurred while setting component '%1'.").arg( toQt(m_pComponent->GetComponentName(componentIdx)) )
-						);
-				}
-			}
-		}
+		inlineEditor->accept();
 	}
 }
 
 // Editor to be relocated.
 void GenericPropertyBinder::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index, bool &bHandled)
 {
-	if (isOverlayEditor(*editor))
+	if (InlineEditor *inlineEditor = qobject_cast<InlineEditor*>(editor))
 	{
-		// Use almost entire with (leave some small space for click escape)
-		int itemWidth = option.rect.width();
-		int width = (3 * editor->parentWidget()->width() + itemWidth) / 4;
+		if (inlineEditor->isOverlay())
+		{
+			// Use almost entire with (leave some small space for click escape)
+			int itemWidth = option.rect.width();
+			int width = (3 * editor->parentWidget()->width() + itemWidth) / 4;
 
-		int height = editor->heightForWidth(width);
-		if (height < 0) height = editor->height();
+			int height = editor->heightForWidth(width);
+			if (height < 0) height = editor->height();
 
-		QPoint editorPos(option.rect.left() - (width - itemWidth), option.rect.bottom());
+			QPoint editorPos(option.rect.left() - (width - itemWidth), option.rect.bottom());
 
-		// Put editor below property
-		editor->move(editorPos); // DOESNT WORK: editor->mapFromGlobal( editor->parentWidget()->mapToGlobal(editorPos) )
-		editor->resize(width, height);
+			// Put editor below property
+			editor->move(editorPos); // DOESNT WORK: editor->mapFromGlobal( editor->parentWidget()->mapToGlobal(editorPos) )
+			editor->resize(width, height);
+		}
+		else
+			editor->setGeometry(option.rect);
+
 		bHandled = true;
 	}
 }

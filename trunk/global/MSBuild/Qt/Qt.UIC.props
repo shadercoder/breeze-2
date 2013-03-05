@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	
+	<PropertyGroup>
+		<QtUICPath Condition="'$(QtUICPath)' == ''">$(QTDIR)\bin\uic.exe</QtUICPath>
+	</PropertyGroup>
+	
+	<ItemDefinitionGroup>
+		<QtUiCompile>
+			<CompilerOutput>GeneratedFiles\ui_%(Filename).h</CompilerOutput>
+			<UICPath>$(QtUICPath)</UICPath>
+		</QtUiCompile>
+	</ItemDefinitionGroup>
+	
+</Project>

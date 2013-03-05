@@ -5,6 +5,7 @@
 
 #include <beMath/beVector.h>
 #include <beMath/beMatrix.h>
+#include <beMath/beUtility.h>
 
 namespace
 {
@@ -53,12 +54,12 @@ void rotate(beEntitySystem::Entity &entity, float timeStep, InputProvider &input
 		beMath::fmat3 orientation = entity.GetOrientation();
 
 		// Rotate
-		orientation = mul(beMath::mat_rot_y<3>(rotY), orientation);
-		orientation = mul(beMath::mat_rot_x<3>(rotX), orientation);
+		orientation = mul( orientation, beMath::mat_rot_y<3>( bem::sign(orientation[1].y + 0.5f) * rotY) );
+		orientation = mul( beMath::mat_rot_x<3>(rotX), orientation );
 
 		// Re-orientate & orthogonalize
-		orientation[0] = normalize( cross(beMath::vec(0.0f, 1.0f, 0.0f), orientation[2]) );
-		orientation[1] = normalize( cross(orientation[2], orientation[0]) );
+		orientation[1] = normalize( cross(orientation[2], beMath::vec(orientation[0].x, 0.0f, orientation[0].z)) );
+		orientation[0] = normalize( cross(orientation[1], orientation[2]) );
 		orientation[2] = normalize( orientation[2] );
 
 		entity.SetOrientation(orientation);

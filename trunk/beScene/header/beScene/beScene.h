@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE
 #define BE_SCENE
 
@@ -72,8 +73,13 @@ namespace beScene
 /// Shorthand namespace.
 namespace breeze
 {
-	/// Scene namespace alias.
+#ifndef DOXYGEN_READ_THIS
+	/// beScene namespace alias.
 	namespace besc = ::beScene;
+#else DOXYGEN_READ_THIS
+	/// beScene namespace alias.
+	namespace besc { using namespace ::beScene; }
+#endif
 }
 
 /// @}

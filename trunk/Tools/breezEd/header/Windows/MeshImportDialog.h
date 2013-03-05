@@ -1,7 +1,7 @@
 #ifndef MESHIMPORTDIALOG_H
 #define MESHIMPORTDIALOG_H
 
-#include <QtGui/QDialog>
+#include <QtWidgets/QDialog>
 #include "ui_MeshImportDialog.h"
 
 class Editor;
@@ -21,7 +21,7 @@ private Q_SLOTS:
 
 public:
 	/// Constructor.
-	MeshImportDialog(Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	MeshImportDialog(Editor *pEditor, QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~MeshImportDialog();
 

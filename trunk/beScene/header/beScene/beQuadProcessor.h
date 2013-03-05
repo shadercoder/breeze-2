@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_QUAD_PROCESSOR
 #define BE_SCENE_QUAD_PROCESSOR
 
@@ -19,7 +20,7 @@ namespace beScene
 class Mesh;
 class AbstractProcessingEffectDriver;
 template <class EffectBinder>
-class EffectBinderCache;
+class EffectDriverCache;
 class Perspective;
 class RenderContext;
 
@@ -27,7 +28,7 @@ class RenderContext;
 class QuadProcessor : public PipelineProcessor, public MaterialDriven
 {
 private:
-	lean::resource_ptr< EffectBinderCache<AbstractProcessingEffectDriver> > m_pEffectBinderCache;
+	lean::resource_ptr< EffectDriverCache<AbstractProcessingEffectDriver> > m_pEffectBinderCache;
 
 protected:
 	/// Device.
@@ -47,7 +48,7 @@ private:
 
 public:
 	/// Constructor.
-	BE_SCENE_API QuadProcessor(const beGraphics::Device *pDevice, EffectBinderCache<AbstractProcessingEffectDriver> *pEffectBinderCache);
+	BE_SCENE_API QuadProcessor(const beGraphics::Device *pDevice, EffectDriverCache<AbstractProcessingEffectDriver> *pEffectBinderCache);
 	/// Destructor.
 	BE_SCENE_API ~QuadProcessor();
 
@@ -62,7 +63,7 @@ public:
 	BE_SCENE_API void Render(uint4 layerIdx, uint4 stageID, uint4 queueID, const Perspective *pPerspective, const RenderContext &context) const;
 
 	/// Sets the processing effect.
-	BE_SCENE_API virtual void SetMaterial(Material *pSetup);
+	BE_SCENE_API virtual void SetMaterial(beGraphics::Material *pSetup);
 };
 
 } // namespace

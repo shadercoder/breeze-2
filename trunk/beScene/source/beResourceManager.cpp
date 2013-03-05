@@ -17,9 +17,9 @@ namespace
 
 /// Creates an effect cache.
 lean::resource_ptr<beGraphics::EffectCache, true> CreateEffectCache(beGraphics::Device *pDevice,
-	const utf8_ntri &effectCacheLocation, const utf8_ntri &effectLocation)
+	const utf8_ntri &effectCacheLocation, const utf8_ntri &effectLocation, beGraphics::TextureCache *pTextureCache)
 {
-	return beGraphics::CreateEffectCache(*pDevice,
+	return beGraphics::CreateEffectCache(*pDevice, pTextureCache,
 		beCore::FileSystem::Get().GetPrimaryPath(effectCacheLocation, true),
 		beCore::FileSystemPathResolver(effectLocation), beCore::FileContentProvider() );
 }
@@ -33,38 +33,50 @@ lean::resource_ptr<beGraphics::TextureCache, true> CreateTextureCache(beGraphics
 }
 
 /// Creates a material cache.
-lean::resource_ptr<MaterialCache, true> CreateMaterialCache(beGraphics::EffectCache *pEffectCache, beGraphics::TextureCache *pTextureCache,
+lean::resource_ptr<beGraphics::MaterialConfigCache, true> CreateMaterialConfigCache(beGraphics::TextureCache *pTextureCache, const utf8_ntri &materialLocation)
+{
+	return beg::CreateMaterialConfigCache(pTextureCache,
+		beCore::FileSystemPathResolver(materialLocation), beCore::FileContentProvider() );
+}
+
+/// Creates a material cache.
+lean::resource_ptr<beGraphics::MaterialCache, true> CreateMaterialCache(beGraphics::EffectCache *pEffectCache, beGraphics::MaterialConfigCache *pConfigCache,
 	const utf8_ntri &materialLocation)
 {
-	return beScene::CreateMaterialCache(pEffectCache, pTextureCache,
+	return beg::CreateMaterialCache(pEffectCache, pConfigCache,
 		beCore::FileSystemPathResolver(materialLocation), beCore::FileContentProvider() );
 }
 
 /// Creates a mesh cache.
-lean::resource_ptr<MeshCache, true> CreateMeshCache(beGraphics::Device *pDevice,
+lean::resource_ptr<MeshCache, true> CreateMeshCache(beGraphics::Device *device,
 	const utf8_ntri &meshLocation)
 {
-	return beScene::CreateMeshCache(*pDevice,
+	return beScene::CreateMeshCache(device,
 		beCore::FileSystemPathResolver(meshLocation), beCore::FileContentProvider() );
 }
 
 } // namespace
 
 // Constructor.
-ResourceManager::ResourceManager(beGraphics::EffectCache *pEffectCache, beGraphics::TextureCache *pTextureCache, class MaterialCache *pMaterialCache, class MeshCache *pMeshCache)
-	: m_pEffectCache( LEAN_ASSERT_NOT_NULL(pEffectCache) ),
-	m_pTextureCache( LEAN_ASSERT_NOT_NULL(pTextureCache) ),
-	m_pMaterialCache( LEAN_ASSERT_NOT_NULL(pMaterialCache) ),
-	m_pMeshCache( LEAN_ASSERT_NOT_NULL(pMeshCache) )
+ResourceManager::ResourceManager(beCore::ComponentMonitor *monitor, beGraphics::EffectCache *effectCache, beGraphics::TextureCache *textureCache,
+	beGraphics::MaterialConfigCache *materialConfigCache, beGraphics::MaterialCache *materialCache, class MeshCache *meshCache)
+	: Monitor( LEAN_ASSERT_NOT_NULL(monitor) ),
+	EffectCache( LEAN_ASSERT_NOT_NULL(effectCache) ),
+	TextureCache( LEAN_ASSERT_NOT_NULL(textureCache) ),
+	MaterialConfigCache( LEAN_ASSERT_NOT_NULL(materialConfigCache) ),
+	MaterialCache( LEAN_ASSERT_NOT_NULL(materialCache) ),
+	MeshCache( LEAN_ASSERT_NOT_NULL(meshCache) )
 {
 }
 
 // Copy constructor.
 ResourceManager::ResourceManager(const ResourceManager &right)
-	: m_pEffectCache( right.m_pEffectCache ),
-	m_pTextureCache( right.m_pTextureCache ),
-	m_pMaterialCache( right.m_pMaterialCache ),
-	m_pMeshCache( right.m_pMeshCache )
+	// MONITOR: REDUNDANT
+	: Monitor( right.Monitor ),
+	EffectCache( right.EffectCache ),
+	TextureCache( right.TextureCache ),
+	MaterialCache( right.MaterialCache ),
+	MeshCache( right.MeshCache )
 {
 }
 
@@ -73,37 +85,54 @@ ResourceManager::~ResourceManager()
 {
 }
 
-// Creates a resource manager from the given device.
-lean::resource_ptr<ResourceManager, true> CreateResourceManager(beGraphics::Device *pDevice,
-	const utf8_ntri &effectCacheDir, const utf8_ntri &effectDir, const utf8_ntri &textureDir, const utf8_ntri &materialDir, const utf8_ntri &meshDir)
+// Notifies dependent listeners about dependency changes.
+void ResourceManager::Commit()
 {
-	LEAN_ASSERT(pDevice != nullptr);
+	// TODO: Process call here?
+	Monitor->Process();
 
-	lean::resource_ptr<beGraphics::EffectCache> pEffectCache = CreateEffectCache(pDevice, effectCacheDir, effectDir);
-	lean::resource_ptr<beGraphics::TextureCache> pTextureCache = CreateTextureCache(pDevice, textureDir);
+	EffectCache->Commit();
+	TextureCache->Commit();
+	MaterialConfigCache->Commit();
+	MaterialCache->Commit();
+	MeshCache->Commit();
+}
 
-	return CreateResourceManager(
-			pEffectCache,
-			pTextureCache,
-			CreateMaterialCache(pEffectCache, pTextureCache, materialDir).get(),
-			CreateMeshCache(pDevice, meshDir).get()
-		);
+// Creates a resource manager from the given device.
+lean::resource_ptr<ResourceManager, true> CreateResourceManager(beGraphics::Device *device,
+	const utf8_ntri &effectCacheDir, const utf8_ntri &effectDir, const utf8_ntri &textureDir, const utf8_ntri &materialDir, const utf8_ntri &meshDir,
+	beCore::ComponentMonitor *pMonitor)
+{
+	LEAN_ASSERT(device != nullptr);
+
+	lean::resource_ptr<beCore::ComponentMonitor> monitor = pMonitor;
+	if (!pMonitor)
+		monitor = new_resource bec::ComponentMonitor();
+
+	lean::resource_ptr<beGraphics::TextureCache> textureCache = CreateTextureCache(device, textureDir);
+	lean::resource_ptr<beGraphics::EffectCache> effectCache = CreateEffectCache(device, effectCacheDir, effectDir, textureCache);
+	lean::resource_ptr<beGraphics::MaterialConfigCache> materialConfigCache = CreateMaterialConfigCache(textureCache, materialDir);
+	lean::resource_ptr<beGraphics::MaterialCache> materialCache = CreateMaterialCache(effectCache, materialConfigCache, materialDir);
+	lean::resource_ptr<MeshCache> meshCache = CreateMeshCache(device, meshDir);
+	
+	effectCache->SetComponentMonitor(monitor);
+	textureCache->SetComponentMonitor(monitor);
+	materialConfigCache->SetComponentMonitor(monitor);
+	materialCache->SetComponentMonitor(monitor);
+	meshCache->SetComponentMonitor(monitor);
+
+	return CreateResourceManager(effectCache, textureCache, materialConfigCache, materialCache, meshCache, monitor);
 }
 
 // Creates a resource manager from the given effect cache.
-lean::resource_ptr<ResourceManager, true> CreateResourceManager(beGraphics::EffectCache *pEffectCache, beGraphics::TextureCache *pTextureCache,
-	MaterialCache *pMaterialCache, MeshCache *pMeshCache)
+lean::resource_ptr<ResourceManager, true> CreateResourceManager(beGraphics::EffectCache *effectCache, beGraphics::TextureCache *textureCache,
+	beGraphics::MaterialConfigCache *materialConfigCache, beGraphics::MaterialCache *materialCache, MeshCache *meshCache,
+	beCore::ComponentMonitor *pMonitor)
 {
-	return lean::bind_resource( new ResourceManager(pEffectCache, pTextureCache, pMaterialCache, pMeshCache) );
-}
-
-// Notifies dependent listeners about dependency changes.
-void NotifyDependents(ResourceManager &resourceManager)
-{
-	resourceManager.EffectCache()->NotifyDependents();
-	resourceManager.TextureCache()->NotifyDependents();
-	resourceManager.MaterialCache()->NotifyDependents();
-	resourceManager.MeshCache()->NotifyDependents();
+	return new_resource ResourceManager(
+			(pMonitor) ? pMonitor : (new_resource bec::ComponentMonitor()).get(),
+			effectCache, textureCache, materialConfigCache, materialCache, meshCache
+		);
 }
 
 } // namespace

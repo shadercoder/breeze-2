@@ -149,10 +149,13 @@ void beLauncher::RunAppWindow(ApplicationWindow *pAppWindow, HWND hFocusWnd)
 	if (!::IsWindowVisible(hFocusWnd))
 		::ShowWindow(hFocusWnd, SW_SHOW);
 
-	while(msg.message != WM_QUIT)
+	while (true)
 	{
 		while (::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
 		{
+			if (msg.message == WM_QUIT)
+				return;
+
 			if (!::IsDialogMessageW(NULL, &msg))
 			{
 				::TranslateMessage(&msg);

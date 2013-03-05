@@ -5,7 +5,7 @@
 #include "Interaction.h"
 #include <QtCore/QObject>
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 
 class SceneDocument;
 class ScaleEntityCommand;
@@ -22,13 +22,15 @@ public:
 private:
 	SceneDocument *m_pDocument;
 
-	lean::resource_ptr<beEntitySystem::Entity> m_axes[3];
+	lean::scoped_ptr<beEntitySystem::Entity> m_axes[3];
 
 	entity_vector m_selection;
 	beMath::fvec3 m_centroid;
 
 	ScaleEntityCommand *m_pCommand;
+	beMath::fvec3 m_axisCenter;
 	beMath::fvec3 m_axisStop;
+	beMath::fvec3 m_axisDir;
 	uint4 m_axisID;
 
 public:

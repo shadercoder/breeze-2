@@ -1,3 +1,3 @@
 #define SPECULARMAP
 
-#include "Materials/Textured.fx"
+#hookincl "Materials/Textured.fx" ...

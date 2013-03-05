@@ -2,14 +2,17 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_RESOURCE_MANAGER
 #define BE_PHYSICS_RESOURCE_MANAGER
 
 #include "bePhysics.h"
 #include <beCore/beShared.h>
+#include <beCore/beComponentMonitor.h>
 #include "beDevice.h"
 #include "beMaterialCache.h"
 #include "beShapeCache.h"
+#include "beRigidShapeCache.h"
 #include <lean/smart/resource_ptr.h>
 
 namespace bePhysics
@@ -18,38 +21,38 @@ namespace bePhysics
 /// Resource Manager class.
 class ResourceManager : public beCore::Resource
 {
-private:
-	const lean::resource_ptr<MaterialCache> m_materialCache;
-
-	const lean::resource_ptr<ShapeCache> m_shapeCache;
-
 public:
 	/// Constructor.
-	BE_PHYSICS_API ResourceManager(MaterialCache *materialCache, ShapeCache *shapeCache);
+	BE_PHYSICS_API ResourceManager(beCore::ComponentMonitor *monitor, class MaterialCache *materialCache,
+		class ShapeCache *shapeCache, class RigidShapeCache *rigidShapeCache);
 	/// Copy constructor.
 	BE_PHYSICS_API ResourceManager(const ResourceManager &right);
 	/// Destructor.
 	BE_PHYSICS_API ~ResourceManager();
+	
+	/// Monitor.
+	lean::resource_ptr<beCore::ComponentMonitor> Monitor;
 
-	/// Gets the material cache.
-	LEAN_INLINE class MaterialCache* MaterialCache() { return m_materialCache; }
-	/// Gets the material cache.
-	LEAN_INLINE const class MaterialCache* MaterialCache() const { return m_materialCache; }
+	/// Material cache.
+	lean::resource_ptr<MaterialCache> MaterialCache;
 
-	/// Gets the shape cache.
-	LEAN_INLINE class ShapeCache* ShapeCache() { return m_shapeCache; }
-	/// Gets the shape cache.
-	LEAN_INLINE const class ShapeCache* ShapeCache() const { return m_shapeCache; }
+	/// Shape cache.
+	lean::resource_ptr<ShapeCache> ShapeCache;
+	/// Rigid shape cache.
+	lean::resource_ptr<RigidShapeCache> RigidShapeCache;
+	
+	/// Commits / reacts to changes.
+	BE_PHYSICS_API void Commit();
 };
 
 /// Creates a resource manager from the given device.
 BE_PHYSICS_API lean::resource_ptr<ResourceManager, true> CreateResourceManager(Device *device,
-	const utf8_ntri &materialDir, const utf8_ntri &shapeDir);
+	const utf8_ntri &materialDir, const utf8_ntri &shapeDir, beCore::ComponentMonitor *pMonitor = nullptr);
 /// Creates a resource manager from the given caches.
-BE_PHYSICS_API lean::resource_ptr<ResourceManager, true> CreateResourceManager(MaterialCache *materialCache, ShapeCache *shapeCache);
-
-/// Notifies dependent listeners about dependency changes.
-BE_PHYSICS_API void NotifyDependents(ResourceManager &resourceManager);
+BE_PHYSICS_API lean::resource_ptr<ResourceManager, true> CreateResourceManager(Device *device, 
+																			   MaterialCache *materialCache, ShapeCache *shapeCache,
+																			   RigidShapeCache *pRigidShapeCache,
+																			   beCore::ComponentMonitor *pMonitor = nullptr);
 
 } // namespace
 

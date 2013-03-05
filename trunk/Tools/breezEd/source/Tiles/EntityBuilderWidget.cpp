@@ -6,7 +6,7 @@
 #include "Widgets/ControllerBuilderWidget.h"
 
 #include <beEntitySystem/beControllerSerializer.h>
-#include <beEntitySystem/beControllerSerialization.h>
+#include <beEntitySystem/beSerialization.h>
 
 #include <QtCore/QSignalMapper>
 #include <QtGui/QDrag>
@@ -15,11 +15,11 @@
 #include <beCore/beParameterSet.h>
 #include <beCore/beParameters.h>
 #include <beEntitySystem/beSerializationParameters.h>
-#include <beEntitySystem/beEntity.h>
-#include <beEntitySystem/beController.h>
+#include <beEntitySystem/beEntities.h>
+#include <beEntitySystem/beEntityController.h>
 #include <lean/smart/resource_ptr.h>
 
-#include <QtGui/QUndoStack.h>
+#include <QtWidgets/QUndoStack.h>
 #include "Commands/CreateEntity.h"
 
 #include "Utility/InputProvider.h"
@@ -27,6 +27,7 @@
 #include "Interaction/Math.h"
 #include <beMath/bePlane.h>
 
+#include "Utility/IconDockStyle.h"
 #include "Utility/Strings.h"
 #include "Utility/Undo.h"
 #include "Utility/Checked.h"
@@ -58,12 +59,12 @@ private:
 		try
 		{
 			// Entity
-			lean::resource_ptr<beEntitySystem::Entity> pEntity = lean::new_resource<beEntitySystem::Entity>( toUtf8Range(name) );
+			lean::scoped_ptr<beEntitySystem::Entity> pEntity( m_pDocument->world()->Entities()->AddEntity( toUtf8Range(name) ) );
 
 			// Document & entity environment
 			beCore::ParameterSet sceneParams( &beEntitySystem::GetSerializationParameters() );
 			m_pDocument->setSerializationParameters(sceneParams);
-			SetEntityParameter(sceneParams, pEntity);
+			SetEntityParameter(sceneParams, pEntity.get());
 
 			QList<ControllerBuilderWidget*> controllerWidgets = m_pUI->controllerAreaContents->findChildren<ControllerBuilderWidget*>();
 
@@ -75,12 +76,15 @@ private:
 				controllerWidget->setParameters(creationParams, *m_pDocument);
 
 				// Controller
-				lean::resource_ptr<beEntitySystem::Controller> pController =
-					controllerWidget->serializer()->Create(creationParams, sceneParams);
-				pEntity->AddController(pController);
+				lean::scoped_ptr<beEntitySystem::EntityController> pController(
+					static_cast<beEntitySystem::EntityController*>(
+						controllerWidget->serializer()->Create(creationParams, sceneParams).detach()
+					) );
+				pEntity->AddController(pController.move_ptr());
 			}
 
-			CreateEntityCommand *pCommand( new CreateEntityCommand(m_pDocument, m_pDocument->world(), pEntity) );
+			CreateEntityCommand *pCommand( new CreateEntityCommand(m_pDocument, m_pDocument->world(), pEntity.get()) );
+			pEntity.detach();
 			m_pDocument->undoStack()->push(pCommand);
 			m_pCommand = pCommand;
 		}
@@ -158,7 +162,7 @@ public:
 /// Adds controller types to the given item widget.
 void setControllerTypes(QPushButton &button, EntityBuilderWidget &widget)
 {
-	const beEntitySystem::ControllerSerialization &serialization = beEntitySystem::GetControllerSerialization();
+	const beEntitySystem::EntityControllerSerialization &serialization = beEntitySystem::GetEntityControllerSerialization();
 
 	QVector<const beEntitySystem::ControllerSerializer*> serializers(serialization.GetSerializerCount());
 	serialization.GetSerializers(serializers.data());
@@ -182,7 +186,7 @@ void setControllerTypes(QPushButton &button, EntityBuilderWidget &widget)
 } // namespace
 
 // Constructor.
-EntityBuilderWidget::EntityBuilderWidget(Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+EntityBuilderWidget::EntityBuilderWidget(Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: QWidget(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
 	m_pDocument()
@@ -214,23 +218,19 @@ void EntityBuilderWidget::createEntity()
 {
 	if (m_pDocument)
 	{
-		std::auto_ptr<EntityCreationInteraction> pInteraction(
-			new EntityCreationInteraction(m_pDocument, &ui, this, m_pEditor) );
+		EntityCreationInteraction interaction(m_pDocument, &ui, this, m_pEditor);
 
-		QDrag *drag = new QDrag(this);
+		lean::scoped_ptr<QDrag> drag( new QDrag(this) );
 		drag->setPixmap( QPixmap(QString::fromUtf8(":/breezEd/icons/tree/asset")) );
-		drag->setMimeData( new QMimeData() );
-
-		m_pDocument->pushInteraction(pInteraction.get());
-		drag->exec();
-		m_pDocument->removeInteraction(pInteraction.get());
+		drag->setMimeData( interactionMimeData(&interaction) );
+		drag.detach()->exec();
 	}
 }
 
 // Adds a controller of the given type.
 void EntityBuilderWidget::addController(const QString &type)
 {
-	const beEntitySystem::ControllerSerializer *pSerializer = beEntitySystem::GetControllerSerialization().GetSerializer( toUtf8Range(type) );
+	const beEntitySystem::ControllerSerializer *pSerializer = beEntitySystem::GetEntityControllerSerialization().GetSerializer( toUtf8Range(type) );
 
 	if (pSerializer)
 	{
@@ -268,6 +268,7 @@ void EntityBuilderWidget::moveDown()
 #include "Plugins/AbstractPlugin.h"
 #include "Plugins/PluginManager.h"
 #include "Windows/MainWindow.h"
+#include "Docking/DockContainer.h"
 
 namespace
 {
@@ -288,20 +289,29 @@ struct EntityBuilderWidgetPlugin : public AbstractPlugin<MainWindow*>
 	}
 
 	/// Initializes the plugin.
-	void initialize(MainWindow *pMainWindow) const
+	void initialize(MainWindow *mainWindow) const
 	{
-		QDockWidget *pDock = new QDockWidget(pMainWindow);
-		pDock->setObjectName("EntityBuilderWidget");
-		pDock->setWidget( new EntityBuilderWidget(pMainWindow->editor(), pDock) );
-		pDock->setWindowTitle(pDock->widget()->windowTitle());
-		pDock->setWindowIcon(pDock->widget()->windowIcon());
-		
-		// Invisible by default
-		pMainWindow->addDockWidget(Qt::LeftDockWidgetArea, pDock);
-		pDock->hide();
+/*		lean::scoped_ptr<QDockWidget> dock( new QDockWidget(mainWindow) );
+		dock->setObjectName("EntityBuilderWidget");
+		dock->setStyle( new IconDockStyle(dock, dock->style()) );
 
-		checkedConnect(pMainWindow->widgets().actionEntity_Builder, SIGNAL(triggered()), pDock, SLOT(show()));
-		checkedConnect(pMainWindow, SIGNAL(documentChanged(AbstractDocument*)), pDock->widget(), SLOT(setDocument(AbstractDocument*)));
+		dock->setWidget( new EntityBuilderWidget(mainWindow->editor(), dock) );
+		dock->setWindowTitle(dock->widget()->windowTitle());
+		dock->setWindowIcon(dock->widget()->windowIcon());
+*/		
+		lean::scoped_ptr<EntityBuilderWidget> widget( new EntityBuilderWidget(mainWindow->editor()) );
+		lean::scoped_ptr<DockWidget> dock( DockWidget::wrap(widget) );
+
+		// Invisible by default
+		dock->hide();
+		mainWindow->dock()->addDock(dock, DockPlacement::Emplace, DockOrientation::Horizontal, DockSide::Before);
+//		pMainWindow->addDockWidget(Qt::LeftDockWidgetArea, dock);
+
+		checkedConnect(mainWindow->widgets().actionEntity_Builder, SIGNAL(triggered()), dock, SLOT(showAndRaise()));
+		checkedConnect(mainWindow, SIGNAL(documentChanged(AbstractDocument*)), widget, SLOT(setDocument(AbstractDocument*)));
+
+		widget.detach();
+		dock.detach();
 	}
 	/// Finalizes the plugin.
 	void finalize(MainWindow *pWindow) const { }

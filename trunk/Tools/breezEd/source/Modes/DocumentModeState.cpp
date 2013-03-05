@@ -5,7 +5,7 @@
 #include "Windows/MainWindow.h"
 #include "Documents/AbstractDocument.h"
 
-#include <QtGui/QFileDialog>
+#include <QtWidgets/QFileDialog>
 
 #include "Utility/Checked.h"
 

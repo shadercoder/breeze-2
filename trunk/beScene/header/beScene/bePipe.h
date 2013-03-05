@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_PIPE
 #define BE_SCENE_PIPE
 
@@ -19,7 +20,7 @@ namespace beScene
 {
 
 /// Pipe target flags enumeration.
-namespace PipeTargetFlags
+struct PipeTargetFlags
 {
 	/// Enumeration.
 	enum T
@@ -31,7 +32,8 @@ namespace PipeTargetFlags
 
 		Output = 0x80
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(PipeTargetFlags)
+};
 
 /// Maximum number of outputs.
 const uint4 MaxPipeOutputCount = 32;

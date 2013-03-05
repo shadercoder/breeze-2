@@ -2,6 +2,7 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_D3DX_EFFECTS_11
 #define BE_GRAPHICS_D3DX_EFFECTS_11
 

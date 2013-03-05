@@ -2,6 +2,7 @@
 /* breeze Engine Physics Module (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_PHYSICS_API_PX
 #define BE_PHYSICS_API_PX
 
@@ -47,11 +48,11 @@ namespace API
 namespace api = API;
 
 /// Scoped PhysX pointer.
-template <class PhysX>
+template <class PhysX, lean::reference_state_t RefState = lean::stable_ref>
 struct scoped_pxptr_t
 {
 	/// Scoped pointer type.
-	typedef lean::scoped_ptr< PhysX, lean::smart::release_ptr_policy<PhysX> > t;
+	typedef lean::scoped_ptr< PhysX, RefState, lean::smart::release_ptr_policy<PhysX> > t;
 };
 
 } // namespace
@@ -61,8 +62,13 @@ struct scoped_pxptr_t
 /// Shorthand namespace.
 namespace breeze
 {
-	/// Physics namespace alias.
+#ifndef DOXYGEN_READ_THIS
+	/// physx namespace alias.
 	namespace px = ::physx;
+#else
+	/// physx namespace alias.
+	namespace px { using namespace ::physx; }
+#endif
 }
 
 #endif

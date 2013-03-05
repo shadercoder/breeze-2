@@ -2,14 +2,10 @@
 #include "Widgets/ControllerBuilderWidget.h"
 
 #include <beEntitySystem/beControllerSerializer.h>
-#include <beEntitySystem/beControllerSerialization.h>
+#include <beEntitySystem/beSerialization.h>
 
 #include <beCore/beComponentTypes.h>
 #include <beCore/beComponentReflector.h>
-
-#include "Plugins/FactoryManager.h"
-#include "Widgets/ComponentPickerFactory.h"
-#include "Widgets/ComponentPicker.h"
 
 #include "Utility/Strings.h"
 #include "Utility/Checked.h"
@@ -38,57 +34,24 @@ void randomizeBackground(QWidget &widget)
 }
 
 /// Adds creation parameters to the given controller builder widget.
-void addCreationParameters(Ui::ControllerBuilderWidget &widget, const beEntitySystem::ControllerSerializer *serializer, Editor *editor)
+void addCreationParameters(Ui::ControllerBuilderWidget &ui, const beEntitySystem::ControllerSerializer *serializer, Editor *editor)
 {
-	const beEntitySystem::ControllerSerializer::SerializationParameters &creationParameters = serializer->GetCreationParameters();
-
-	for (const beEntitySystem::CreationParameter *it = creationParameters.begin(); it != creationParameters.end(); ++it)
 	{
-		QString parameterName = toQt(it->Name);
-		QString parameterType = toQt(it->Type);
-
-		QGroupBox *parameterGroup = new QGroupBox(parameterName, widget.centerWidget);
-		QVBoxLayout *layout = new QVBoxLayout(parameterGroup);
-		layout->setMargin(6);
-
-		if (it->Optional)
-		{
-			parameterGroup->setCheckable(true);
-			parameterGroup->setChecked(true);
-		}
-
-		const beCore::ComponentReflector *pReflector = beCore::GetComponentTypes().GetReflector(it->Type);
-
-		QWidget *parameterWidget;
-
-		if (pReflector)
-		{
-			const ComponentPickerFactory &componentPickerFactory = *LEAN_ASSERT_NOT_NULL(
-					getComponentPickerFactories().getFactory(parameterType)
-				);
-
-			parameterWidget = componentPickerFactory.createComponentPicker(pReflector, nullptr, editor, parameterGroup);
-		}
-		else
-			parameterWidget = new QLabel(
-					ControllerBuilderWidget::tr("Unknown type '%1'").arg(parameterType),
-					parameterGroup
-				);
-
-		layout->addWidget(parameterWidget);
-
-		parameterGroup->setLayout(layout);
-		widget.centerLayout->addWidget(parameterGroup);
+		lean::scoped_ptr<ComponentParameterWidget> parameterWidget( new ComponentParameterWidget(
+				serializer->GetCreationParameters(), bec::Parameters(), false, editor, ui.parameterBox
+			) );
+		ui.parameterBox->layout()->addWidget(parameterWidget);
+		delete ui.parameterWidget;
+		ui.parameterWidget = parameterWidget.detach();
 	}
 
-	if (creationParameters.empty())
-		widget.centerWidget->hide();
+	ui.parameterBox->setVisible(ui.parameterWidget->hasParameters());
 }
 
 } // namespace
 
 // Constructor.
-ControllerBuilderWidget::ControllerBuilderWidget(const beEntitySystem::ControllerSerializer *pSerializer, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+ControllerBuilderWidget::ControllerBuilderWidget(const beEntitySystem::ControllerSerializer *pSerializer, Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: QWidget(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
 	m_pSerializer( LEAN_ASSERT_NOT_NULL(pSerializer) )
@@ -113,21 +76,5 @@ ControllerBuilderWidget::~ControllerBuilderWidget()
 // Sets the creation parameter in the given set.
 void ControllerBuilderWidget::setParameters(beCore::Parameters &parameters, SceneDocument &document) const
 {
-	int parameterCount = ui.centerLayout->count();
-	
-	for (int idx = 0; idx < parameterCount; ++idx)
-	{
-		QGroupBox *pParameterGroup = qobject_cast<QGroupBox*>( ui.centerLayout->itemAt(idx)->widget() );
-		
-		if (pParameterGroup && (!pParameterGroup->isCheckable() || pParameterGroup->isChecked()))
-		{
-			lean::utf8_string parameterName = toUtf8(pParameterGroup->title());
-			QWidget &parameterWidget = *LEAN_ASSERT_NOT_NULL( pParameterGroup->layout()->itemAt(0)->widget() );
-
-			ComponentPicker *pComponentPicker = qobject_cast<ComponentPicker*>(&parameterWidget);
-
-			if (pComponentPicker)
-				parameters.SetAnyValue( parameters.Add(parameterName), &*pComponentPicker->acquireComponent(document) );
-		}
-	}
+	ui.parameterWidget->getParameters(parameters);
 }

@@ -2,7 +2,7 @@
 #define TREEVIEWEX_H
 
 #include "breezEd.h"
-#include <QtGui/QTreeView>
+#include <QtWidgets/QTreeView>
 
 /// Tree widget enhanced by drag signals.
 class TreeViewEx : public QTreeView

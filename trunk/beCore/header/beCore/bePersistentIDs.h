@@ -2,6 +2,7 @@
 /* breeze Engine Core Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_CORE_PERSISTENT_IDS
 #define BE_CORE_PERSISTENT_IDS
 
@@ -60,7 +61,7 @@ public:
 	/// Gets a reference.
 	BE_CORE_API void* GetReference(uint8 id, const std::type_info &type) const;
 	/// Unsets a reference.
-	BE_CORE_API void UnsetReference(uint8 id, bool bErase = false);
+	BE_CORE_API void UnsetReference(uint8 id, const void *compare = nullptr, bool bErase = true);
 
 	/// Adds a new reference.
 	template <class Type>

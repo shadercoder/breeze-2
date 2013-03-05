@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_RENDERINGLIMITS
 #define BE_SCENE_RENDERINGLIMITS
 
@@ -35,6 +36,38 @@ typedef uint2 PipelineStageID;
 /// Queue ID type.
 typedef uint2 RenderQueueID;
 
+struct PipelineQueueID
+{
+	PipelineStageID StageID;
+	RenderQueueID QueueID;
+	
+	PipelineQueueID(PipelineStageID stageID, RenderQueueID queueID)
+		: StageID(stageID),
+		QueueID(queueID) { }
+
+	friend bool operator <(PipelineQueueID left, PipelineQueueID right)
+	{
+		return (left.StageID < right.StageID) || (left.StageID == right.StageID && left.QueueID < right.QueueID);
+	}
+	friend bool operator ==(PipelineQueueID left, PipelineQueueID right)
+	{
+		return (left.StageID == right.StageID) && (left.QueueID == right.QueueID);
+	}
+
+	friend PipelineQueueID GetID(PipelineQueueID id) { return id; }
+
+	struct Less
+	{
+		template <class L, class R>
+		bool operator ()(const L &left, const R &right) { return GetID(left) < GetID(right); }
+	};
+	struct Equal
+	{
+		template <class L, class R>
+		bool operator ()(const L &left, const R &right) { return GetID(left) == GetID(right); }
+	};
+};
+
 /// Invalid stage ID.
 const PipelineStageID InvalidPipelineStage = static_cast<PipelineStageID>(-1);
 /// Invalid queue ID.
@@ -47,6 +80,33 @@ typedef uint4 RenderQueueMask;
 
 LEAN_STATIC_ASSERT(lean::size_info<PipelineStageMask>::bits >= MaxPipelineStageCount);
 LEAN_STATIC_ASSERT(lean::size_info<RenderQueueMask>::bits >= MaxRenderQueueCount);
+
+/// All normal stages.
+const PipelineStageMask NormalPipelineStages = -1;
+/// All normal queues.
+const RenderQueueMask NormalRenderQueues = -1;
+
+/// Only normal stages.
+const PipelineStageMask NormalPipelineStagesOnly = 1 << (lean::size_info<PipelineStageMask>::bits - 1);
+/// Only normal queues.
+const RenderQueueMask NormalRenderQueuesOnly = 1 << (lean::size_info<RenderQueueMask>::bits - 1);
+
+/// All stages.
+const PipelineStageMask AllPipelineStages = ~NormalPipelineStagesOnly;
+/// All queues.
+const RenderQueueMask AllRenderQueues = ~NormalRenderQueuesOnly;
+
+/// Gets the stage mask from the given stage.
+LEAN_INLINE PipelineStageMask ComputeStageMask(PipelineStageID stageID)
+{
+	return (stageID != InvalidPipelineStage) ? (1U << stageID) : 0U;
+}
+
+/// Gets the queue mask from the given stage.
+LEAN_INLINE RenderQueueMask ComputeQueueMask(RenderQueueID queueID)
+{
+	return (queueID != InvalidRenderQueue) ? (1U << queueID) : 0U;
+}
 
 } // namespace
 

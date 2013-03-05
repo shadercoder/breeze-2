@@ -65,7 +65,7 @@ float oneMinusPow(float val, float powVal)
 	return 1.0f - pow(1.0f - val, powVal);
 }
 
-GeometryOutput PSGeometry(Pixel p)
+GBufferBinding PSGeometry(Pixel p)
 {
 	float3 normal = normalize(p.NormalDepth.xyz);
 	float4 diffuse = DiffuseColor;
@@ -79,7 +79,10 @@ GeometryOutput PSGeometry(Pixel p)
 
 	diffuse.xyz *= diffuseTex;
 
-	return ReturnGeometry(p.NormalDepth.w, normal, diffuse, SpecularColor);
+	return BindGBuffer(
+		MakeGeometry(p.NormalDepth.w, normal),
+		MakeDiffuse(diffuse.xyz, 1.0f - SpecularColor.w),
+		MakeSpecular(SpecularColor.xyz, 1.0f, diffuse.w) );
 }
 
 struct GrassVertex
@@ -204,7 +207,7 @@ void GSGrass(triangle GrassControlPoint tri[3], inout TriangleStream<Pixel> triS
 	}
 }
 
-GeometryOutput PSGrassGeometry(Pixel p)
+GBufferBinding PSGrassGeometry(Pixel p)
 {
 	float3 normal = normalize(p.NormalDepth.xyz);
 	float4 diffuse = DiffuseColor;
@@ -212,7 +215,10 @@ GeometryOutput PSGrassGeometry(Pixel p)
 	float3 diffuseTex = DiffuseTexture.Sample(LinearSampler, p.World.xz).rgb;
 	diffuse.xyz *= diffuseTex;
 
-	return ReturnGeometry(p.NormalDepth.w, normal, diffuse, SpecularColor);
+	return BindGBuffer(
+		MakeGeometry(p.NormalDepth.w, normal),
+		MakeDiffuse(diffuse.xyz, 1.0f - SpecularColor.w),
+		MakeSpecular(SpecularColor.xyz, 1.0f, diffuse.w) );
 }
 
 technique11 Geometry <

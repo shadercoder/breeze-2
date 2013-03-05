@@ -36,6 +36,15 @@
     <Filter Include="Header Files\Utility">
       <UniqueIdentifier>{c5cdf7cc-6012-40b3-bc28-6212a8244f2a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="2.0\Modifiers">
+      <UniqueIdentifier>{0dccfe09-dea1-4aac-aa90-bf743bf3a1a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="2.0\Hooks">
+      <UniqueIdentifier>{52efb0ff-bb5d-436a-9f12-0b5569d471e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\External">
+      <UniqueIdentifier>{a37e8579-8c8e-48cd-8544-db484d2a2082}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Bin\Data\Effects\2.0\Engine\Pipeline.fx">
@@ -161,5 +170,28 @@
     <None Include="..\Bin\Data\Effects\2.0\Materials\Fur.fx">
       <Filter>2.0\Materials</Filter>
     </None>
+    <None Include="..\Bin\Data\Effects\2.0\Modifiers\Wind.fx">
+      <Filter>2.0\Modifiers</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Hooks\Transform.fx">
+      <Filter>2.0\Hooks</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Bump.fx">
+      <Filter>2.0\Materials</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Utility\Color.fx">
+      <Filter>Header Files\Utility</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Processing\FXAA.fx">
+      <Filter>2.0\Processing</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Bin\Data\Effects\2.0\External\Fxaa3_11.h">
+      <Filter>Header Files\External</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bin\Data\Effects\2.0\External\Fxaa3_8.h">
+      <Filter>Header Files\External</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

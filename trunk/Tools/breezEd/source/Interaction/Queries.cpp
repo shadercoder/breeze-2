@@ -4,9 +4,10 @@
 #include "Documents/SceneDocument.h"
 #include <beScene/bePipePool.h>
 #include <beScene/bePipe.h>
+#include <beScene/bePerspectivePool.h>
 #include <beScene/beRenderingPipeline.h>
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 
 #include <beMath/beVector.h>
 #include <beMath/beMatrix.h>
@@ -14,11 +15,11 @@
 #include <lean/logging/errors.h>
 
 /// Retrieve the object ID under the given cursor position.
-uint4 objectIDUnderCursor(beScene::Renderer &renderer, beScene::SceneController &scene, const QPointF &relativePos, const beScene::PerspectiveDesc &perspective)
+uint4 objectIDUnderCursor(beScene::Renderer &renderer, beScene::RenderingController &scene, const QPointF &relativePos, const beScene::PerspectiveDesc &perspectiveDesc)
 {
 	using namespace beMath;
 
-	beScene::PerspectiveDesc rayPerspective(perspective);
+	beScene::PerspectiveDesc rayPerspective(perspectiveDesc);
 
 	// Offset camera to ray perspective
 	fmat4 rayOffsetScale = fmat4::identity;
@@ -44,8 +45,9 @@ uint4 objectIDUnderCursor(beScene::Renderer &renderer, beScene::SceneController 
 	pSelectionPipe->KeepResults();
 
 	// Perform scene query
-	renderer.Pipeline()->AddPerspective(rayPerspective, pSelectionPipe, nullptr, 1U << objectIDStage);
-	scene.Render();
+	lean::com_ptr<besc::PipelinePerspective> perspective = renderer.PerspectivePool()->GetPerspective(
+		rayPerspective, pSelectionPipe, nullptr, 1U << objectIDStage);
+	scene.Render(*perspective, *scene.GetRenderContext());
 
 	const beGraphics::ColorTextureTarget *pObjectIDTarget = pSelectionPipe->GetColorTarget("ObjectIDTarget");
 
@@ -58,7 +60,7 @@ uint4 objectIDUnderCursor(beScene::Renderer &renderer, beScene::SceneController 
 	// Read back object IDs
 	renderer.TargetPool()->ReadBack(
 			pObjectIDTarget, &selectedObjectID, sizeof(selectedObjectID),
-			renderer.ImmediateContext()
+			*renderer.ImmediateContext()
 		);
 
 	// Release pipe resources
@@ -74,6 +76,6 @@ beEntitySystem::Entity* entityUnderCursor(SceneDocument &document, const QPointF
 	uint4 selectedObjectID = objectIDUnderCursor(*document.renderer(), *document.scene(), relativePos, perspective);
 	
 	return (selectedObjectID != beEntitySystem::Entity::InvalidID)
-		? document.world()->GetEntity(selectedObjectID)
+		? document.world()->Entities()->GetEntityByCustomID(selectedObjectID)
 		: nullptr;
 }

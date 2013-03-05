@@ -30,16 +30,22 @@ lean::resource_ptr<ShapeCache, true> CreateShapeCache(Device *device, const utf8
 } // namespace
 
 // Constructor.
-ResourceManager::ResourceManager(class MaterialCache *materialCache, class ShapeCache *shapeCache)
-	: m_materialCache( LEAN_ASSERT_NOT_NULL(materialCache) ),
-	m_shapeCache( LEAN_ASSERT_NOT_NULL(shapeCache) )
+ResourceManager::ResourceManager(beCore::ComponentMonitor *monitor, class MaterialCache *materialCache,
+								 class ShapeCache *shapeCache, class RigidShapeCache *rigidShapeCache)
+	: Monitor( LEAN_ASSERT_NOT_NULL(monitor) ),
+	MaterialCache( LEAN_ASSERT_NOT_NULL(materialCache) ),
+	ShapeCache( LEAN_ASSERT_NOT_NULL(shapeCache) ),
+	RigidShapeCache( LEAN_ASSERT_NOT_NULL(rigidShapeCache) )
 {
 }
 
 // Copy constructor.
 ResourceManager::ResourceManager(const ResourceManager &right)
-	: m_materialCache( right.m_materialCache ),
-	m_shapeCache( right.m_shapeCache )
+	// MONITOR: REDUNDANT
+	: Monitor( right.Monitor ),
+	MaterialCache( right.MaterialCache ),
+	ShapeCache( right.ShapeCache ),
+	RigidShapeCache( right.RigidShapeCache )
 {
 }
 
@@ -48,31 +54,45 @@ ResourceManager::~ResourceManager()
 {
 }
 
+// Commits / reacts to changes.
+void ResourceManager::Commit()
+{
+	MaterialCache->Commit();
+	ShapeCache->Commit();
+	RigidShapeCache->Commit();
+}
+
 // Creates a resource manager from the given device.
-lean::resource_ptr<ResourceManager, true> CreateResourceManager(Device *device, const utf8_ntri &materialDir, const utf8_ntri &shapeDir)
+lean::resource_ptr<ResourceManager, true> CreateResourceManager(Device *device, const utf8_ntri &materialDir, const utf8_ntri &shapeDir,
+	beCore::ComponentMonitor *pMonitor)
 {
 	LEAN_ASSERT(device != nullptr);
 
-	lean::resource_ptr<MaterialCache> effectCache = CreateMaterialCache(device, materialDir);
-	lean::resource_ptr<ShapeCache> shapeCache = CreateShapeCache(device, shapeDir);
+	lean::resource_ptr<beCore::ComponentMonitor> monitor = pMonitor;
+	if (!pMonitor)
+		monitor = new_resource bec::ComponentMonitor();
 
-	return CreateResourceManager(
-			effectCache,
-			shapeCache
-		);
+	lean::resource_ptr<MaterialCache> materialCache = CreateMaterialCache(device, materialDir);
+	lean::resource_ptr<ShapeCache> shapeCache = CreateShapeCache(device, shapeDir);
+	
+	// TODO: Move to next function?
+	materialCache->SetComponentMonitor(monitor);
+	shapeCache->SetComponentMonitor(monitor);
+
+	return CreateResourceManager(device, materialCache, shapeCache, nullptr, monitor);
 }
 
 // Creates a resource manager from the given effect cache.
-lean::resource_ptr<ResourceManager, true> CreateResourceManager(MaterialCache *materialCache, ShapeCache *shapeCache)
+lean::resource_ptr<ResourceManager, true> CreateResourceManager(Device *device, MaterialCache *materialCache, ShapeCache *shapeCache,
+																RigidShapeCache *pRigidShapeCache,
+																beCore::ComponentMonitor *pMonitor)
 {
-	return lean::new_resource<ResourceManager>(materialCache, shapeCache);
-}
+	lean::resource_ptr<beCore::ComponentMonitor> monitor = (!pMonitor) ? new_resource bec::ComponentMonitor() : lean::secure_resource(pMonitor);
+	lean::resource_ptr<RigidShapeCache> rigidShapeCache = (!pRigidShapeCache) ? new_resource RigidShapeCache(device) : lean::secure_resource(pRigidShapeCache);
+	
+	rigidShapeCache->SetComponentMonitor(monitor);
 
-// Notifies dependent listeners about dependency changes.
-void NotifyDependents(ResourceManager &resourceManager)
-{
-	resourceManager.MaterialCache()->NotifyDependents();
-	resourceManager.ShapeCache()->NotifyDependents();
+	return new_resource ResourceManager(monitor, materialCache, shapeCache, rigidShapeCache);
 }
 
 } // namespace

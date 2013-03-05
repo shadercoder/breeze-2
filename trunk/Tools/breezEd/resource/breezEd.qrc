@@ -4,6 +4,11 @@
     <file alias="open">icons/file/openHS.png</file>
     <file alias="save">icons/file/saveHS.png</file>
   </qresource>
+  <qresource prefix="/breezEd/icons/state">
+    <file alias="sync">icons/state/arrow-circle-double.png</file>
+    <file alias="repeat">icons/state/arrow-repeat.png</file>
+    <file alias="link">icons/state/arrow-switch.png</file>
+  </qresource>
   <qresource prefix="/breezEd/icons/transform">
     <file alias="select">icons/transform/select.png</file>
     <file alias="object">icons/transform/object.png</file>
@@ -48,6 +53,7 @@
     <file alias="properties">icons/specific/1435_ClipBoard.png</file>
   </qresource>
   <qresource prefix="/breezEd/icons/tools">
+    <file alias="component">icons/tools/cake.png</file>
     <file alias="world">icons/tools/globe.png</file>
     <file alias="properties">icons/tools/property.png</file>
     <file alias="asset">icons/tools/asset.png</file>

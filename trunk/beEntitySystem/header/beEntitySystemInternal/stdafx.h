@@ -10,3 +10,5 @@
 
 #include <windows.h>
 #include <tchar.h>
+
+using namespace breeze;

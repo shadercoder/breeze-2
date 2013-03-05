@@ -4,7 +4,7 @@
 #include "breezEd.h"
 #include <QtCore/QObject>
 #include <QtCore/QMap>
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 
 /// State
 class InputState

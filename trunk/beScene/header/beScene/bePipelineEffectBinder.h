@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_PIPELINE_EFFECT_BINDER
 #define BE_SCENE_PIPELINE_EFFECT_BINDER
 
@@ -20,14 +21,15 @@ namespace beScene
 {
 
 /// Pipeline effect binder flags enumeration.
-namespace PipelineEffectBinderFlags
+struct PipelineEffectBinderFlags
 {
 	/// Enumeration.
 	enum T
 	{
 		AllowUnclassified = 0x1		///< Permits passes & technique to omit stage & queue classification.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(PipelineEffectBinderFlags)
+};
 
 // Prototypes
 class RenderingPipeline;
@@ -83,10 +85,8 @@ public:
 	/// Destructor.
 	BE_SCENE_API ~PipelineEffectBinder();
 
-	/// Gets the number of passes.
-	BE_SCENE_API uint4 GetPassCount() const;
-	/// Gets the pass identified by the given ID.
-	BE_SCENE_API const PipelineEffectBinderPass* GetPass(uint4 passID) const;
+	/// Gets the passes.
+	BE_SCENE_API PassRange GetPasses() const;
 
 	/// Gets the technique.
 	LEAN_INLINE const beGraphics::Technique& GetTechnique() const { return m_technique; }

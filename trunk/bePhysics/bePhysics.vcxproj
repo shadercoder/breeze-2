@@ -117,6 +117,8 @@
       <PreprocessorDefinitions>PX_PHYSX_CHARACTER_STATIC_LIB;WIN32;_DEBUG;_WINDOWS;_USRDLL;BEPHYSICS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>bePhysicsInternal/StdAfx.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -197,13 +199,14 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="header\bePhysics\beAssembledShape.h" />
     <ClInclude Include="header\bePhysics\beCharacter.h" />
     <ClInclude Include="header\bePhysics\beCharacterController.h" />
     <ClInclude Include="header\bePhysics\beCharacterScene.h" />
     <ClInclude Include="header\bePhysics\beCharacterSceneController.h" />
     <ClInclude Include="header\bePhysics\beDevice.h" />
-    <ClInclude Include="header\bePhysics\beEntityController.h" />
     <ClInclude Include="header\bePhysics\beInlineMaterialSerialization.h" />
+    <ClInclude Include="header\bePhysics\beInlineShapeSerialization.h" />
     <ClInclude Include="header\bePhysics\beMaterial.h" />
     <ClInclude Include="header\bePhysics\beMaterialCache.h" />
     <ClInclude Include="header\bePhysics\beMaterialSerialization.h" />
@@ -213,42 +216,50 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\bePhysics\beResourceManager.h" />
     <ClInclude Include="header\bePhysics\beRigidActors.h" />
     <ClInclude Include="header\bePhysics\beRigidControllerSerializer.h" />
-    <ClInclude Include="header\bePhysics\beRigidDynamicController.h" />
-    <ClInclude Include="header\bePhysics\beRigidStaticController.h" />
+    <ClInclude Include="header\bePhysics\beRigidDynamicControllers.h" />
+    <ClInclude Include="header\bePhysics\beRigidShape.h" />
+    <ClInclude Include="header\bePhysics\beRigidShapeCache.h" />
+    <ClInclude Include="header\bePhysics\beRigidStaticControllers.h" />
     <ClInclude Include="header\bePhysics\beSceneController.h" />
     <ClInclude Include="header\bePhysics\beScene.h" />
     <ClInclude Include="header\bePhysics\beSerializationParameters.h" />
     <ClInclude Include="header\bePhysics\beShapeCache.h" />
     <ClInclude Include="header\bePhysics\beShapes.h" />
+    <ClInclude Include="header\bePhysics\beShapeSerialization.h" />
     <ClInclude Include="header\bePhysics\PX3\beAPI.h" />
+    <ClInclude Include="header\bePhysics\PX3\beAssembledShape.h" />
     <ClInclude Include="header\bePhysics\PX3\beCharacter.h" />
     <ClInclude Include="header\bePhysics\PX3\beCharactersAPI.h" />
     <ClInclude Include="header\bePhysics\PX3\beCharacterScene.h" />
     <ClInclude Include="header\bePhysics\PX3\beDevice.h" />
     <ClInclude Include="header\bePhysics\PX3\beJoints.h" />
     <ClInclude Include="header\bePhysics\PX3\beMaterial.h" />
-    <ClInclude Include="header\bePhysics\PX3\beMaterialCache.h" />
     <ClInclude Include="header\bePhysics\PX3\beMath.h" />
     <ClInclude Include="header\bePhysics\PX3\bePhysics.h" />
     <ClInclude Include="header\bePhysics\PX3\beRigidActors.h" />
+    <ClInclude Include="header\bePhysics\PX3\beRigidShape.h" />
     <ClInclude Include="header\bePhysics\PX3\beScene.h" />
-    <ClInclude Include="header\bePhysics\PX3\beShapeCache.h" />
     <ClInclude Include="header\bePhysics\PX3\beShapes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\beCharacterController.cpp" />
     <ClCompile Include="source\beCharacterSceneController.cpp" />
-    <ClCompile Include="source\beEntityController.cpp" />
     <ClCompile Include="source\beInlineMaterialSerialization.cpp" />
+    <ClCompile Include="source\beInlineSerialization.cpp" />
+    <ClCompile Include="source\beInlineShapeSerialization.cpp" />
+    <ClCompile Include="source\beMaterialCache.cpp" />
     <ClCompile Include="source\beMaterialComponent.cpp" />
     <ClCompile Include="source\bePhysics.cpp" />
     <ClCompile Include="source\beResourceManager.cpp" />
     <ClCompile Include="source\beRigidControllerSerializer.cpp" />
-    <ClCompile Include="source\beRigidDynamicController.cpp" />
-    <ClCompile Include="source\beRigidStaticController.cpp" />
+    <ClCompile Include="source\beRigidDynamicControllers.cpp" />
+    <ClCompile Include="source\beRigidShapeCache.cpp" />
+    <ClCompile Include="source\beRigidStaticControllers.cpp" />
     <ClCompile Include="source\beSceneController.cpp" />
     <ClCompile Include="source\beSerializationParameters.cpp" />
+    <ClCompile Include="source\beShapeCache.cpp" />
     <ClCompile Include="source\beShapeComponent.cpp" />
+    <ClCompile Include="source\beShapes.cpp" />
     <ClCompile Include="source\dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
@@ -263,16 +274,16 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\PX3\beAssembledShape.cpp" />
     <ClCompile Include="source\PX3\beCharacter.cpp" />
     <ClCompile Include="source\PX3\beCharacterScene.cpp" />
     <ClCompile Include="source\PX3\beDefaultRigidActors.cpp" />
     <ClCompile Include="source\PX3\beDevice.cpp" />
     <ClCompile Include="source\PX3\beJoints.cpp" />
     <ClCompile Include="source\PX3\beMaterial.cpp" />
-    <ClCompile Include="source\PX3\beMaterialCache.cpp" />
     <ClCompile Include="source\PX3\beRigidActors.cpp" />
+    <ClCompile Include="source\PX3\beRigidShape.cpp" />
     <ClCompile Include="source\PX3\beScene.cpp" />
-    <ClCompile Include="source\PX3\beShapeCache.cpp" />
     <ClCompile Include="source\PX3\beShapes.cpp" />
     <ClCompile Include="source\PX3\beShapeSerialization.cpp" />
     <ClCompile Include="source\stdafx.cpp">

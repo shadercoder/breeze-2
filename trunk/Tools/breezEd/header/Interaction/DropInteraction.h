@@ -22,4 +22,9 @@ public:
 	virtual void complete(QDropEvent &dropEvent) { }
 };
 
+/// Creates drag/drop mime data for the given interaction.
+class QMimeData* interactionMimeData(DropInteraction *interaction);
+/// Retrieves a drop interaction.
+DropInteraction* interactionFromMimeData(const QMimeData *data);
+
 #endif

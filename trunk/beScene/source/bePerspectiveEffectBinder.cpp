@@ -103,10 +103,10 @@ PerspectiveEffectBinder::rasterizer_state_vector GetRasterizerStates(ID3DX11Effe
 
 // Constructor.
 PerspectiveEffectBinder::PerspectiveEffectBinder(const beGraphics::Any::Technique &technique, PerspectiveEffectBinderPool *pPool)
-	: m_effect( *technique.GetEffect() ),
+	: m_effect( technique.GetEffect() ),
 	m_pPool( LEAN_ASSERT_NOT_NULL(pPool) ),
-	m_pPerspectiveConstants( MaybeGetPerspectiveConstants(m_effect) ),
-	m_rasterizerStates( GetRasterizerStates(m_effect, technique) )
+	m_pPerspectiveConstants( MaybeGetPerspectiveConstants(*m_effect) ),
+	m_rasterizerStates( GetRasterizerStates(*m_effect, technique) )
 {
 }
 
@@ -116,7 +116,7 @@ PerspectiveEffectBinder::~PerspectiveEffectBinder()
 }
 
 // Applies the given perspective data to the effect bound by this effect driver.
-bool PerspectiveEffectBinder::Apply(const Perspective &perspective, beGraphics::Any::StateManager& stateManager, ID3D11DeviceContext *pContext) const
+void PerspectiveEffectBinder::Apply(const Perspective &perspective, beGraphics::Any::StateManager& stateManager, ID3D11DeviceContext *pContext) const
 {
 	if (m_pPerspectiveConstants)
 		m_pPerspectiveConstants->SetConstantBuffer(
@@ -136,8 +136,6 @@ bool PerspectiveEffectBinder::Apply(const Perspective &perspective, beGraphics::
 			it != m_rasterizerStates.end(); ++it)
 			it->pState->UndoSetRasterizerState(it->stateIndex);
 	}
-
-	return true;
 }
 
 } // namespace

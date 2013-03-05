@@ -12,3 +12,5 @@
 #include <D3D11.h>
 #include <DXGI.h>
 #include <tchar.h>
+
+using namespace breeze;

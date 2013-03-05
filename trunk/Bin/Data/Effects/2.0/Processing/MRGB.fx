@@ -75,7 +75,7 @@ float4 PSDownsample(Pixel p, uniform Texture2D sourceTex, uniform float2 sourceP
 	// Average normals
 	eyeNormal = normalize(eyeNormal);
 
-	return BuildGeometry(eyeDepth, eyeNormal);
+	return MakeGeometry(eyeDepth, eyeNormal);
 }
 
 technique11 Default <

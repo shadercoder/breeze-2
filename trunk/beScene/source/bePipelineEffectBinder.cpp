@@ -23,7 +23,7 @@ PipelineEffectBinderPass::pass_vector CreatePasses(beGraphics::Any::API::Effect 
 	for (uint4 i = 0; i < passCount; ++i)
 	{
 		uint4 passID = passIDs[i];
-		passes.shift_back( new (passes.allocate_back()) StateEffectBinderPass(pEffect, pTechnique->GetPassByIndex(passID), passID) );
+		new_emplace(passes) StateEffectBinderPass(pEffect, pTechnique->GetPassByIndex(passID), passID);
 	}
 
 	return passes;
@@ -34,7 +34,7 @@ PipelineEffectBinderPass::pass_vector CreatePasses(beGraphics::Any::API::Effect 
 // Constructor.
 PipelineEffectBinderPass::PipelineEffectBinderPass(beGraphics::Any::API::Effect *pEffect, beGraphics::Any::API::EffectTechnique *pTechnique,
 												   const uint4 *passIDs, uint4 passCount, uint4 stageID, uint4 queueID)
-	: m_passes( CreatePasses(pEffect, pTechnique, passIDs, passCount), pass_vector::consume ),
+	: m_passes( CreatePasses(pEffect, pTechnique, passIDs, passCount), lean::consume ),
 	m_stageID( stageID ),
 	m_queueID( queueID )
 {
@@ -184,7 +184,7 @@ PipelineEffectBinder::pass_vector GetPasses(beGraphics::Any::API::Effect *pEffec
 // Constructor.
 PipelineEffectBinder::PipelineEffectBinder(const beGraphics::Any::Technique &technique, RenderingPipeline *pPipeline, uint4 flags)
 	: m_technique( technique ),
-	m_passes( GetPasses(*m_technique.GetEffect(), m_technique, pPipeline, flags), pass_vector::consume )
+	m_passes( beScene::GetPasses(*m_technique.GetEffect(), m_technique, pPipeline, flags), lean::consume )
 {
 }
 
@@ -193,18 +193,10 @@ PipelineEffectBinder::~PipelineEffectBinder()
 {
 }
 
-// Gets the number of passes.
-uint4 PipelineEffectBinder::GetPassCount() const
-{
-	return static_cast<uint4>(m_passes.size());
-}
-
 // Gets the pass identified by the given ID.
-const PipelineEffectBinderPass* PipelineEffectBinder::GetPass(uint4 passID) const
+PipelineEffectBinder::PassRange PipelineEffectBinder::GetPasses() const
 {
-	return (passID < m_passes.size())
-		? &m_passes[passID]
-		: nullptr;
+	return beCore::MakeRangeN(&m_passes[0], m_passes.size());
 }
 
 } // namespace

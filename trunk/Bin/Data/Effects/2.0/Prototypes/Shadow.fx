@@ -3,6 +3,14 @@
 #include <Engine/Perspective.fx>
 #include <Engine/Renderable.fx>
 
+cbuffer SetupConstants
+{
+	#hookinsert SetupConstants
+}
+
+#hookincl "Hooks/Transform.fx"
+#hookincl ...
+
 struct Vertex
 {
 	float4 Position	: Position;
@@ -16,8 +24,10 @@ struct DepthPixel
 
 DepthPixel VSDepth(Vertex v)
 {
+	#hookcall transformState = Transform(TransformHookPositionOnly(v.Position));
+
 	DepthPixel o;
-	o.Position = mul(v.Position, WorldViewProj);
+	o.Position = GetWVPPosition(transformState);
 	o.Depth = o.Position.w;
 	return o;
 }

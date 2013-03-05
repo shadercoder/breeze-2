@@ -19,4 +19,43 @@ protected:
 	using Class::retranslateUi;
 };
 
+inline bool isChildOf(const QObject *child, const QObject *parent)
+{
+	while (child)
+		if (child != parent)
+			child = child->parent();
+		else
+			return true;
+
+	return false;
+}
+
+template <class T>
+inline T findParent(QObject *obj)
+{
+	while (obj)
+	{
+		obj = obj->parent();
+
+		if (T parent = qobject_cast<T>(obj))
+			return parent;
+	}
+
+	return nullptr;
+}
+
+template <class T>
+inline T findParentInc(QObject *obj)
+{
+	while (obj)
+	{
+		if (T parent = qobject_cast<T>(obj))
+			return parent;
+
+		obj = obj->parent();
+	}
+
+	return nullptr;
+}
+
 #endif

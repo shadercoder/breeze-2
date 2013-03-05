@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProjectSchemaDefinitions
+  xmlns="clr-namespace:Microsoft.Build.Framework.XamlTypes;assembly=Microsoft.Build.Framework"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:sys="clr-namespace:System;assembly=mscorlib">
+  
+  <ItemType Name="QtUiCompile" DisplayName="Qt User Interface" />
+  <ContentType Name="QtUiCompile" DisplayName="Qt User Interface" ItemType="QtUiCompile" />
+  <FileExtension Name="*.ui" ContentType="QtUiCompile" />
+  
+  <Rule Name="QtUiCompile" PageTemplate="tool" DisplayName="Qt User Interface" Order="12">
+    <Rule.DataSource>
+      <DataSource Persistence="ProjectFile" ItemType="QtUiCompile" />
+    </Rule.DataSource>
+
+    <Rule.Categories>
+      <Category Name="Common" DisplayName="Common" />
+      <Category Name="Command Line" DisplayName="Command Line" Subtype="CommandLine" />
+    </Rule.Categories>
+
+    <Rule.Properties>
+      <StringProperty
+        Name="CompilerOutput"
+        DisplayName="Compiler Output"
+        Category="Common"
+        Subcategory="Compiler"
+        Description="Sets the output file."
+        Switch="-o " />
+
+      <StringProperty
+        Name="UICPath"
+        DisplayName="Compiler Path"
+        Category="Common"
+        Description="Designated path to uic.exe."
+        IncludeInCommandLine="False" />
+
+      <StringProperty
+        Name="AdditionalOptions"
+        DisplayName="Additional Options"
+        Category="Command Line"
+        Description="Additional Options"
+        IncludeInCommandLine="False" />
+    </Rule.Properties>
+  </Rule>
+</ProjectSchemaDefinitions>

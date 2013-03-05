@@ -2,6 +2,7 @@
 /* breeze Engine Math Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_MATH_SPHERE_FWD
 #define BE_MATH_SPHERE_FWD
 

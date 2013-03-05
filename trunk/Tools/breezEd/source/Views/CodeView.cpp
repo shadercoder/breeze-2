@@ -10,7 +10,7 @@
 #include "Utility/Checked.h"
 
 // Constructor.
-CodeView::CodeView(CodeDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent, Qt::WFlags flags)
+CodeView::CodeView(CodeDocument *pDocument, Mode *pDocumentMode, Editor *pEditor, QWidget *pParent, Qt::WindowFlags flags)
 	: AbstractView(pParent, flags),
 	m_pEditor( LEAN_ASSERT_NOT_NULL(pEditor) ),
 	m_pDocument( LEAN_ASSERT_NOT_NULL(pDocument) ),

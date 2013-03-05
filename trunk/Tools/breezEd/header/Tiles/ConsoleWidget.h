@@ -21,7 +21,7 @@ private:
 
 public:
 	/// Constructor.
-	ConsoleWidget(Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	ConsoleWidget(Editor *pEditor, QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~ConsoleWidget();
 
@@ -61,6 +61,6 @@ public:
 };
 
 /// Adds the console widget to the given main window.
-ConsoleWidget* addConsoleWidget(MainWindow &mainWindow, Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+ConsoleWidget* addConsoleWidget(MainWindow &mainWindow, Editor *pEditor, QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 
 #endif

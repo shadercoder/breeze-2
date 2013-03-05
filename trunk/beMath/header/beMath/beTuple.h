@@ -2,6 +2,7 @@
 /* breeze Engine Math Module    (c) Tobias Zirr 2011 */
 /*****************************************************/
 
+#pragma once
 #ifndef BE_MATH_TUPLE
 #define BE_MATH_TUPLE
 
@@ -300,6 +301,17 @@ LEAN_INLINE bool operator <(const tuple<Operand, Component, Dimension> &left, co
 	return true;
 }
 
+/// Returns true iff all components of the given vectors are approximately equal.
+template <class Operand, class Component, size_t Dimension>
+LEAN_INLINE bool eps_eq(const tuple<Operand, Component, Dimension> &left, const tuple<Operand, Component, Dimension> &right, Component delta)
+{
+	for (size_t i = 0; i < Operand::count; ++i)
+		if (abs(left[i] - right[i]) > delta)
+			return false;
+	
+	return true;
+}
+
 /// Computes the component-wise minimum of the given two values.
 template <class Operand, class Component, size_t Dimension>
 LEAN_INLINE Operand min_cw(const tuple<Operand, Component, Dimension> &left, const tuple<Operand, Component, Dimension> &right)
@@ -321,6 +333,30 @@ LEAN_INLINE Operand max_cw(const tuple<Operand, Component, Dimension> &left, con
 	Operand result(uninitialized);
 	for (size_t i = 0; i < Operand::count; ++i)
 		result.element(i) = max(left[i], right[i]);
+	return result;
+}
+
+/// Computes the minimum of all components.
+template <class Operand, class Component, size_t Dimension>
+LEAN_INLINE Component min_scan(const tuple<Operand, Component, Dimension> &left)
+{
+	using lean::min;
+
+	Component result = left[0];
+	for (size_t i = 1; i < Operand::count; ++i)
+		result = min(result, left[i]);
+	return result;
+}
+
+/// Computes the maximum of all components.
+template <class Operand, class Component, size_t Dimension>
+LEAN_INLINE Component max_scan(const tuple<Operand, Component, Dimension> &left)
+{
+	using lean::max;
+
+	Component result = left[0];
+	for (size_t i = 1; i < Operand::count; ++i)
+		result = max(result, left[i]);
 	return result;
 }
 

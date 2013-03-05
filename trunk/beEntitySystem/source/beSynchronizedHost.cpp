@@ -35,27 +35,27 @@ void SynchronizedHost::Fetch()
 }
 
 // Adds a synchronized controller.
-void SynchronizedHost::AddSynchronized(Synchronized *pSynchronized, uint4 flags)
+void SynchronizedHost::AddSynchronized(Synchronized *synchronized, uint4 flags)
 {
-	if (!pSynchronized)
+	if (!synchronized)
 	{
-		LEAN_LOG_ERROR_MSG("pSynchronized may not be nullptr");
+		LEAN_LOG_ERROR_MSG("synchronized may not be nullptr");
 		return;
 	}
 
 	if (flags & SynchronizedFlags::Flush)
-		m_synchFlush.push_back(pSynchronized);
+		lean::push_unique(m_synchFlush, synchronized);
 	if (flags & SynchronizedFlags::Fetch)
-		m_synchFetch.push_back(pSynchronized);
+		lean::push_unique(m_synchFetch, synchronized);
 }
 
 // Removes a synchronized controller.
-void SynchronizedHost::RemoveSynchronized(Synchronized *pSynchronized, uint4 flags)
+void SynchronizedHost::RemoveSynchronized(Synchronized *synchronized, uint4 flags)
 {
 	if (flags & SynchronizedFlags::Flush)
-		lean::remove(m_synchFlush, pSynchronized);
+		lean::remove(m_synchFlush, synchronized);
 	if (flags & SynchronizedFlags::Fetch)
-		lean::remove(m_synchFetch, pSynchronized);
+		lean::remove(m_synchFetch, synchronized);
 }
 
 } // namespace

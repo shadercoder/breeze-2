@@ -16,14 +16,15 @@ using namespace beGraphics;
 namespace beScene
 {
 
-namespace ResourceBindingType
+struct ResourceBindingType
 {
 	enum T
 	{
 		ConstantBuffer,
 		Resource
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(ResourceBindingType)
+};
 
 /// Resource binding.
 struct ResourceBinding
@@ -372,7 +373,7 @@ StateEffectBinder::pass_vector GetPasses(Any::API::Effect *pEffect, Any::API::Ef
 		if (!pPass->IsValid())
 			LEAN_THROW_ERROR_MSG("Invalid pass");
 
-		passes.shift_back( new(passes.allocate_back()) StateEffectBinderPass(pEffect, pPass, passID) );
+		new_emplace(passes) StateEffectBinderPass(pEffect, pPass, passID);
 	}
 
 	return passes;
@@ -383,7 +384,7 @@ StateEffectBinder::pass_vector GetPasses(Any::API::Effect *pEffect, Any::API::Ef
 // Constructor.
 StateEffectBinder::StateEffectBinder(const Any::Technique &technique)
 	: m_technique( technique ),
-	m_passes( GetPasses(*m_technique.GetEffect(), m_technique), pass_vector::consume )
+	m_passes( beScene::GetPasses(*m_technique.GetEffect(), m_technique), lean::consume )
 {
 }
 
@@ -392,18 +393,10 @@ StateEffectBinder::~StateEffectBinder()
 {
 }
 
-// Gets the number of passes.
-uint4 StateEffectBinder::GetPassCount() const
+// Gets the passes.
+StateEffectBinder::PassRange StateEffectBinder::GetPasses() const
 {
-	return static_cast<uint4>( m_passes.size() );
-}
-
-// Gets the pass identified by the given ID.
-const StateEffectBinderPass* StateEffectBinder::GetPass(uint4 passID) const
-{
-	return (passID < m_passes.size())
-		? &m_passes[passID]
-		: nullptr;
+	return beCore::MakeRangeN(&m_passes[0], m_passes.size());
 }
 
 } // namespace

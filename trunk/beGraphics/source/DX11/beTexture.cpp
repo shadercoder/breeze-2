@@ -48,48 +48,48 @@ namespace
 // Ripped from DirectXTex internals
 inline static bool ispow2(_In_ size_t x)
 {
-    return ((x != 0) && !(x & (x - 1)));
+	return ((x != 0) && !(x & (x - 1)));
 }
 
 // Ripped from DirectXTex internals
 size_t CountMips( _In_ size_t width, _In_ size_t height)
 {
-    size_t mipLevels = 1;
+	size_t mipLevels = 1;
 
-    while ( height > 1 || width > 1 )
-    {
-        if ( height > 1 )
-            height >>= 1;
+	while ( height > 1 || width > 1 )
+	{
+		if ( height > 1 )
+			height >>= 1;
 
-        if ( width > 1 )
-            width >>= 1;
+		if ( width > 1 )
+			width >>= 1;
 
-        ++mipLevels;
-    }
-    
-    return mipLevels;
+		++mipLevels;
+	}
+	
+	return mipLevels;
 }
 
 // Ripped from DirectXTex internals
 size_t _CountMips3D( _In_ size_t width, _In_ size_t height, _In_ size_t depth)
 {
-    size_t mipLevels = 1;
+	size_t mipLevels = 1;
 
-    while ( height > 1 || width > 1 || depth > 1 )
-    {
-        if ( height > 1 )
-            height >>= 1;
+	while ( height > 1 || width > 1 || depth > 1 )
+	{
+		if ( height > 1 )
+			height >>= 1;
 
-        if ( width > 1 )
-            width >>= 1;
+		if ( width > 1 )
+			width >>= 1;
 
-        if ( depth > 1 )
-            depth >>= 1;
+		if ( depth > 1 )
+			depth >>= 1;
 
-        ++mipLevels;
-    }
-    
-    return mipLevels;
+		++mipLevels;
+	}
+	
+	return mipLevels;
 }
 
 size_t CountMips3D(_In_ size_t width, _In_ size_t height, _In_ size_t depth)
@@ -237,7 +237,7 @@ lean::com_ptr<ID3D11Resource, true> LoadTexture(ID3D11Device *device, const char
 }
 
 // Creates a texture from the given texture resource.
-lean::resource_ptr<beGraphics::Texture, true> CreateTexture(ID3D11Resource *pTextureResource, beGraphics::TextureCache *pCache)
+lean::resource_ptr<Texture, true> CreateTexture(ID3D11Resource *pTextureResource)
 {
 	LEAN_ASSERT_NOT_NULL(pTextureResource);
 
@@ -249,33 +249,33 @@ lean::resource_ptr<beGraphics::Texture, true> CreateTexture(ID3D11Resource *pTex
 	switch (texDim)
 	{
 	case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
-		pTexture = new Texture1D( static_cast<ID3D11Texture1D*>(pTextureResource), pCache );
+		pTexture = new Texture1D( static_cast<ID3D11Texture1D*>(pTextureResource) );
 		break;
 	case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
-		pTexture = new Texture2D( static_cast<ID3D11Texture2D*>(pTextureResource), pCache );
+		pTexture = new Texture2D( static_cast<ID3D11Texture2D*>(pTextureResource) );
 		break;
 	case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
-		pTexture = new Texture3D( static_cast<ID3D11Texture3D*>(pTextureResource), pCache );
+		pTexture = new Texture3D( static_cast<ID3D11Texture3D*>(pTextureResource) );
 		break;
 	default:
 		LEAN_THROW_ERROR_MSG("Invalid texture resource type!");
 	}
 
-	return lean::bind_resource<beGraphics::Texture>(pTexture);
+	return lean::bind_resource(pTexture);
 }
 
 } // namespace
 
 // Loads a texture from the given file.
-lean::resource_ptr<beGraphics::Texture, true> LoadTexture(const beGraphics::Device &device, const lean::utf8_ntri &fileName, const TextureDesc *pDesc, bool bSRGB, TextureCache *pCache)
+lean::resource_ptr<beGraphics::Texture, true> LoadTexture(const beGraphics::Device &device, const lean::utf8_ntri &fileName, const TextureDesc *pDesc, bool bSRGB)
 {
-	return DX11::CreateTexture( DX11::LoadTexture(ToImpl(device), fileName, pDesc, bSRGB).get(), pCache );
+	return DX11::CreateTexture( DX11::LoadTexture(ToImpl(device), fileName, pDesc, bSRGB).get() );
 }
 
 // Loads a texture from the given memory.
-lean::resource_ptr<beGraphics::Texture, true> LoadTexture(const beGraphics::Device &device, const char *data, uint4 dataLength, const TextureDesc *pDesc, bool bSRGB, TextureCache *pCache)
+lean::resource_ptr<beGraphics::Texture, true> LoadTexture(const beGraphics::Device &device, const char *data, uint4 dataLength, const TextureDesc *pDesc, bool bSRGB)
 {
-	return DX11::CreateTexture( DX11::LoadTexture(ToImpl(device), data, dataLength, pDesc, bSRGB).get(), pCache );
+	return DX11::CreateTexture( DX11::LoadTexture(ToImpl(device), data, dataLength, pDesc, bSRGB).get() );
 }
 
 // Creates a texture view from the given texture.
@@ -499,17 +499,15 @@ lean::com_ptr<ID3D11ShaderResourceView, true> CreateShaderResourceView(ID3D11Res
 
 // Constructor.
 template <TextureType::T Type>
-TypedTexture<Type>::TypedTexture(const DescType &desc, const D3D11_SUBRESOURCE_DATA *pInitialData, ID3D11Device *pDevice, beGraphics::TextureCache *pCache)
-	: Texture(pCache),
-	m_pTexture( CreateTexture(desc, pInitialData, pDevice) )
+TypedTexture<Type>::TypedTexture(const DescType &desc, const D3D11_SUBRESOURCE_DATA *pInitialData, ID3D11Device *pDevice)
+	: m_pTexture( CreateTexture(desc, pInitialData, pDevice) )
 {
 }
 
 // Constructor.
 template <TextureType::T Type>
-TypedTexture<Type>::TypedTexture(InterfaceType *pTexture, beGraphics::TextureCache *pCache)
-	: Texture(pCache),
-	m_pTexture(pTexture)
+TypedTexture<Type>::TypedTexture(InterfaceType *pTexture)
+	: m_pTexture(pTexture)
 {
 	LEAN_ASSERT(m_pTexture != nullptr);
 }
@@ -521,16 +519,14 @@ TypedTexture<Type>::~TypedTexture()
 }
 
 // Constructor.
-TextureView::TextureView(ID3D11Resource *pTexture, const D3D11_SHADER_RESOURCE_VIEW_DESC *pDesc, ID3D11Device *pDevice, beGraphics::TextureCache *pCache)
-	: m_pTexture( CreateShaderResourceView(pTexture, pDesc, pDevice) ),
-	m_pCache( pCache )
+TextureView::TextureView(ID3D11Resource *pTexture, const D3D11_SHADER_RESOURCE_VIEW_DESC *pDesc, ID3D11Device *pDevice)
+	: m_pTexture( CreateShaderResourceView(pTexture, pDesc, pDevice) )
 {
 }
 
 // Constructor.
-TextureView::TextureView(ID3D11ShaderResourceView *pView, beGraphics::TextureCache *pCache)
-	: m_pTexture( LEAN_ASSERT_NOT_NULL(pView) ),
-	m_pCache( pCache )
+TextureView::TextureView(ID3D11ShaderResourceView *pView)
+	: m_pTexture( LEAN_ASSERT_NOT_NULL(pView) )
 {
 }
 

@@ -3,7 +3,7 @@
 /*****************************************************/
 
 #include "bePhysicsInternal/stdafx.h"
-#include "bePhysics/PX3/beShapes.h"
+#include "bePhysics/PX3/beRigidShape.h"
 #include "bePhysics/PX3/beRigidActors.h"
 #include "bePhysics/PX3/beDevice.h"
 #include "bePhysics/PX3/beMaterial.h"
@@ -15,34 +15,16 @@
 namespace bePhysics
 {
 
-namespace PX3
-{
-
-// Adds all shapes in the given shape compound to the given actor.
-void CreateShapesFromCompound(physx::PxRigidActor &actor, const PX3::ShapeCompound &compound)
-{
-	const uint4 shapeCount = compound.GetShapeCount();
-
-	for (uint4 i = 0; i < shapeCount; ++i)
-		actor.createShape(
-			*compound.GetGeometry()[i], 
-			*compound.GetMaterials()[i], 
-			compound.GetPoses()[i]);
-}
-
-} // namespace
-
 // Creates a dynamic actor from the given shape.
-lean::resource_ptr<RigidDynamic, true> CreateDynamicFromShape(Device &device, const ShapeCompound &shape, float mass)
+lean::resource_ptr<RigidDynamic, true> CreateDynamicFromShape(Device &device, const RigidShape &shape, float mass)
 {
 	PX3::scoped_pxptr_t<physx::PxRigidDynamic>::t pRigid(
 			ToImpl(device)->createRigidDynamic( physx::PxTransform::createIdentity() )
 		);
-
 	if (!pRigid)
 		LEAN_THROW_ERROR_MSG("PxPhysics::createRigidDynamic()");
 
-	CreateShapesFromCompound(*pRigid, ToImpl(shape));
+	SetShape(*pRigid, ToImpl(shape), nullptr);
 
 	if (mass > 0.0f && !physx::PxRigidBodyExt::setMassAndUpdateInertia(*pRigid, mass))
 		LEAN_THROW_ERROR_MSG("PxRigidBodyExt::setMassAndUpdateInertia()");
@@ -101,16 +83,15 @@ lean::resource_ptr<RigidDynamic, true> CreateDynamicSphere(Device &device, float
 }
 
 // Creates a static actor from the given shape.
-lean::resource_ptr<RigidStatic, true> CreateStaticFromShape(Device &device, const ShapeCompound &shape)
+lean::resource_ptr<RigidStatic, true> CreateStaticFromShape(Device &device, const RigidShape &shape)
 {
 	PX3::scoped_pxptr_t<physx::PxRigidStatic>::t pRigid(
 			ToImpl(device)->createRigidStatic( physx::PxTransform::createIdentity() )
 		);
-
 	if (!pRigid)
 		LEAN_THROW_ERROR_MSG("PxPhysics::createRigidStatic()");
 
-	CreateShapesFromCompound(*pRigid, ToImpl(shape));
+	SetShape(*pRigid, ToImpl(shape), nullptr);
 
 	return lean::bind_resource<RigidStatic>( new PX3::RigidStatic(pRigid.detach()) );
 }

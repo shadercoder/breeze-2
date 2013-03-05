@@ -2,12 +2,15 @@
 /* breeze Engine Graphics Module (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_GRAPHICS_TEXTURE
 #define BE_GRAPHICS_TEXTURE
 
 #include "beGraphics.h"
 #include "beFormat.h"
 #include <beCore/beShared.h>
+#include <beCore/beManagedResource.h>
+#include <beCore/beComponent.h>
 #include <beGraphics/beDevice.h>
 #include <beCore/beOpaqueHandle.h>
 #include <lean/smart/resource_ptr.h>
@@ -39,7 +42,7 @@ struct TextureDesc
 };
 
 /// Texture type enumeration.
-namespace TextureType
+struct TextureType
 {
 	/// Enumeration.
 	enum T
@@ -50,44 +53,38 @@ namespace TextureType
 
 		NotATexture		///< Not a texture.
 	};
-}
+	LEAN_MAKE_ENUM_STRUCT(TextureType)
+};
 
 class TextureCache;
 
 /// Texture resource interface.
-class Texture : public lean::nonassignable, public beCore::OptionalResource, public Implementation
+class LEAN_INTERFACE Texture : public lean::nonassignable, public beCore::OptionalResource,
+	public beCore::ManagedResource<TextureCache>, public beCore::HotResource<Texture>, public Implementation
 {
-protected:
-	LEAN_INLINE Texture& operator =(const Texture&) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(Texture)
 
 public:
-	virtual ~Texture() throw() { };
-
 	/// Gets the texture description.
 	virtual TextureDesc GetDesc() const = 0;
 	/// Gets the texture type.
 	virtual TextureType::T GetType() const = 0;
-
-	/// Gets the texture cache.
-	virtual TextureCache* GetCache() const = 0;
 };
 
 /// Texture view interface.
-class TextureView : public beCore::OptionalResource, public Implementation
+class LEAN_INTERFACE TextureView : public beCore::OptionalResource,
+	public beCore::ManagedResource<TextureCache>, public beCore::HotResource<TextureView>, public Implementation
 {
-protected:
-	LEAN_INLINE TextureView& operator =(const TextureView&) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(TextureView)
 
 public:
-	virtual ~TextureView() throw() { };
-
 	/// Gets the texture description.
 	virtual TextureDesc GetDesc() const = 0;
 	/// Gets the texture type.
 	virtual TextureType::T GetType() const = 0;
 
-	/// Gets the texture cache.
-	virtual TextureCache* GetCache() const = 0;
+	/// Gets the component type.
+	BE_GRAPHICS_API static const beCore::ComponentType* GetComponentType();
 };
 
 /// Texture view handle.
@@ -99,9 +96,9 @@ using beCore::ToImpl;
 class SwapChain;
 
 /// Loads a texture from the given file.
-BE_GRAPHICS_API lean::resource_ptr<Texture, true> LoadTexture(const Device &device, const lean::utf8_ntri &fileName, const TextureDesc *pDesc = nullptr, bool bSRGB = false, TextureCache *pCache = nullptr);
+BE_GRAPHICS_API lean::resource_ptr<Texture, true> LoadTexture(const Device &device, const lean::utf8_ntri &fileName, const TextureDesc *pDesc = nullptr, bool bSRGB = false);
 /// Loads a texture from the given memory.
-BE_GRAPHICS_API lean::resource_ptr<Texture, true> LoadTexture(const Device &device, const char *data, uint4 dataLength, const TextureDesc *pDesc = nullptr, bool bSRGB = false, TextureCache *pCache = nullptr);
+BE_GRAPHICS_API lean::resource_ptr<Texture, true> LoadTexture(const Device &device, const char *data, uint4 dataLength, const TextureDesc *pDesc = nullptr, bool bSRGB = false);
 /// Creates a texture view from the given texture.
 BE_GRAPHICS_API lean::resource_ptr<TextureView, true> ViewTexture(const Texture &texture, const Device &device);
 

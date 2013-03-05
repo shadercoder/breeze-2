@@ -44,9 +44,12 @@ Pixel VSMain(Vertex v)
 	return o;
 }
 
-GeometryOutput PSGeometry(Pixel p)
+GBufferBinding PSGeometry(Pixel p)
 {
-	return ReturnGeometry(p.NormalDepth.w, normalize(p.NormalDepth.xyz), DiffuseColor, SpecularColor);
+	return BindGBuffer(
+		MakeGeometry(p.NormalDepth.w, normalize(p.NormalDepth.xyz)),
+		MakeDiffuse(DiffuseColor.xyz, 1.0f - SpecularColor.w),
+		MakeSpecular(SpecularColor.xyz, 1.0f, DiffuseColor.w) );
 }
 
 technique11 Geometry <

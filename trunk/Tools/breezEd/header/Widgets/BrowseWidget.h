@@ -13,13 +13,15 @@ private:
 
 public:
 	/// Constructor.
-	BrowseWidget(QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	BrowseWidget(QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~BrowseWidget();
 
 	/// Installs the given event handler on all relevant child widgets.
 	void installFocusHandler(QObject *handler);
 
+	/// Gets the path widget.
+	QLineEdit* pathWidget() { return ui.pathEdit; }
 	/// Gets the path.
 	QString path() const;
 
@@ -34,6 +36,8 @@ Q_SIGNALS:
 	void editingStarted();
 	/// Path editing finished.
 	void editingFinished();
+	/// Path changed.
+	void pathSelected();
 };
 
 #endif

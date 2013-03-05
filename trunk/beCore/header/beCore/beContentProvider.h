@@ -2,6 +2,7 @@
 /* breeze Engine Core Module     (c) Tobias Zirr 2011 */
 /******************************************************/
 
+#pragma once
 #ifndef BE_CORE_CONTENT_PROVIDER
 #define BE_CORE_CONTENT_PROVIDER
 
@@ -14,11 +15,9 @@ namespace beCore
 {
 
 /// Content provider interface.
-class ContentProvider : public lean::cloneable
+class LEAN_INTERFACE ContentProvider : public lean::cloneable
 {
-protected:
-	LEAN_INLINE ContentProvider& operator =(const ContentProvider&) { return *this; }
-	LEAN_INLINE ~ContentProvider() throw() { }
+	LEAN_INTERFACE_BEHAVIOR(ContentProvider)
 
 public:
 	/// Gets the content identified by the given path.

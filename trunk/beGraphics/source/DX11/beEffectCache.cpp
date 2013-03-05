@@ -5,6 +5,7 @@
 #include "beGraphicsInternal/stdafx.h"
 #include "beGraphics/DX11/beEffectCache.h"
 #include "beGraphics/DX11/beEffect.h"
+#include "beGraphics/DX11/beTextureCache.h"
 #include "beGraphics/DX11/beDevice.h"
 #include "beGraphics/DX/beEffect.h"
 #include "beGraphics/DX/beIncludeManager.h"
@@ -13,10 +14,20 @@
 #include <lean/smart/cloneable_obj.h>
 #include <unordered_map>
 #include <vector>
+#include <lean/containers/simple_vector.h>
 #include <lean/containers/dynamic_array.h>
+#include <lean/smart/scoped_ptr.h>
 
+#include <lean/containers/simple_queue.h>
+#include <deque>
+
+#include <beCore/beResourceManagerImpl.hpp>
+#include <beCore/beResourceIndex.h>
 #include <beCore/beFileWatch.h>
-#include <beCore/beDependenciesImpl.h>
+
+#include <Effects11Lite/D3DEffectsLiteHooks.h>
+
+#include <lean/strings/hashing.h>
 
 #include <lean/io/raw_file.h>
 #include <lean/io/mapped_file.h>
@@ -24,6 +35,9 @@
 
 #include <lean/logging/errors.h>
 #include <lean/logging/log.h>
+
+extern template beg::DX11::TextureCache::ResourceManagerImpl;
+extern template beg::DX11::TextureCache::FiledResourceManagerImpl;
 
 namespace beGraphics
 {
@@ -37,54 +51,58 @@ struct EffectCache::M
 	lean::cloneable_obj<beCore::PathResolver> resolver;
 	lean::cloneable_obj<beCore::ContentProvider> provider;
 
-	lean::com_ptr<ID3D11Device> pDevice;
+	EffectCache *cache;
+	lean::com_ptr<api::Device> device;
+	lean::resource_ptr<TextureCache> pTextureCache;
 	utf8_string cacheDir;
 
-	/// Effect
-	struct ObservedEffect : public beCore::FileObserver
+	struct Info : public beCore::FileObserver
 	{
-		lean::resource_ptr<Effect> pEffect;
-		const utf8_string *mangledFile;
+		lean::resource_ptr<Effect> effect;
+		M *m;
 
-		EffectCache *pCache;
-		utf8_string file;
+		utf8_string resolvedFile;
 		utf8_string unresolvedFile;
 		typedef lean::dynamic_array<char> macro_backing_store;
 		macro_backing_store macroStore;
 		typedef lean::dynamic_array<D3D_SHADER_MACRO> macro_vector;
 		macro_vector macros;
-
-		beCore::Dependency<beGraphics::Effect*>* dependency;
+		typedef lean::dynamic_array<uint4> hook_vector;
+		hook_vector hooks;
 
 		/// Constructor.
-		ObservedEffect(lean::resource_ptr<Effect> pEffect, EffectCache *pCache)
-			: pEffect(pEffect.transfer()),
-			mangledFile(),
-			pCache(pCache),
-			dependency() { }
+		Info(Effect *effect, M *m)
+			: effect(effect),
+			m(m) { }
 
 		/// Method called whenever an observed effect has changed.
 		void FileChanged(const lean::utf8_ntri &file, lean::uint8 revision);
 	};
 
-	typedef std::unordered_map<utf8_string, ObservedEffect> effect_map;
-	effect_map effects;
+	typedef beCore::ResourceIndex<API::Effect, Info> resources_t;
+	resources_t resourceIndex;
 
-	typedef std::unordered_map<ID3DX11Effect*, ObservedEffect*> effect_info_map;
-	effect_info_map effectInfo;
+	typedef lean::simple_vector<lean::scoped_ptr<utf8_t[]>, lean::vector_policies::semipod> hook_vector;
+	typedef std::unordered_map< utf8_nt, uint4, lean::hash<utf8_nt> > hook_hash_map;
+	hook_vector hooks;
+	hook_vector unresolvedHooks;
+	hook_hash_map hookHashes;
 
 	beCore::FileWatch fileWatch;
-
-	beCore::DependenciesImpl<beGraphics::Effect*> dependencies;
+	typedef lean::simple_queue< std::deque< std::pair< lean::resource_ptr<Effect>, lean::resource_ptr<Effect> > > > replace_queue_t;
+	replace_queue_t replaceQueue;
+	lean::resource_ptr<beCore::ComponentMonitor> pComponentMonitor;
 
 	/// Constructor.
-	M(ID3D11Device *pDevice, const utf8_ntri &cacheDir, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
-		: pDevice(pDevice),
+	M(EffectCache *cache, api::Device *device, TextureCache *pTextureCache, const utf8_ntri &cacheDir, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
+		: cache(cache),
+		pTextureCache(pTextureCache),
+		device(device),
 		cacheDir( lean::canonical_path<utf8_string>(cacheDir) ),
 		resolver(resolver),
 		provider(contentProvider)
 	{
-		LEAN_ASSERT(pDevice != nullptr);
+		LEAN_ASSERT(device != nullptr);
 	}
 };
 
@@ -171,8 +189,29 @@ uint8 GetDependencyRevision(EffectCache::M &m, const lean::utf8_ntri &dependency
 	return dependencyRevision;
 }
 
+struct IncludeManagerEL : D3DEffectsLite::Include
+{
+	beGraphics::DX::IncludeManager &manager;
+
+	IncludeManagerEL(beGraphics::DX::IncludeManager &manager)
+		: manager(manager) { }
+
+	/// Opens the given include file.
+	HRESULT D3DEFFECTSLITE_STDCALL Open(D3DEffectsLiteIncludeType type, const char *fileName,
+		const void *parent, const void **child, UINT *childSize)
+	{
+		return manager.Open(D3D_INCLUDE_LOCAL, fileName, parent, child, childSize);
+	}
+	/// Closes the given include file.
+	void D3DEFFECTSLITE_STDCALL Close(const void *child)
+	{
+		manager.Close(child);
+	}
+};
+
 // Compiles and caches the given effect.
 lean::com_ptr<ID3DBlob, true> CompileAndCacheEffect(EffectCache::M &m, const lean::utf8_ntri &file, const D3D_SHADER_MACRO *pMacros,
+		const uint4 *hooks, uint4 hookCount,
 		const lean::utf8_ntri &cacheFile, const lean::utf8_ntri &dependencyFile,
 		const lean::utf8_ntri &unresolvedFile, std::vector<utf8_string> *pIncludeFiles)
 {
@@ -183,13 +222,25 @@ lean::com_ptr<ID3DBlob, true> CompileAndCacheEffect(EffectCache::M &m, const lea
 	VectorIncludeTracker includeTracker(pIncludeFiles);
 	VectorIncludeTracker rawDependencyTracker(&rawDependencies);
 	DX::IncludeManager includeManager(*m.resolver, *m.provider, &includeTracker, &rawDependencyTracker);
+	
+	lean::com_ptr<bec::Content> rawContent = m.provider->GetContent(file);
+
+	// Extract hashed hook files
+	lean::dynamic_array<const char*> hookFiles(hookCount);
+	for (uint4 i = 0; i < hookCount; ++i)
+		hookFiles.push_back(m.unresolvedHooks[i]);
+
+	// Track main file
+	includeTracker.Track(file);
+	rawDependencyTracker.Track(unresolvedFile);
+
+	// Apply hooks
+	IncludeManagerEL includeManagerEL(includeManager);
+	lean::com_ptr<D3DEffectsLite::Blob> hookedContent = D3DEffectsLite::HookEffect(rawContent->Data(), (UINT) rawContent->Size(),
+		&includeManagerEL, &hookFiles[0], hookCount);
 
 	// Compile effect
-	lean::com_ptr<ID3DBlob> pData = CompileEffect(file, pMacros, &includeManager);
-
-	// Replace resolved main file
-	if (!rawDependencies.empty())
-		rawDependencies[0] = unresolvedFile.to<utf8_string>();
+	lean::com_ptr<ID3DBlob> pData = CompileEffect((const char*) hookedContent->Data(), hookedContent->Size(), file, pMacros, &includeManager);
 
 	try
 	{
@@ -226,7 +277,7 @@ lean::com_ptr<ID3DBlob, true> CompileAndCacheEffect(EffectCache::M &m, const lea
 }
 
 // Re-compiles the given effect.
-lean::com_ptr<ID3DX11Effect, true> RecompileEffect(EffectCache::M &m, const lean::utf8_ntri &file, const D3D_SHADER_MACRO *pMacros,
+lean::com_ptr<ID3DX11Effect, true> RecompileEffect(EffectCache::M &m, const lean::utf8_ntri &file, const D3D_SHADER_MACRO *pMacros, const uint4 *hooks, uint4 hookCount,
 		const lean::utf8_ntri &mangledFile, const lean::utf8_ntri &unresolvedFile, std::vector<utf8_string> *pIncludeFiles)
 {
 	utf8_string cacheFile = GetCacheFile(m, mangledFile);
@@ -235,12 +286,13 @@ lean::com_ptr<ID3DX11Effect, true> RecompileEffect(EffectCache::M &m, const lean
 	if (pIncludeFiles)
 		pIncludeFiles->clear();
 
-	lean::com_ptr<ID3DBlob> pCompiledData = CompileAndCacheEffect(m, file, pMacros, cacheFile, dependencyFile, unresolvedFile, pIncludeFiles);
-	return CreateEffect(pCompiledData, m.pDevice);
+	lean::com_ptr<ID3DBlob> pCompiledData = CompileAndCacheEffect(m, file, pMacros, hooks, hookCount,
+		cacheFile, dependencyFile, unresolvedFile, pIncludeFiles);
+	return CreateEffect(pCompiledData, m.device);
 }
 
 // Compiles or loads the given effect.
-lean::com_ptr<ID3DX11Effect, true> CompileOrLoadEffect(EffectCache::M &m, const lean::utf8_ntri &file, const D3D_SHADER_MACRO *pMacros,
+lean::com_ptr<ID3DX11Effect, true> CompileOrLoadEffect(EffectCache::M &m, const lean::utf8_ntri &file, const D3D_SHADER_MACRO *pMacros, const uint4 *hooks, uint4 hookCount,
 		const lean::utf8_ntri &mangledFile, const lean::utf8_ntri &unresolvedFile, std::vector<utf8_string> *pIncludeFiles)
 {
 	lean::com_ptr<ID3DX11Effect> pEffect;
@@ -281,12 +333,12 @@ lean::com_ptr<ID3DX11Effect, true> CompileOrLoadEffect(EffectCache::M &m, const 
 		// ... recompile otherwise
 		if (!pEffectData)
 		{
-			pCompiledData = CompileAndCacheEffect(m, file, pMacros, cacheFile, dependencyFile, unresolvedFile, pIncludeFiles);
+			pCompiledData = CompileAndCacheEffect(m, file, pMacros, hooks, hookCount, cacheFile, dependencyFile, unresolvedFile, pIncludeFiles);
 			pEffectData = static_cast<const char*>( pCompiledData->GetBufferPointer() );
 			effectDataSize = static_cast<uint4>(pCompiledData->GetBufferSize());
 		}
 
-		pEffect = CreateEffect(pEffectData, effectDataSize, m.pDevice);
+		pEffect = CreateEffect(pEffectData, effectDataSize, m.device);
 	}
 
 	return pEffect.transfer();
@@ -295,8 +347,8 @@ lean::com_ptr<ID3DX11Effect, true> CompileOrLoadEffect(EffectCache::M &m, const 
 } // namespace
 
 // Constructor.
-EffectCache::EffectCache(ID3D11Device *pDevice, const utf8_ntri &cacheDir, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
-	: m( new M(pDevice, cacheDir, resolver, contentProvider) )
+EffectCache::EffectCache(ID3D11Device *device, TextureCache *pTextureCache, const utf8_ntri &cacheDir, const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
+	: m( new M(this, device, pTextureCache, cacheDir, resolver, contentProvider) )
 {
 }
 
@@ -305,35 +357,44 @@ EffectCache::~EffectCache()
 {
 }
 
+/// Constructs a new resource info for the given texture.
+LEAN_INLINE EffectCache::M::Info MakeResourceInfo(EffectCache::M &m, beg::Effect *effect, EffectCache *cache)
+{
+	return EffectCache::M::Info(ToImpl(effect), &m);
+}
+
+/// Gets the resource from the given resource index iterator.
+template <class Iterator>
+LEAN_INLINE Effect* GetResource(const EffectCache::M&, Iterator it)
+{
+	return it->effect;
+}
+
+/// Sets the resource for the given resource index iterator.
+template <class Iterator>
+LEAN_INLINE void SetResource(EffectCache::M&, Iterator it, beg::Effect *resource)
+{
+	it->effect = ToImpl(resource);
+}
+
+/// Gets the resource key for the given resource.
+LEAN_INLINE API::Effect* GetResourceKey(const EffectCache::M&, const beg::Effect *pResource)
+{
+	return (pResource) ? ToImpl(pResource)->Get() : nullptr;
+}
+
 namespace
 {
 
 /// Gets the mangled file name.
-inline utf8_string GetMangledFilename(const lean::utf8_ntri &path, const EffectMacro *pMacros, size_t macroCount)
+inline utf8_string GetMangledFilename(const lean::utf8_ntri &path, const EffectMacro *pMacros, size_t macroCount, const EffectHook *pHooks, size_t hookCount)
 {
 	utf8_string mangledFile;
 	
 	// Decorate path
-	if (pMacros && macroCount > 0)
+	if (pMacros && macroCount > 0 || pHooks && hookCount > 0)
 	{
-		beCore::Exchange::utf8_string mangled = MangleFilename(path, pMacros, macroCount);
-		mangledFile.assign(mangled.begin(), mangled.end());
-	}
-	else
-		mangledFile.assign(path.begin(), path.end());
-
-	return mangledFile;
-}
-
-/// Gets the mangled file name.
-inline utf8_string GetMangledFilename(const lean::utf8_ntri &path, const utf8_ntri &macros)
-{
-	utf8_string mangledFile;
-	
-	// Decorate path
-	if (!macros.empty())
-	{
-		beCore::Exchange::utf8_string mangled = MangleFilename(path, macros);
+		beCore::Exchange::utf8_string mangled = MangleFilename(path, pMacros, macroCount, pHooks, hookCount);
 		mangledFile.assign(mangled.begin(), mangled.end());
 	}
 	else
@@ -343,205 +404,277 @@ inline utf8_string GetMangledFilename(const lean::utf8_ntri &path, const utf8_nt
 }
 
 /// Adds the given effect.
-inline EffectCache::M::effect_map::iterator AddEffect(EffectCache::M &m, const utf8_ntri &unresolvedFile, const utf8_ntri &path, const utf8_string &mangledFile,
-	EffectCache::M::ObservedEffect::macro_vector &macros, EffectCache::M::ObservedEffect::macro_backing_store &macroStore, EffectCache *pCache)
+inline EffectCache::M::resources_t::file_iterator AddEffect(EffectCache::M &m, const utf8_ntri &unresolvedFile, const utf8_ntri &path, const utf8_string &mangledFile,
+	EffectCache::M::Info::macro_vector &macros, EffectCache::M::Info::macro_backing_store &macroStore, 
+	EffectCache::M::Info::hook_vector &hooks)
 {
-	EffectCache::M::effect_map::iterator itEffect;
+	LEAN_FREE_PIMPL(EffectCache);
+	M::resources_t::file_iterator itEffect;
 
 	typedef std::vector<utf8_string> file_vector;
 	file_vector includeFiles;
 
-	// WARNING: Resource pointer invalid after transfer
+	// WARNING: Moved data invalid after transfer
 	{
 		LEAN_LOG("Attempting to load effect \"" << mangledFile << "\"");
 
-		lean::resource_ptr<Effect> pEffect = lean::bind_resource(
-				new Effect( 
-					CompileOrLoadEffect(m, path, &macros[0], mangledFile, unresolvedFile, &includeFiles).get(),
-					pCache
-				)
+		lean::resource_ptr<Effect> effect = new_resource Effect( 
+				CompileOrLoadEffect(m, path, &macros[0], &hooks[0], (uint4) hooks.size(), mangledFile, unresolvedFile, &includeFiles).get(),
+				m.pTextureCache
 			);
 
 		LEAN_LOG("Effect \"" << unresolvedFile.c_str() << "\" created successfully");
 
 		// Insert effect into cache
-		itEffect = m.effects.insert(
-				EffectCache::M::effect_map::value_type(
-					mangledFile,
-					EffectCache::M::ObservedEffect( pEffect.transfer(), pCache )
-				)
-			).first;
-		itEffect->second.mangledFile = &itEffect->first;
-		itEffect->second.file.assign(path.begin(), path.end());
-		itEffect->second.unresolvedFile.assign(unresolvedFile.begin(), unresolvedFile.end());
-		itEffect->second.macroStore = LEAN_MOVE(macroStore);
-		itEffect->second.macros = LEAN_MOVE(macros);
+		M::resources_t:: iterator rit = m.resourceIndex.Insert(
+				*effect,
+				m.resourceIndex.GetUniqueName( lean::io::get_stem<utf8_string>(unresolvedFile) ),
+				M::Info(effect, &m)
+			);
+		effect->SetCache(m.cache);
+		itEffect = m.resourceIndex.SetFile(rit, mangledFile);
+		rit->resolvedFile.assign(path.begin(), path.end());
+		rit->unresolvedFile.assign(unresolvedFile.begin(), unresolvedFile.end());
+		rit->macroStore = LEAN_MOVE(macroStore);
+		rit->macros = LEAN_MOVE(macros);
+		rit->hooks = LEAN_MOVE(hooks);
 	}
-
-	// Link back to effect info
-	m.effectInfo[*itEffect->second.pEffect] = &itEffect->second;
-
-	// Allow for monitoring of dependencies
-	itEffect->second.dependency = m.dependencies.AddDependency(itEffect->second.pEffect);
 
 	// Watch entire include graph
 	for (file_vector::const_iterator itFile = includeFiles.begin(); itFile != includeFiles.end(); ++itFile)
-		m.fileWatch.AddObserver(*itFile, &itEffect->second);
+		m.fileWatch.AddObserver(*itFile, &*itEffect);
 
 	return itEffect;
+}
+
+inline lean::scoped_ptr<utf8_t[], lean::critical_ref> AllocateString(utf8_ntri str)
+{
+	size_t size = str.length() + 1;
+	lean::scoped_ptr<utf8_t[]> hookString( new utf8_t[size] );
+	memcpy(hookString, str.begin(), sizeof(utf8_t) * size);
+	return hookString.transfer();
+}
+
+uint4 AddHook(EffectCache::M &m, const EffectHook &hook)
+{
+	utf8_string unresolvedHook = lean::from_range<utf8_string>(hook.File);
+	beCore::Exchange::utf8_string resolvedHook = m.resolver->Resolve(unresolvedHook, true);
+
+	EffectCache::M::hook_hash_map::iterator it = m.hookHashes.find(utf8_nt(resolvedHook));
+
+	if (it == m.hookHashes.end())
+	{
+		uint4 hash = static_cast<uint4>(m.hooks.size());
+
+		try
+		{
+			m.unresolvedHooks.push_back().reset( AllocateString(unresolvedHook).detach() );
+			m.hooks.push_back().reset( AllocateString(resolvedHook).detach() );
+		}
+		LEAN_ASSERT_NOEXCEPT
+
+		it = m.hookHashes.insert(std::make_pair(m.hooks.back().get(), hash)).first;
+	}
+
+	return it->second;
+}
+
+uint4 GetHook(const EffectCache::M::hook_hash_map &hookHashes, utf8_ntri hook)
+{
+	EffectCache::M::hook_hash_map::const_iterator it = hookHashes.find(utf8_nt(hook));
+	return (it != hookHashes.end()) ? it->second : -1;
 }
 
 } // namespace
 
 // Gets the given effect compiled using the given options from file.
-Effect* EffectCache::GetEffect(const lean::utf8_ntri &unresolvedFile, const EffectMacro *pMacros, size_t macroCount)
+Effect* EffectCache::GetByFile(const lean::utf8_ntri &unresolvedFile, const EffectMacro *pMacros, uint4 macroCount, const EffectHook *pHooks, uint4 hookCount)
 {
+	LEAN_PIMPL();
+
 	// Get absolute path
-	beCore::Exchange::utf8_string path = m->resolver->Resolve(unresolvedFile, true);
+	beCore::Exchange::utf8_string path = m.resolver->Resolve(unresolvedFile, true);
 
 	// Try to find cached effect
-	utf8_string mangledFile = GetMangledFilename(path, pMacros, macroCount);
-	M::effect_map::iterator itEffect = m->effects.find(mangledFile);
+	utf8_string mangledFile = GetMangledFilename(path, pMacros, macroCount, pHooks, hookCount);
+	M::resources_t::file_iterator it = m.resourceIndex.FindByFile(mangledFile);
 
-	if (itEffect == m->effects.end())
+	if (it == m.resourceIndex.EndByFile())
 	{
-		M::ObservedEffect::macro_backing_store macroStore;
-		EffectCache::M::ObservedEffect::macro_vector macros = DX::ToAPI( pMacros, (pMacros) ? macroCount : 0, macroStore );
+		M::Info::macro_backing_store macroStore;
+		M::Info::macro_vector macros = DX::ToAPI( pMacros, (pMacros) ? macroCount : 0, macroStore );
+		
+		M::Info::hook_vector hooks(hookCount);
+		for (size_t i = 0; i < hookCount; ++i)
+			hooks.push_back( AddHook(m, pHooks[i]) );
 
-		itEffect = AddEffect(
-				*m, unresolvedFile, path, mangledFile,
-				macros, macroStore,
-				this
+		it = AddEffect(
+				m, unresolvedFile, path, mangledFile,
+				macros, macroStore, hooks
 			);
 	}
 
-	return itEffect->second.pEffect;
+	return it->effect;
 }
 
 // Gets the given effect compiled using the given options from file.
-Effect* EffectCache::GetEffect(const lean::utf8_ntri &unresolvedFile, const utf8_ntri &macroString)
+Effect* EffectCache::GetByFile(const lean::utf8_ntri &unresolvedFile, const utf8_ntri &macroString, const utf8_ntri &hookString)
 {
-	// Get absolute path
-	beCore::Exchange::utf8_string path = m->resolver->Resolve(unresolvedFile, true);
-	
-	// Try to find cached effect
-	utf8_string mangledFile = GetMangledFilename(path, macroString);
-	M::effect_map::iterator itEffect = m->effects.find(mangledFile);
+	lean::dynamic_array<EffectMacro> macros = DX::ToMacros(macroString);
+	lean::dynamic_array<EffectHook> hooks = DX::ToHooks(hookString);
 
-	if (itEffect == m->effects.end())
-	{
-		M::ObservedEffect::macro_backing_store macroStore;
-		EffectCache::M::ObservedEffect::macro_vector macros = DX::ToAPI( macroString, macroStore );
+	return GetByFile(unresolvedFile, &macros[0], macros.size(), &hooks[0], hooks.size());
+}
 
-		itEffect = AddEffect(
-				*m, unresolvedFile, path, mangledFile,
-				macros, macroStore,
-				this
-			);
-	}
-
-	return itEffect->second.pEffect;
+/// The file associated with the given resource has changed.
+LEAN_INLINE void ResourceFileChanged(EffectCache::M &m, EffectCache::M::resources_t::iterator it, const utf8_ntri &newFile, const utf8_ntri &oldFile)
+{
+	// Watch texture changes
+	if (!newFile.empty())
+		m.fileWatch.AddObserver(newFile, &*it);
 }
 
 // Gets the given effect compiled using the given options from file, if it has been loaded.
-Effect* EffectCache::IdentifyEffect(const lean::utf8_ntri &file, const utf8_ntri &macros) const
+Effect* EffectCache::IdentifyEffect(const lean::utf8_ntri &file, const utf8_ntri &macroString, const utf8_ntri &hookString) const
 {
-	// Get absolute path
-	beCore::Exchange::utf8_string path = m->resolver->Resolve(file, true);
-	
-	// Try to find cached effect
-	utf8_string mangledFile = GetMangledFilename(path, macros);
-	M::effect_map::const_iterator itEffect = m->effects.find(mangledFile);
+	LEAN_PIMPL_CONST();
 
-	return (itEffect != m->effects.end())
-		? itEffect->second.pEffect
-		: nullptr;
+	// Get absolute path
+	beCore::Exchange::utf8_string path = m.resolver->Resolve(file, true);
+	
+	lean::dynamic_array<EffectMacro> macros = DX::ToMacros(macroString);
+	lean::dynamic_array<EffectHook> hooks = DX::ToHooks(hookString);
+
+	// Try to find cached effect
+	utf8_string mangledFile = GetMangledFilename(path, &macros[0], macros.size(), &hooks[0], hooks.size());
+	M::resources_t::const_file_iterator it = m.resourceIndex.FindByFile(mangledFile);
+
+	return (it != m.resourceIndex.EndByFile()) ? it->effect : nullptr;
 }
 
-// Notifies dependent listeners about dependency changes.
-void EffectCache::NotifyDependents()
+// Sets the component monitor.
+void EffectCache::SetComponentMonitor(beCore::ComponentMonitor *componentMonitor)
 {
-	m->dependencies.NotifiyAllSyncDependents();
+	m->pComponentMonitor = componentMonitor;
+}
+
+// Gets the component monitor.
+beCore::ComponentMonitor* EffectCache::GetComponentMonitor() const
+{
+	return m->pComponentMonitor;
+}
+
+// Gets the file of the given effect.
+utf8_ntr EffectCache::GetFile(const beGraphics::Effect *pEffect) const
+{
+	LEAN_PIMPL_CONST();
+
+	M::resources_t::const_iterator it = m.resourceIndex.Find( GetResourceKey(m, pEffect) );
+	return (it != m.resourceIndex.End())
+		? utf8_ntr(it->resolvedFile)
+		: utf8_ntr("");
 }
 
 // Gets the file (or name) of the given effect.
-utf8_ntr EffectCache::GetFile(const beGraphics::Effect &effect, beCore::Exchange::utf8_string *pMacros, bool *pIsFile) const
+void EffectCache::GetParameters(const beg::Effect *pEffect, beCore::Exchange::utf8_string *pMacros, beCore::Exchange::utf8_string *pHooks) const
 {
-	utf8_ntr file("");
+	LEAN_PIMPL_CONST();
 
-	M::effect_info_map::const_iterator itInfo = m->effectInfo.find( ToImpl(effect) );
+	M::resources_t::const_iterator it = m.resourceIndex.Find( GetResourceKey(m, pEffect) );
 
-	if (itInfo != m->effectInfo.end())
+	if (it != m.resourceIndex.End())
 	{
-		file = utf8_ntr(itInfo->second->file);
-
 		if (pMacros)
 		{
-			pMacros->reserve( itInfo->second->macroStore.size() );
-			DX::ToString(&itInfo->second->macros.front(), &itInfo->second->macros.back() + 1, *pMacros);
+			pMacros->reserve( it->macroStore.size() );
+			DX::ToString(&it->macros.front(), &it->macros.back() + 1, *pMacros);
 		}
 
-		if (pIsFile)
-			// Back pointer only valid for files
-			*pIsFile = (itInfo->second->pCache != nullptr);
-	}
+		if (pHooks)
+		{
+			bool bFirstHook = true;
 
-	return file;
+			for (M::Info::hook_vector::const_iterator itHook = it->hooks.begin(), itHookEnd = it->hooks.end(); itHook != itHookEnd; ++itHook)
+			{
+				if (!bFirstHook)
+					pHooks->append(1, ';');
+				bFirstHook = false;
+
+				pHooks->append(m.unresolvedHooks[*itHook]);
+			}
+		}
+	}
 }
 
 // Checks if the given effects are cache-equivalent.
 bool EffectCache::Equivalent(const beGraphics::Effect &left, const beGraphics::Effect &right, bool bIgnoreMacros) const
 {
+	LEAN_PIMPL_CONST();
+
 	const beGraphics::DX11::Effect &leftImpl = ToImpl(left);
 	const beGraphics::DX11::Effect &rightImpl = ToImpl(right);
 
 	if (leftImpl.Get() == rightImpl.Get())
 		return true;
 
-	M::effect_info_map::const_iterator itLeftInfo = m->effectInfo.find(leftImpl);
-	M::effect_info_map::const_iterator itRightInfo = m->effectInfo.find(rightImpl);
+	M::resources_t::const_iterator itLeftInfo = m.resourceIndex.Find(leftImpl);
+	M::resources_t::const_iterator itRightInfo = m.resourceIndex.Find(rightImpl);
 
-	if (itLeftInfo != m->effectInfo.end() && itRightInfo != m->effectInfo.end())
+	if (itLeftInfo != m.resourceIndex.End() && itRightInfo != m.resourceIndex.End())
 	{
 		if (itLeftInfo == itRightInfo)
 			return true;
 		else if (bIgnoreMacros)
-			return (itLeftInfo->second->file == itRightInfo->second->file);
+			return (itLeftInfo->resolvedFile == itRightInfo->resolvedFile);
 	}
 
 	return false;
 }
 
-// Gets the dependencies registered for the given effect.
-beCore::Dependency<beGraphics::Effect*>* EffectCache::GetDependency(const beGraphics::Effect &effect)
+// Commits changes / reacts to changes.
+void EffectCache::Commit()
 {
-	M::effect_info_map::iterator itEffect = m->effectInfo.find( ToImpl(effect) );
+	LEAN_PIMPL();
 
-	return (itEffect != m->effectInfo.end())
-		? itEffect->second->dependency
-		: nullptr;
+	bool bHasChanges = !m.replaceQueue.empty();
+
+	while (!m.replaceQueue.empty())
+	{
+		M::replace_queue_t::value_type replacePair = m.replaceQueue.pop_front();
+		Replace(replacePair.first, replacePair.second);
+	}
+
+	// Notify dependents
+	if (bHasChanges && m.pComponentMonitor)
+		m.pComponentMonitor->Replacement.AddChanged(Effect::GetComponentType());
 }
 
 // Method called whenever an observed effect has changed.
-void EffectCache::M::ObservedEffect::FileChanged(const lean::utf8_ntri &file, lean::uint8 revision)
+void EffectCache::M::Info::FileChanged(const lean::utf8_ntri &file, lean::uint8 revision)
 {
+	LEAN_PIMPL();
+
+	M::resources_t::iterator it = m.resourceIndex.Find(this->effect->Get());
+	LEAN_ASSERT(it != m.resourceIndex.End());
+	M::Info &info = *it;
+	LEAN_ASSERT(&info == this);
+
 	typedef std::vector<utf8_string> file_vector;
 	file_vector includeFiles;
 
-	// MONITOR: Non-atomic asynchronous assignment!
-	this->pEffect = lean::bind_resource(
-			new Effect( 
-				RecompileEffect(*this->pCache->m, file, &this->macros[0], *this->mangledFile, this->unresolvedFile, &includeFiles).get(),
-				this->pCache
-			)
+	lean::resource_ptr<Effect> newEffect = new_resource Effect( 
+			RecompileEffect(
+				m, info.resolvedFile, &info.macros[0], &info.hooks[0], (uint4) info.hooks.size(),
+				m.resourceIndex.GetFile(it), info.unresolvedFile, &includeFiles
+			).get(),
+			m.pTextureCache
 		);
+
+	m.replaceQueue.push_back( std::make_pair(info.effect, newEffect) );
 
 	// Enhance watched include graph
 	for (file_vector::const_iterator itFile = includeFiles.begin(); itFile != includeFiles.end(); ++itFile)
-		this->pCache->m->fileWatch.AddOrKeepObserver(*itFile, this);
-
-	// Notify dependent listeners
-	this->pCache->m->dependencies.DependencyChanged(this->dependency, this->pEffect);
+		m.fileWatch.AddObserver(*itFile, this);
 }
 
 /// Gets the path resolver.
@@ -553,16 +686,15 @@ const beCore::PathResolver& EffectCache::GetPathResolver() const
 } // namespace
 
 // Creates a new effect cache.
-lean::resource_ptr<EffectCache, true> CreateEffectCache(const Device &device, const utf8_ntri &cacheDir, 
+lean::resource_ptr<EffectCache, true> CreateEffectCache(const Device &device, TextureCache *pTextureCache, const utf8_ntri &cacheDir, 
 	const beCore::PathResolver &resolver, const beCore::ContentProvider &contentProvider)
 {
-	return lean::bind_resource(
-		new DX11::EffectCache(
-				ToImpl(device),
-				cacheDir,
-				resolver,
-				contentProvider
-			)
+	return new_resource DX11::EffectCache(
+			ToImpl(device),
+			ToImpl(pTextureCache),
+			cacheDir,
+			resolver,
+			contentProvider
 		);
 }
 

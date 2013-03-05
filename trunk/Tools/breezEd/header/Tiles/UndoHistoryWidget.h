@@ -16,7 +16,7 @@ private:
 
 public:
 	/// Constructor.
-	UndoHistoryWidget(QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	UndoHistoryWidget(QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~UndoHistoryWidget();
 

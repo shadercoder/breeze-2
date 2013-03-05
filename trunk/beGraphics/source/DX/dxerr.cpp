@@ -56,25 +56,25 @@
 //--------------------------------------------------------------------------------------
 #define  CHK_ERR(hrchk, strOut) \
         case hrchk: \
-             return L##strOut;
+             return strOut;
 
 #define  CHK_ERRA(hrchk) \
         case hrchk: \
-             return L#hrchk;
+             return #hrchk;
 
 #define HRESULT_FROM_WIN32b(x) ((HRESULT)(x) <= 0 ? ((HRESULT)(x)) : ((HRESULT) (((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000)))
 
 #define  CHK_ERR_WIN32A(hrchk) \
         case HRESULT_FROM_WIN32b(hrchk): \
         case hrchk: \
-             return L#hrchk;
+             return #hrchk;
 
 #define  CHK_ERR_WIN32_ONLY(hrchk, strOut) \
         case HRESULT_FROM_WIN32b(hrchk): \
-             return L##strOut;
+             return strOut;
 
 //-----------------------------------------------------
-const WCHAR* WINAPI DXGetErrorStringW( _In_ HRESULT hr )
+const CHAR* WINAPI DXGetErrorStringA( _In_ HRESULT hr )
 {
    switch(hr)
    {
@@ -97,6 +97,8 @@ const WCHAR* WINAPI DXGetErrorStringW( _In_ HRESULT hr )
         CHK_ERRA(E_FAIL)
         CHK_ERRA(E_ACCESSDENIED)
         CHK_ERRA(E_PENDING)
+
+#ifdef LEAN_DEBUG
         CHK_ERRA(CO_E_INIT_TLS)
         CHK_ERRA(CO_E_INIT_SHARED_ALLOCATOR)
         CHK_ERRA(CO_E_INIT_MEMORY_ALLOCATOR)
@@ -3001,7 +3003,7 @@ const WCHAR* WINAPI DXGetErrorStringW( _In_ HRESULT hr )
         CHK_ERR_WIN32A(ERROR_IPSEC_IKE_MM_LIMIT)
         CHK_ERR_WIN32A(ERROR_IPSEC_IKE_NEGOTIATION_DISABLED)
         CHK_ERR_WIN32A(ERROR_IPSEC_IKE_NEG_STATUS_END)
-
+#endif
 // -------------------------------------------------------------
 // ddraw.h error codes
 // -------------------------------------------------------------
@@ -3422,7 +3424,7 @@ const WCHAR* WINAPI DXGetErrorStringW( _In_ HRESULT hr )
         CHK_ERRA(XAPO_E_FORMAT_UNSUPPORTED)
     }
 
-    return L"Unknown";
+    return "Unknown";
 }
 
 //--------------------------------------------------------------------------------------
@@ -3434,15 +3436,15 @@ const WCHAR* WINAPI DXGetErrorStringW( _In_ HRESULT hr )
 
 #define  CHK_ERRA(hrchk) \
         case hrchk: \
-             wcscpy_s( desc, count, L#hrchk );
+             strcpy_s( desc, count, #hrchk );
 
 #define  CHK_ERR(hrchk, strOut) \
         case hrchk: \
-             wcscpy_s( desc, count, L##strOut );
+             strcpy_s( desc, count, strOut );
 
 
 //--------------------------------------------------------------------------------------
-void WINAPI DXGetErrorDescriptionW( _In_ HRESULT hr, _Out_cap_(count) WCHAR* desc, _In_ size_t count )
+void WINAPI DXGetErrorDescriptionA( _In_ HRESULT hr, _Out_cap_(count) CHAR* desc, _In_ size_t count )
 {
     if ( !count )
         return;
@@ -3450,14 +3452,14 @@ void WINAPI DXGetErrorDescriptionW( _In_ HRESULT hr, _Out_cap_(count) WCHAR* des
     *desc = 0;
 
     // First try to see if FormatMessage knows this hr
-    LPWSTR errorText = nullptr;
+    LPSTR errorText = nullptr;
 
-    DWORD result = FormatMessageW( FORMAT_MESSAGE_FROM_SYSTEM |FORMAT_MESSAGE_ALLOCATE_BUFFER, nullptr, hr, 
-                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&errorText, 0, nullptr );
+    DWORD result = FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM |FORMAT_MESSAGE_ALLOCATE_BUFFER, nullptr, hr, 
+                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&errorText, 0, nullptr );
 
     if (result > 0 && errorText)
     {
-        wcscpy_s( desc, count, errorText );
+        strcpy_s( desc, count, errorText );
 
         if ( errorText )
             LocalFree( errorText );
@@ -3895,49 +3897,49 @@ void WINAPI DXGetErrorDescriptionW( _In_ HRESULT hr, _Out_cap_(count) WCHAR* des
 }
 
 //-----------------------------------------------------------------------------
-HRESULT WINAPI DXTraceW( _In_z_ const WCHAR* strFile, _In_ DWORD dwLine, _In_ HRESULT hr,
-                         _In_opt_ const WCHAR* strMsg, _In_ bool bPopMsgBox )
+HRESULT WINAPI DXTraceA( _In_z_ const CHAR* strFile, _In_ DWORD dwLine, _In_ HRESULT hr,
+                         _In_opt_ const CHAR* strMsg, _In_ bool bPopMsgBox )
 {
-    WCHAR strBufferFile[MAX_PATH];
-    WCHAR strBufferLine[128];
-    WCHAR strBufferError[256];
-    WCHAR strBufferMsg[1024];
-    WCHAR strBuffer[BUFFER_SIZE];
+    CHAR strBufferFile[MAX_PATH];
+    CHAR strBufferLine[128];
+    CHAR strBufferError[256];
+    CHAR strBufferMsg[1024];
+    CHAR strBuffer[BUFFER_SIZE];
 
-    swprintf_s( strBufferLine, 128, L"%lu", dwLine );
+    sprintf_s( strBufferLine, 128, "%lu", dwLine );
     if( strFile )
     {
-       swprintf_s( strBuffer, BUFFER_SIZE, L"%s(%s): ", strFile, strBufferLine );
-       OutputDebugStringW( strBuffer );
+       sprintf_s( strBuffer, BUFFER_SIZE, "%s(%s): ", strFile, strBufferLine );
+       OutputDebugStringA( strBuffer );
     }
 
-    size_t nMsgLen = (strMsg) ? wcsnlen_s( strMsg, 1024 ) : 0;
+    size_t nMsgLen = (strMsg) ? strlen( strMsg ) : 0;
     if( nMsgLen > 0 )
     {
-        OutputDebugStringW( strMsg );
-        OutputDebugStringW( L" " );
+        OutputDebugStringA( strMsg );
+        OutputDebugStringA( " " );
     }
 
-    swprintf_s( strBufferError, 256, L"%s (0x%0.8x)", DXGetErrorStringW(hr), hr );
-    swprintf_s( strBuffer, BUFFER_SIZE, L"hr=%s", strBufferError );
-    OutputDebugStringW( strBuffer );
+    sprintf_s( strBufferError, 256, "%s (0x%0.8x)", DXGetErrorStringA(hr), hr );
+    sprintf_s( strBuffer, BUFFER_SIZE, "hr=%s", strBufferError );
+    OutputDebugStringA( strBuffer );
 
-    OutputDebugStringW( L"\n" );
+    OutputDebugStringA( "\n" );
 
     if( bPopMsgBox )
     {
-        wcscpy_s( strBufferFile, MAX_PATH, L"" );
+        strcpy_s( strBufferFile, MAX_PATH, "" );
         if( strFile )
-            wcscpy_s( strBufferFile, MAX_PATH, strFile );
+            strcpy_s( strBufferFile, MAX_PATH, strFile );
 
-        wcscpy_s( strBufferMsg, 1024, L"" );
+        strcpy_s( strBufferMsg, 1024, "" );
         if( nMsgLen > 0 )
-            swprintf_s( strBufferMsg, 1024, L"Calling: %s\n", strMsg );
+            sprintf_s( strBufferMsg, 1024, "Calling: %s\n", strMsg );
 
-        swprintf_s( strBuffer, BUFFER_SIZE, L"File: %s\nLine: %s\nError Code: %s\n%sDo you want to debug the application?",
+        sprintf_s( strBuffer, BUFFER_SIZE, "File: %s\nLine: %s\nError Code: %s\n%sDo you want to debug the application?",
                     strBufferFile, strBufferLine, strBufferError, strBufferMsg );
 
-        int nResult = MessageBoxW( GetForegroundWindow(), strBuffer, L"Unexpected error encountered", MB_YESNO | MB_ICONERROR );
+        int nResult = MessageBoxA( GetForegroundWindow(), strBuffer, "Unexpected error encountered", MB_YESNO | MB_ICONERROR );
         if( nResult == IDYES )
             DebugBreak();
     }

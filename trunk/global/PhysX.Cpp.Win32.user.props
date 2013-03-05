@@ -1,11 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <IncludePath>C:\SDKs\PhysX\3.2\Include;C:\SDKs\PhysX\3.2\Include\extensions;C:\SDKs\PhysX\3.2\Include\characterkinematic;C:\SDKs\PhysX\3.2\Include\foundation;C:\SDKs\PhysX\3.2\Include\pxtask;C:\SDKs\PhysX\3.2\Include\cooking;$(IncludePath)</IncludePath>
+  <PropertyGroup Label="UserMacros">
+    <BE_PHYSX_DIR>C:\SDKs\PhysX\3.2.3\</BE_PHYSX_DIR>
   </PropertyGroup>
   <PropertyGroup>
-    <LibraryPath>C:\SDKs\PhysX\3.2\Lib\win32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(BE_PHYSX_DIR)Include;$(BE_PHYSX_DIR)Include\extensions;$(BE_PHYSX_DIR)Include\characterkinematic;$(BE_PHYSX_DIR)Include\foundation;$(BE_PHYSX_DIR)Include\pxtask;$(BE_PHYSX_DIR)Include\cooking;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <PropertyGroup>
+    <LibraryPath>$(BE_PHYSX_DIR)Lib\win32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <BuildMacro Include="BE_PHYSX_DIR">
+      <Value>$(BE_PHYSX_DIR)</Value>
+    </BuildMacro>
+  </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile />
     <Link>

@@ -2,6 +2,7 @@
 /* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
 /****************************************************/
 
+#pragma once
 #ifndef BE_SCENE_ABSTRACT_PROCESSING_EFFECT_DRIVER
 #define BE_SCENE_ABSTRACT_PROCESSING_EFFECT_DRIVER
 
@@ -9,8 +10,12 @@
 #include "beEffectDriver.h"
 #include "bePassSequence.h"
 #include "beQueuedPass.h"
+#include "beEffectBinderCache.h"
 #include <beGraphics/beDeviceContext.h>
 #include <beGraphics/beStateManager.h>
+#include <lean/containers/strided_ptr.h>
+
+#include <lean/functional/callable.h>
 
 namespace beScene
 {
@@ -19,21 +24,20 @@ namespace beScene
 class Perspective;
 
 /// Processing effect driver base.
-class AbstractProcessingEffectDriver : public EffectDriver, public PassSequence<QueuedPass>
+class LEAN_INTERFACE AbstractProcessingEffectDriver : public EffectDriver, public PassSequence< QueuedPass, lean::strided_ptr<const QueuedPass> >
 {
-protected:
-	LEAN_INLINE AbstractProcessingEffectDriver& operator =(const AbstractProcessingEffectDriver&) { return *this; }
+	LEAN_SHARED_INTERFACE_BEHAVIOR(AbstractProcessingEffectDriver)
 
 public:
-	/// Applies the given perspective data to the effect bound by this effect driver.
-	virtual bool Apply(const Perspective *pPerspective,
-		beGraphics::StateManager& stateManager, const beGraphics::DeviceContext &context) const = 0;
+	/// Signature of draw job call backed for every pass to be rendered.
+	typedef void (DrawJobSignature)(uint4 passIdx, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context);
 
-	/// Applies the given pass to the effect bound by this effect driver.
-	virtual bool ApplyPass(const QueuedPass *pPass, uint4 &nextStep,
-		const void *pProcessor, const Perspective *pPerspective,
-		beGraphics::StateManager& stateManager, const beGraphics::DeviceContext &context) const = 0;
+	/// Draws the given pass.
+	virtual void Render(const QueuedPass *pass, const void *pProcessor, const Perspective *pPerspective,
+		lean::vcallable<DrawJobSignature> &drawJob, beGraphics::StateManager &stateManager, const beGraphics::DeviceContext &context) const = 0;
 };
+
+typedef EffectDriverCache<AbstractProcessingEffectDriver> AbstractProcessingEffectDriverCache;
 
 } // namespace
 

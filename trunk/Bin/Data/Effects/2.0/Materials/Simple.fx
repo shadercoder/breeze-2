@@ -11,13 +11,46 @@ cbuffer SetupConstants
 	<
 		String UIName = "Diffuse";
 		String UIWidget = "Color";
-	> = float4(1.0f, 1.0f, 1.0f, 0.053f);
+	> = float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	float4 SpecularColor
 	<
 		String UIName = "Specular";
 		String UIWidget = "Color";
-	> = float4(0.0f, 0.0f, 0.0f, 0.1f);
+	> = float4(0.1f, 0.1f, 0.1f, 1.0f);
+	
+	float Roughness
+	<
+		String UIName = "Roughness";
+		String UIWidget = "Slider";
+		float UIMin = 0.0f;
+		float UIMax = 1.0f;
+	> = 0.2f;
+
+	float Reflectance
+	<
+		String UIName = "Reflectance";
+		String UIWidget = "Slider";
+		float UIMin = 0.0f;
+		float UIMax = 1.0f;
+	> = 0.0f;
+
+	float Metalness
+	<
+		String UIName = "Metalness";
+		String UIWidget = "Slider";
+		float UIMin = 0.0f;
+		float UIMax = 1.0f;
+	> = 0.0f;
+
+	float MetalFresnel
+	<
+		String UIName = "Metal Fresnel";
+		String UIWidget = "Slider";
+		float UIMin = 0.0f;
+		float UIMax = 1.0f;
+	> = 0.0f;
+
 }
 
 struct Vertex
@@ -43,9 +76,12 @@ Pixel VSMain(Vertex v)
 	return o;
 }
 
-GeometryOutput PSGeometry(Pixel p)
+GBufferBinding PSGeometry(Pixel p)
 {
-	return ReturnGeometry(p.NormalDepth.w, normalize(p.NormalDepth.xyz), DiffuseColor, SpecularColor);
+	return BindGBuffer(
+		MakeGeometry(p.NormalDepth.w, normalize(p.NormalDepth.xyz)),
+		MakeDiffuse(DiffuseColor.xyz, Roughness),
+		MakeSpecular(SpecularColor.xyz, SpecularColor.w, saturate(Reflectance + DiffuseColor.w), Metalness, MetalFresnel) );
 }
 
 technique11 Geometry <

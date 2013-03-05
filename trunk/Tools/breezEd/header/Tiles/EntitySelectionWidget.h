@@ -3,7 +3,7 @@
 
 #include "ui_EntitySelectionWidget.h"
 
-#include <beEntitySystem/beEntity.h>
+#include <beEntitySystem/beEntities.h>
 
 class QTimer;
 
@@ -30,7 +30,7 @@ private:
 
 public:
 	/// Constructor.
-	EntitySelectionWidget(Editor *pEditor, QWidget *pParent = nullptr, Qt::WFlags flags = 0);
+	EntitySelectionWidget(Editor *pEditor, QWidget *pParent = nullptr, Qt::WindowFlags flags = 0);
 	/// Destructor.
 	~EntitySelectionWidget();
 
