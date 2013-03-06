@@ -1,5 +1,5 @@
 /****************************************************/
-/* breeze Engine Scene Module  (c) Tobias Zirr 2011 */
+/* breeze Engine Scene Module  (c) Tobias Zirr 2013 */
 /****************************************************/
 
 #include "beSceneInternal/stdafx.h"
@@ -7,87 +7,43 @@
 
 #include <beEntitySystem/beEntities.h>
 
+#include <beCore/beReflectionProperties.h>
+#include <beCore/bePersistentIDs.h>
+
+#include "beScene/beRenderingPipeline.h"
+#include "beScene/bePipelinePerspective.h"
+#include "beScene/bePerspectiveStatePool.h"
+#include "beScene/beQueueStatePool.h"
+
 #include "beScene/DX11/beMesh.h"
 #include "beScene/beRenderableMesh.h"
 #include "beScene/beRenderableMaterial.h"
 #include "beScene/beRenderableEffectData.h"
 #include "beScene/beAbstractRenderableEffectDriver.h"
-#include "beScene/bePipelinePerspective.h"
-#include "beScene/beRenderingPipeline.h"
-
-// Crap
-#include "beScene/beResourceManager.h"
-#include "beScene/beEffectDrivenRenderer.h"
-#include "beScene/beRenderableMaterialCache.h"
-
-#include <beCore/beReflectionProperties.h>
-#include <beCore/bePersistentIDs.h>
-
-#include <beCore/bePooled.h>
-#include <beCore/bePool.h>
-#include "beScene/bePerspectiveStatePool.h"
-#include "beScene/beQueueStatePool.h"
 
 #include "beScene/beRenderContext.h"
 #include <beGraphics/Any/beDevice.h>
 #include <beGraphics/Any/beStateManager.h>
 #include <beGraphics/Any/beDeviceContext.h>
 
-#include <beGraphics/DX/beError.h>
-
-#include <lean/functional/algorithm.h>
-
-#include <beMath/beUtility.h>
 #include <beMath/beVector.h>
 #include <beMath/beMatrix.h>
 #include <beMath/beSphere.h>
 #include <beMath/bePlane.h>
+#include <beMath/beUtility.h>
 
-#include <lean/containers/multi_vector.h>
-#include <lean/containers/simple_vector.h>
+#include <lean/functional/algorithm.h>
+
 #include <lean/memory/chunk_pool.h>
+#include <lean/containers/simple_vector.h>
+#include <lean/containers/multi_vector.h>
 
 #include <lean/io/numeric.h>
 
+#include <beGraphics/DX/beError.h>
+
 namespace beScene
 {
-
-namespace
-{
-
-/// Default effect.
-inline utf8_string& GetDefaultEffectFile()
-{
-	static utf8_string defaultEffectFile = "Materials/Simple.fx";
-	return defaultEffectFile;
-}
-
-} // namespace
-
-// Sets the default mesh effect file.
-void SetMeshDefaultEffect(const utf8_ntri &file)
-{
-	GetDefaultEffectFile().assign(file.begin(), file.end());
-}
-
-// Gets the default mesh effect file.
-beCore::Exchange::utf8_string GetMeshDefaultEffect()
-{
-	const utf8_string &file = GetDefaultEffectFile();
-	return beCore::Exchange::utf8_string(file.begin(), file.end());
-}
-
-// Gets the default material for meshes.
-RenderableMaterial* GetMeshDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer)
-{
-	const char *materialName = "beMeshController.Material";
-
-	beg::Material *material = resources.MaterialCache()->GetByName(materialName);
-	if (!material)
-		material = resources.MaterialCache()->NewByFile(GetDefaultEffectFile(), materialName);
-
-	return renderer.RenderableMaterials()->GetMaterial(material);
-}
 
 BE_CORE_PUBLISH_COMPONENT(MeshController)
 BE_CORE_PUBLISH_COMPONENT(MeshControllers)
@@ -315,16 +271,60 @@ struct MeshMaterialSorter
 	}
 };
 
-template <class Counter>
-struct SequenceGenerator
+/// Sorts controllers by mesh, material and shader (moving null meshes outwards).
+void SortControllers(MeshControllers::M::controllers_t &destControllers, const MeshControllers::M::controllers_t &srcControllers)
 {
-	Counter counter;
+	LEAN_FREE_PIMPL(MeshControllers);
+	
+	uint4 controllerCount = (uint4) srcControllers.size();
+	
+	lean::scoped_ptr<uint4[]> sortIndices( new uint4[controllerCount] );
+	std::generate_n(&sortIndices[0], controllerCount, lean::increment_gen<uint4>(0));
+	std::sort(&sortIndices[0], &sortIndices[controllerCount], MeshMaterialSorter(srcControllers));
+	
+	destControllers.clear();
+	lean::append_swizzled(srcControllers, &sortIndices[0], &sortIndices[controllerCount], destControllers);
+}
 
-	SequenceGenerator(Counter counter)
-		: counter(counter) { }
+uint4 LinkControllersToUniqueMeshesAndCountLODs(MeshControllers::M::Data &data)
+{
+	LEAN_FREE_PIMPL(MeshControllers);
 
-	LEAN_INLINE Counter operator ()() { return counter++; }
-};
+	const uint4 controllerCount = (uint4) data.controllers.size();
+	data.controllersToMeshLODs.resize(controllerCount);
+	data.uniqueMeshes.clear();
+	data.activeControllerCount = 0;
+
+	const RenderableMesh *prevMesh = nullptr;
+	bec::Range<uint4> prevMeshLODRange;
+
+	for (uint4 internalIdx = 0; internalIdx < controllerCount; ++internalIdx)
+	{
+		const M::Record &controller = data.controllers[internalIdx];
+
+		// Ignore null & detached meshes at the back
+		if (!controller.Mesh || !data.controllers(M::state)[internalIdx].Attached)
+			break;
+
+		++data.activeControllerCount;
+
+		// Add new unique mesh
+		if (prevMesh != controller.Mesh)
+		{
+			data.uniqueMeshes.push_back(controller.Mesh);
+			
+			prevMesh = controller.Mesh;
+			prevMeshLODRange.Begin = prevMeshLODRange.End;
+			prevMeshLODRange.End += Size4(prevMesh->GetLODs());
+		}
+
+		// Let controllers reference unique mesh LOD ranges
+		data.controllersToMeshLODs[internalIdx] = prevMeshLODRange;
+	}
+
+	// NOTE: Mesh LODs initialized during construction of queues, see below
+	return prevMeshLODRange.End;
+}
 
 MeshControllers::M::Data::Queue::Pass ConstructPass(const DX11::Mesh *mesh, const beGraphics::MaterialTechnique *material,
 	const AbstractRenderableEffectDriver *effectDriver, const QueuedPass *meshPass)
@@ -335,7 +335,6 @@ MeshControllers::M::Data::Queue::Pass ConstructPass(const DX11::Mesh *mesh, cons
 	
 	uint4 passSignatureSize = 0;
 	const char *passSignature = meshPass->GetInputSignature(passSignatureSize);
-
 	BE_THROW_DX_ERROR_MSG(
 		beGraphics::Any::GetDevice(*mesh->GetVertexBuffer())->CreateInputLayout(
 			mesh->GetVertexElementDescs(),
@@ -352,6 +351,81 @@ MeshControllers::M::Data::Queue::Pass ConstructPass(const DX11::Mesh *mesh, cons
 	return pass;
 }
 
+void AddTechniquePasses(MeshControllers::M::Data &data, uint4 meshLODIdx, const DX11::Mesh *mesh, RenderableMaterial::Technique technique)
+{
+	LEAN_FREE_PIMPL(MeshControllers);
+
+	AbstractRenderableEffectDriver::PassRange passes = technique.TypedDriver()->GetPasses();
+
+	for (uint4 passIdx = 0, passCount = Size4(passes); passIdx < passCount; ++passIdx)
+	{
+		const QueuedPass *pass = &passes.Begin[passIdx];
+		PipelineQueueID queueID(pass->GetStageID(), pass->GetQueueID());
+		M::Data::Queue &queue = data.queues.GetQueue(queueID);
+
+		// Link mesh LOD to beginning of pass range & insert pass
+		queue.meshLODsToPasses.resize( meshLODIdx + 1, (uint4) queue.passes.size());
+		queue.passes.push_back( ConstructPass(mesh, technique.Technique, technique.TypedDriver(), pass) );
+	}
+}
+
+void AddSubsetPasses(MeshControllers::M::Data &data, uint4 meshLODIdx,
+					 bec::Range<uint4> subsets, RenderableMesh::MeshRange meshes, RenderableMesh::MaterialRange materials)
+{
+	LEAN_FREE_PIMPL(MeshControllers);
+
+	for (uint4 subsetIdx = subsets.Begin; subsetIdx < subsets.End; ++subsetIdx)
+	{
+		const DX11::Mesh *mesh = ToImpl(meshes[subsetIdx]);
+		const RenderableMaterial *material = materials[subsetIdx];
+
+		// NOTE: Ignore incomplete subsets
+		if (!mesh || !material)
+			continue;
+
+		RenderableMaterial::TechniqueRange meshTechniques = material->GetTechniques();
+
+		for (uint4 techniqueIdx = 0, techniqueCount = Size4(meshTechniques); techniqueIdx < techniqueCount; ++techniqueIdx)
+			AddTechniquePasses(data, meshLODIdx, mesh, meshTechniques.Begin[techniqueIdx]);
+	}
+}
+
+void CollectLODsAndBuildQueues(MeshControllers::M::Data &data, uint4 totalLODCount)
+{
+	LEAN_FREE_PIMPL(MeshControllers);
+
+	data.meshLODs.clear();
+	data.meshLODs.reserve(totalLODCount);
+
+	data.queues.Clear();
+
+	// Build queues from meshes
+	for (uint4 uniqueMeshIdx = 0, uniqueMeshCount = (uint4) data.uniqueMeshes.size(); uniqueMeshIdx < uniqueMeshCount; ++uniqueMeshIdx)
+	{
+		const RenderableMesh *meshCompound = data.uniqueMeshes[uniqueMeshIdx];
+		RenderableMesh::LODRange meshLODs = meshCompound->GetLODs();
+		RenderableMesh::MeshRange meshes = meshCompound->GetMeshes();
+		RenderableMesh::MaterialRange materials = meshCompound->GetMaterials();
+
+		for (uint4 lod = 0, lodCount = Size4(meshLODs); lod < lodCount; ++lod)
+		{
+			const RenderableMesh::LOD &meshLOD = meshLODs.Begin[lod];
+
+			uint4 meshLODIdx = (uint4) data.meshLODs.size();
+			data.meshLODs.push_back( M::Data::MeshLOD(meshLOD.Distance) );
+
+			AddSubsetPasses(data, meshLODIdx, meshLOD.Subsets, meshes, materials);
+		}
+	}
+
+	// Discard unused queues
+	data.queues.Shrink();
+
+	// IMPORTANT: Finish implicit mesh LOD to pass offset ranges
+	for (M::Data::Queue *it = data.queues.begin(), *itEnd = data.queues.end(); it < itEnd; ++it)
+		it->meshLODsToPasses.resize(totalLODCount + 1, (uint4) it->passes.size());
+}
+
 } // namespace
 
 // Commits changes.
@@ -365,124 +439,19 @@ void MeshControllers::Commit()
 	const M::Data &prevData = *m.data;
 	M::Data &data = *m.dataAux;
 
-	if (prevData.structureRevision == m.controllerRevision)
-		return;
+	if (prevData.structureRevision != m.controllerRevision)
+	{
+		// Rebuild internal data structures in swap buffer
+		SortControllers(data.controllers, prevData.controllers);
+		uint4 totalLODCount = LinkControllersToUniqueMeshesAndCountLODs(data);
+		CollectLODsAndBuildQueues(data, totalLODCount);
 	
+		data.structureRevision = m.controllerRevision;
 
-	uint4 controllerCount = (uint4) prevData.controllers.size();
-	data.controllers.clear();
-
-	// Sort controllers by mesh, material and shader (moving null meshes outwards)
-	{
-		lean::scoped_ptr<uint4[]> sortIndices( new uint4[controllerCount] );
-		std::generate_n(&sortIndices[0], controllerCount, SequenceGenerator<uint4>(0));
-		std::sort(&sortIndices[0], &sortIndices[controllerCount], MeshMaterialSorter(prevData.controllers));
-		lean::append_swizzled(prevData.controllers, &sortIndices[0], &sortIndices[controllerCount], data.controllers);
+		// Swap current data with updated data
+		std::swap(m.data, m.dataAux);
+		M::FixControllerHandles(m.data->controllers);
 	}
-
-
-	data.activeControllerCount = 0;
-	uint4 meshLODCount = 0;
-	data.controllersToMeshLODs.resize(controllerCount);
-	data.uniqueMeshes.clear();
-	data.meshLODs.clear();
-	data.activeLODCount = 0;
-
-	// Link controllers to meshes
-	{
-		const RenderableMesh *prevMesh = nullptr;
-		bec::Range<uint4> prevMeshLODRange;
-
-		for (uint4 internalIdx = 0; internalIdx < controllerCount; ++internalIdx)
-		{
-			const M::Record &controller = data.controllers[internalIdx];
-
-			// Ignore null & detached meshes at the back
-			if (!controller.Mesh || !data.controllers(M::state)[internalIdx].Attached)
-				break;
-
-			// Add new unique mesh
-			if (prevMesh != controller.Mesh)
-			{
-				data.uniqueMeshes.push_back(controller.Mesh);
-				prevMesh = controller.Mesh;
-				prevMeshLODRange.Begin = prevMeshLODRange.End;
-
-				uint4 lodCount = Size4(prevMesh->GetLODs());
-				prevMeshLODRange.End += lodCount;
-				data.activeLODCount = max(lodCount, data.activeLODCount);
-			}
-
-			// Let controllers reference unique mesh LOD ranges
-			data.controllersToMeshLODs[internalIdx] = prevMeshLODRange;
-			++data.activeControllerCount;
-		}
-
-		// NOTE: Mesh LODs initialized during construction of queues, see below
-		meshLODCount = prevMeshLODRange.End;
-	}
-
-	data.meshLODs.reserve(meshLODCount);
-	data.queues.Clear();
-
-	// Build queues from meshes
-	for (uint4 meshCompoundIdx = 0, meshCompoundCount = (uint4) data.uniqueMeshes.size(); meshCompoundIdx < meshCompoundCount; ++meshCompoundIdx)
-	{
-		const RenderableMesh *meshCompound = data.uniqueMeshes[meshCompoundIdx];
-		RenderableMesh::LODRange meshLODs = meshCompound->GetLODs();
-		RenderableMesh::MeshRange meshes = meshCompound->GetMeshes();
-		RenderableMesh::MaterialRange materials = meshCompound->GetMaterials();
-
-		for (uint4 lod = 0, lodCount = Size4(meshLODs); lod < lodCount; ++lod)
-		{
-			const RenderableMesh::LOD &meshLOD = meshLODs.Begin[lod];
-
-			uint4 meshLODIdx = (uint4) data.meshLODs.size();
-			data.meshLODs.push_back( M::Data::MeshLOD(meshLOD.Distance) );
-
-			for (uint4 meshIdx = meshLOD.Subsets.Begin; meshIdx < meshLOD.Subsets.End; ++meshIdx)
-			{
-				const DX11::Mesh *mesh = ToImpl(meshes[meshIdx]);
-				const RenderableMaterial *material = materials[meshIdx];
-
-				// NOTE: Ignore incomplete subsets
-				if (!mesh || !material)
-					continue;
-
-				RenderableMaterial::TechniqueRange meshTechniques = material->GetTechniques();
-
-				for (uint4 techniqueIdx = 0, techniqueCount = Size4(meshTechniques); techniqueIdx < techniqueCount; ++techniqueIdx)
-				{
-					const AbstractRenderableEffectDriver *effectDriver = meshTechniques.Begin[techniqueIdx].TypedDriver();
-					const beGraphics::MaterialTechnique *material = meshTechniques.Begin[techniqueIdx].Technique;
-
-					AbstractRenderableEffectDriver::PassRange passes = effectDriver->GetPasses();
-
-					for (uint4 passIdx = 0, passCount = Size4(passes); passIdx < passCount; ++passIdx)
-					{
-						const QueuedPass *pass = &passes.Begin[passIdx];
-						PipelineQueueID queueID(pass->GetStageID(), pass->GetQueueID());
-						M::Data::Queue &queue = data.queues.GetQueue(queueID);
-
-						// Link mesh LOD to beginning of pass range & insert pass
-						queue.meshLODsToPasses.resize( meshLODIdx + 1, (uint4) queue.passes.size());
-						queue.passes.push_back( ConstructPass(mesh, material, effectDriver, pass) );
-					}
-				}
-			}
-		}
-	}
-
-	// Discard unused queues
-	data.queues.Shrink();
-
-	// IMPORTANT: Finish implicit mesh LOD to pass offset ranges
-	for (M::Data::Queue *it = data.queues.begin(), *itEnd = data.queues.end(); it < itEnd; ++it)
-		it->meshLODsToPasses.resize(meshLODCount + 1, (uint4) it->passes.size());
-
-	data.structureRevision = m.controllerRevision;
-	std::swap(m.data, m.dataAux);
-	M::FixControllerHandles(m.data->controllers);
 }
 
 struct MeshControllers::M::PerspectiveState : public PerspectiveStateBase<const MeshControllers::M, PerspectiveState>
@@ -1061,6 +1030,52 @@ bool MeshController::IsComponentReplaceable(uint4 idx) const
 void MeshController::SetComponent(uint4 idx, const lean::any &pComponent)
 {
 	SetMesh( any_cast<RenderableMesh*>(pComponent) );
+}
+
+} // namespace
+
+#include "beScene/beResourceManager.h"
+#include "beScene/beEffectDrivenRenderer.h"
+#include "beScene/beRenderableMaterialCache.h"
+
+namespace beScene
+{
+
+namespace
+{
+
+/// Default effect.
+inline utf8_string& GetDefaultEffectFile()
+{
+	static utf8_string defaultEffectFile = "Materials/Simple.fx";
+	return defaultEffectFile;
+}
+
+} // namespace
+
+// Sets the default mesh effect file.
+void SetMeshDefaultEffect(const utf8_ntri &file)
+{
+	GetDefaultEffectFile().assign(file.begin(), file.end());
+}
+
+// Gets the default mesh effect file.
+beCore::Exchange::utf8_string GetMeshDefaultEffect()
+{
+	const utf8_string &file = GetDefaultEffectFile();
+	return beCore::Exchange::utf8_string(file.begin(), file.end());
+}
+
+// Gets the default material for meshes.
+RenderableMaterial* GetMeshDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer)
+{
+	const char *materialName = "beMeshController.Material";
+
+	beg::Material *material = resources.MaterialCache()->GetByName(materialName);
+	if (!material)
+		material = resources.MaterialCache()->NewByFile(GetDefaultEffectFile(), materialName);
+
+	return renderer.RenderableMaterials()->GetMaterial(material);
 }
 
 } // namespace

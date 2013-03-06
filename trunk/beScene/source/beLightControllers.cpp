@@ -388,17 +388,6 @@ struct MaterialSorter
 	}
 };
 
-template <class Counter>
-struct SequenceGenerator
-{
-	Counter counter;
-
-	SequenceGenerator(Counter counter)
-		: counter(counter) { }
-
-	LEAN_INLINE Counter operator ()() { return counter++; }
-};
-
 LightControllersBase::M::Data::Queue::Pass ConstructPass(const beGraphics::MaterialTechnique *material,
 	const AbstractLightEffectDriver *effectDriver, const QueuedPass *driverPass)
 {
@@ -434,7 +423,7 @@ void LightControllers<LightController>::Commit()
 	// Sort controllers by material and shader (moving null materials outwards)
 	{
 		lean::scoped_ptr<uint4[]> sortIndices( new uint4[controllerCount] );
-		std::generate_n(&sortIndices[0], controllerCount, SequenceGenerator<uint4>(0));
+		std::generate_n(&sortIndices[0], controllerCount, lean::increment_gen<uint4>(0));
 		std::sort(&sortIndices[0], &sortIndices[controllerCount], MaterialSorter<typename M::controllers_t>(prevData.controllers));
 		lean::append_swizzled(prevData.controllers, &sortIndices[0], &sortIndices[controllerCount], data.controllers);
 	}

@@ -187,23 +187,12 @@ struct NameSorter
 	}
 };
 
-template <class Counter>
-struct SequenceGenerator
-{
-	Counter counter;
-
-	SequenceGenerator(Counter counter)
-		: counter(counter) { }
-
-	LEAN_INLINE Counter operator ()() { return counter++; }
-};
-
 /// Makes a sorted index list from the given range of named elements.
 template <class Range>
 void GenerateSortedIndices(Material::indices_t &sortedIndices, const Range &namedRange)
 {
 	sortedIndices.resize(namedRange.end() - namedRange.begin());
-	std::generate(sortedIndices.begin(), sortedIndices.end(), SequenceGenerator<uint4>(0));
+	std::generate(sortedIndices.begin(), sortedIndices.end(), lean::increment_gen<uint4>(0));
 	std::sort(sortedIndices.begin(), sortedIndices.end(), NameSorter<Range>(namedRange));
 }
 

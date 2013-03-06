@@ -10,6 +10,7 @@
 #include "beAABDef.h"
 #include "beVector.h"
 #include "beMatrix.h"
+#include "beUtility.h"
 
 namespace beMath
 {
@@ -46,7 +47,8 @@ inline aab<Component, Dimension> mulh(const aab<Component, Dimension> &box, cons
 {
 	using std::swap;
 
-	aab<Component, Dimension> result( mat[Dimension], mat[Dimension] );
+	vector<Component, Dimension> pos(mat[Dimension]);
+	aab<Component, Dimension> result = aab<Component, Dimension>(pos, pos);
 
 	for (size_t i = 0; i < Dimension; ++i)
 		for (size_t j = 0; j < Dimension; ++j)
@@ -63,6 +65,16 @@ inline aab<Component, Dimension> mulh(const aab<Component, Dimension> &box, cons
 			result.max[j] += b;
 		}
 
+	return result;
+}
+
+/// Gets the losest point contained by the given aab.
+template <class Component, size_t Dimension>
+inline vector<Component, Dimension> closest_point(const aab<Component, Dimension> &box, const vector<Component, Dimension> &pos)
+{
+	vector<Component, Dimension> result(uninitialized);
+	for (size_t i = 0; i < Dimension; ++i)
+		result[i] = clamp(pos[i], box.min[i], box.max[i]);
 	return result;
 }
 
