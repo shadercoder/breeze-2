@@ -16,7 +16,19 @@ namespace beMath
 template <class Scalar>
 LEAN_INLINE Scalar sign(Scalar s)
 {
-	return (s < Scalar(0)) ? Scalar(-1) : Scalar(1);
+	return (s >= Scalar(0)) ? Scalar(1) : Scalar(-1);
+}
+
+/// -1, 0 or 1, depending on the value.
+template <class Scalar>
+LEAN_INLINE Scalar sign0(Scalar s)
+{
+	if (s > Scalar(0))
+		return Scalar(1);
+	else if (s < Scalar(0))
+		return Scalar(-1);
+	else
+		return Scalar(0);
 }
 
 /// Value squared.

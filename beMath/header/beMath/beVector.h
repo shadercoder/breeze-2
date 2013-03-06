@@ -23,6 +23,22 @@ LEAN_INLINE Component dot(const tuple<LeftClass, Component, Dimension> &left, co
 	return scalar;
 }
 
+/// Reflects the given vector on the given normalized axis.
+template <class Class, class Component, size_t Dimension>
+LEAN_INLINE vector<Component, 3> reflect(const tuple<Class, Component, Dimension> &vec,
+										 const tuple<Class, Component, Dimension> &axis)
+{
+	return vec - 2.0f * dot(vec, axis) * axis;
+}
+
+/// Flattens the given vector on the given normalized axis.
+template <class Class, class Component, size_t Dimension>
+LEAN_INLINE vector<Component, 3> flatten(const tuple<Class, Component, Dimension> &vec,
+										 const tuple<Class, Component, Dimension> &axis)
+{
+	return vec - dot(vec, axis) * axis;
+}
+
 /// Computes the squared length of the given vector.
 template <class Class, class Component, size_t Dimension>
 LEAN_INLINE Component lengthSq(const tuple<Class, Component, Dimension> &vector)

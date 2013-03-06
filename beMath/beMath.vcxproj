@@ -161,6 +161,7 @@
     <ClInclude Include="header\beMath\beAABFwd.h" />
     <ClInclude Include="header\beMath\beComparisonOperators.h" />
     <ClInclude Include="header\beMath\beConstants.h" />
+    <ClInclude Include="header\beMath\beIntersect.h" />
     <ClInclude Include="header\beMath\beMath.h" />
     <ClInclude Include="header\beMath\beMatrix.h" />
     <ClInclude Include="header\beMath\beMatrixDef.h" />
