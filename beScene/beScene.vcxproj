@@ -224,7 +224,6 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beScene\beInlineMeshSerialization.h" />
     <ClInclude Include="header\beScene\beLight.h" />
     <ClInclude Include="header\beScene\beLightControllers.h" />
-    <ClInclude Include="header\beScene\beLightControllerSerializer.h" />
     <ClInclude Include="header\beScene\beLightEffectBinder.h" />
     <ClInclude Include="header\beScene\beLightEffectData.h" />
     <ClInclude Include="header\beScene\beLightEffectDriver.h" />
@@ -237,7 +236,6 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beScene\beMesh.h" />
     <ClInclude Include="header\beScene\beMeshCompound.h" />
     <ClInclude Include="header\beScene\beMeshControllers.h" />
-    <ClInclude Include="header\beScene\beMeshControllerSerializer.h" />
     <ClInclude Include="header\beScene\beMeshGeneration.h" />
     <ClInclude Include="header\beScene\beMeshCache.h" />
     <ClInclude Include="header\beScene\beMeshSerialization.h" />

@@ -26,10 +26,10 @@ public:
 	using ComponentSerializer<Controller>::Load;
 	/// Loads a controller from the given xml node.
 	BE_ENTITYSYSTEM_API virtual void Load(Controller *pController, const rapidxml::xml_node<lean::utf8_t> &node,
-		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const;
+		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const LEAN_OVERRIDE;
 	/// Saves the given controller to the given XML node.
 	BE_ENTITYSYSTEM_API virtual void Save(const Controller *pController, rapidxml::xml_node<lean::utf8_t> &node,
-		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue) const;
+		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue) const LEAN_OVERRIDE;
 };
 
 } // namespace

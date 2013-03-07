@@ -104,9 +104,6 @@
     <ClInclude Include="header\bePhysics\beInlineMaterialSerialization.h">
       <Filter>Source Files\Serialization</Filter>
     </ClInclude>
-    <ClInclude Include="header\bePhysics\beRigidControllerSerializer.h">
-      <Filter>Source Files\Serialization</Filter>
-    </ClInclude>
     <ClInclude Include="header\bePhysics\beSerializationParameters.h">
       <Filter>Source Files\Serialization</Filter>
     </ClInclude>

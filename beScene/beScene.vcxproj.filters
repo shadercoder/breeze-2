@@ -275,12 +275,6 @@
     <ClInclude Include="header\beScene\beMeshSerialization.h">
       <Filter>Source Files\Serialization</Filter>
     </ClInclude>
-    <ClInclude Include="header\beScene\beMeshControllerSerializer.h">
-      <Filter>Source Files\Serialization</Filter>
-    </ClInclude>
-    <ClInclude Include="header\beScene\beLightControllerSerializer.h">
-      <Filter>Source Files\Serialization</Filter>
-    </ClInclude>
     <ClInclude Include="header\beScene\beInlineMeshSerialization.h">
       <Filter>Source Files\Serialization</Filter>
     </ClInclude>

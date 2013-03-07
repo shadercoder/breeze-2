@@ -215,7 +215,6 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\bePhysicsInternal\targetver.h" />
     <ClInclude Include="header\bePhysics\beResourceManager.h" />
     <ClInclude Include="header\bePhysics\beRigidActors.h" />
-    <ClInclude Include="header\bePhysics\beRigidControllerSerializer.h" />
     <ClInclude Include="header\bePhysics\beRigidDynamicControllers.h" />
     <ClInclude Include="header\bePhysics\beRigidShape.h" />
     <ClInclude Include="header\bePhysics\beRigidShapeCache.h" />

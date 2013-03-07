@@ -138,7 +138,6 @@ public:
 
 		uint4 structureRevision;
 
-		uint4 activeLODCount;
 		meshes_t uniqueMeshes;
 		mesh_lods_t meshLODs;
 
@@ -149,8 +148,7 @@ public:
 		queues_t queues;
 
 		Data()
-			: structureRevision(0),
-			activeLODCount(0) { }
+			: structureRevision(0) { }
 	};
 	Data dataSets[2];
 	Data *data, *dataAux;
@@ -359,7 +357,7 @@ void AddTechniquePasses(MeshControllers::M::Data &data, uint4 meshLODIdx, const 
 
 	for (uint4 passIdx = 0, passCount = Size4(passes); passIdx < passCount; ++passIdx)
 	{
-		const QueuedPass *pass = &passes.Begin[passIdx];
+		const QueuedPass *pass = &passes[passIdx];
 		PipelineQueueID queueID(pass->GetStageID(), pass->GetQueueID());
 		M::Data::Queue &queue = data.queues.GetQueue(queueID);
 
@@ -386,7 +384,7 @@ void AddSubsetPasses(MeshControllers::M::Data &data, uint4 meshLODIdx,
 		RenderableMaterial::TechniqueRange meshTechniques = material->GetTechniques();
 
 		for (uint4 techniqueIdx = 0, techniqueCount = Size4(meshTechniques); techniqueIdx < techniqueCount; ++techniqueIdx)
-			AddTechniquePasses(data, meshLODIdx, mesh, meshTechniques.Begin[techniqueIdx]);
+			AddTechniquePasses(data, meshLODIdx, mesh, meshTechniques[techniqueIdx]);
 	}
 }
 
@@ -409,7 +407,7 @@ void CollectLODsAndBuildQueues(MeshControllers::M::Data &data, uint4 totalLODCou
 
 		for (uint4 lod = 0, lodCount = Size4(meshLODs); lod < lodCount; ++lod)
 		{
-			const RenderableMesh::LOD &meshLOD = meshLODs.Begin[lod];
+			const RenderableMesh::LOD &meshLOD = meshLODs[lod];
 
 			uint4 meshLODIdx = (uint4) data.meshLODs.size();
 			data.meshLODs.push_back( M::Data::MeshLOD(meshLOD.Distance) );

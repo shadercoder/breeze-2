@@ -207,6 +207,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beEntitySystemInternal\stdafx.h" />
     <ClInclude Include="header\beEntitySystemInternal\targetver.h" />
     <ClInclude Include="header\beEntitySystem\beGenericControllerSerializer.h" />
+    <ClInclude Include="header\beEntitySystem\beGenericGroupControllerSerializer.h" />
     <ClInclude Include="header\beEntitySystem\beRenderable.h" />
     <ClInclude Include="header\beEntitySystem\beRenderableHost.h" />
     <ClInclude Include="header\beEntitySystem\beSerialization.h" />

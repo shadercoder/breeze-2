@@ -142,7 +142,7 @@ public:
 	{
 		return (&layout == m_pLayout)
 			? GetValue<Value>( parameterID )
-			: GetValue<Value>( layout.GetName(parameterID) )
+			: GetValue<Value>( layout.GetName(parameterID) );
 	}
 	/// Gets the value of the parameter identified by the given ID.
 	template <class Value>
@@ -197,6 +197,43 @@ public:
 	/// Gets the parameter layout.
 	LEAN_INLINE const ParameterLayout* GetLayout() const { return m_pLayout; }
 };
+
+template <class Value, class Factory>
+Value MakeAndSet(ParameterSet &parameters, const ParameterLayout &layout, uint4 parameterID, const Factory &factory)
+{
+	Value result = factory(parameters, layout);
+	parameters.SetValue<Value>(layout, parameterID, result);
+	return result;
+}
+
+template <class Value, class Factory>
+Value MakeAndSet(const ParameterSet &parameters, const ParameterLayout &layout, uint4 parameterID, const Factory &factory)
+{
+	return factory(parameters, layout);
+}
+
+/// Gets the value stored under the given id, creates and stores it if missing.
+template <class Value, class Parameters, class Factory>
+Value GetOrMake(Parameters &parameters, const ParameterLayout &layout, uint4 parameterID, const Factory &factory)
+{
+	const Value* pValue = parameters.GetValue<Value>(layout, parameterID);
+	return (pValue) ? *pValue : MakeAndSet<Value>(parameters, layout, parameterID, factory);
+}
+
+/// Gets the value stored under the given name, creates and stores it if missing.
+template <class Value, class Token, class Parameters, class Factory>
+Value GetOrMake(Parameters &parameters, ParameterLayout &layout, const utf8_ntri &name, const Factory &factory)
+{
+	static const uint4 parameterID = layout.Add(name);
+	return GetOrMake<Value>(parameters, layout, parameterID, factory);
+}
+
+/// Gets the value stored under the given name, creates and stores it if missing.
+template <class Value, class Token, class Parameters, class Factory>
+Value GetOrMake(Parameters &parameters, const Factory &factory)
+{
+	return GetOrMake<Value, Token>(parameters, factory.ParameterLayout(), factory.ParameterName(), factory);
+}
 
 } // namespace
 
