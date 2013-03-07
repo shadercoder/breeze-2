@@ -207,47 +207,30 @@ public:
 	}
 };
 
-const uint4 ShapeImportSerializerID = beEntitySystem::GetSerializationParameters().Add("bePhysics.ShapeImportSerializer");
-const uint4 ShapeSerializerID = beEntitySystem::GetSerializationParameters().Add("bePhysics.ShapeSerializer");
+struct InlineSerializationToken;
 
 } // namespace
 
 // Schedules the given shape for inline serialization.
 void SaveShape(const AssembledShape *shape, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue)
 {
-	ShapeImportSerializer *pSerializer = parameters.GetValueDefault< ShapeImportSerializer* >(beEntitySystem::GetSerializationParameters(), ShapeImportSerializerID);
-
-	// Create serializer on first call
-	if (!pSerializer)
-	{
-		// NOTE: Serialization queue takes ownership
-		pSerializer = new ShapeImportSerializer();
-		queue.AddSerializationJob(pSerializer);
-		parameters.SetValue< ShapeImportSerializer* >(beEntitySystem::GetSerializationParameters(), ShapeImportSerializerID, pSerializer);
-	}
-
-	// Schedule material for serialization
-	pSerializer->Add(shape);
+	bec::GetOrMake< ShapeImportSerializer*, InlineSerializationToken >(
+			parameters, beEntitySystem::GetSerializationParameters(),
+			"bePhysics.ShapeImportSerializer",
+			bec::SaveJobFactory<ShapeImportSerializer>(queue)
+		)->Add(shape);
 }
 
 // Schedules the given material for inline serialization.
 void SaveShape(const RigidShape *shape, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue)
 {
-	ShapeSerializer *pSerializer = parameters.GetValueDefault< ShapeSerializer* >(beEntitySystem::GetSerializationParameters(), ShapeSerializerID);
+	bec::GetOrMake< ShapeSerializer*, InlineSerializationToken >(
+			parameters, beEntitySystem::GetSerializationParameters(),
+			"bePhysics.ShapeSerializer",
+			bec::SaveJobFactory<ShapeSerializer>(queue)
+		)->Add(shape);
 
-	// Create serializer on first call
-	if (!pSerializer)
-	{
-		// NOTE: Serialization queue takes ownership
-		pSerializer = new ShapeSerializer();
-		queue.AddSerializationJob(pSerializer);
-		parameters.SetValue< ShapeSerializer* >(beEntitySystem::GetSerializationParameters(), ShapeSerializerID, pSerializer);
-	}
-
-	// Schedule material for serialization
-	pSerializer->Add(shape);
-
-	// Schedule shapes for serialization
+	// Schedule source shapes for serialization
 	if (const AssembledShape *sourceShape = shape->GetSource())
 		SaveShape(sourceShape, parameters, queue);
 

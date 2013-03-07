@@ -23,14 +23,14 @@ AbstractGenericControllerSerializer::~AbstractGenericControllerSerializer()
 lean::scoped_ptr<Controller, lean::critical_ref> AbstractGenericControllerSerializer::Create(
 	const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const
 {
-	return CreateController();
+	return CreateController(parameters);
 }
 
 // Loads a mesh controller from the given xml node.
 lean::scoped_ptr<Controller, lean::critical_ref> AbstractGenericControllerSerializer::Load(const rapidxml::xml_node<lean::utf8_t> &node,
 	beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const
 {
-	lean::scoped_ptr<Controller> controller = CreateController();
+	lean::scoped_ptr<Controller> controller = CreateController(parameters);
 	ControllerSerializer::Load(controller, node, parameters, queue);
 	return controller.transfer();
 }

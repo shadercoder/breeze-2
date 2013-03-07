@@ -23,8 +23,6 @@ namespace bePhysics
 namespace
 {
 
-const uint4 MaterialSerializerID = beEntitySystem::GetSerializationParameters().Add("bePhysics.MaterialSerializer");
-
 /// Serializes a list of materials.
 class MaterialSerializer : public beCore::SaveJob
 {
@@ -65,26 +63,20 @@ public:
 	}
 };
 
+struct InlineSerializationToken;
+
 } // namespace
 
 // Schedules the given material for inline serialization.
 void SaveMaterial(const Material *pMaterial, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue)
 {
-	MaterialSerializer *pSerializer = parameters.GetValueDefault< MaterialSerializer* >(beEntitySystem::GetSerializationParameters(), MaterialSerializerID, nullptr);
-
-	// Create serializer on first call
-	if (!pSerializer)
-	{
-		// NOTE: Serialization queue takes ownership
-		pSerializer = new MaterialSerializer();
-		queue.AddSerializationJob(pSerializer);
-		parameters.SetValue< MaterialSerializer* >(beEntitySystem::GetSerializationParameters(), MaterialSerializerID, pSerializer);
-	}
-
 	// Schedule material for serialization
-	pSerializer->AddMaterial(pMaterial);
+	bec::GetOrMake< MaterialSerializer*, InlineSerializationToken >(
+			parameters, beEntitySystem::GetSerializationParameters(),
+			"bePhysics.MaterialSerializer",
+			bec::SaveJobFactory<MaterialSerializer>(queue)
+		)->AddMaterial(pMaterial);
 }
-
 
 namespace
 {

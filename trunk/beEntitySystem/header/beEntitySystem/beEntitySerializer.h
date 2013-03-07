@@ -24,17 +24,17 @@ public:
 
 	/// Creates a serializable object from the given parameters.
 	BE_ENTITYSYSTEM_API lean::scoped_ptr<Entity, lean::critical_ref> Create(
-		const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const;
+		const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const LEAN_OVERRIDE;
 
 	/// Loads an entity from the given xml node.
 	BE_ENTITYSYSTEM_API virtual lean::scoped_ptr<Entity, lean::critical_ref> Load(const rapidxml::xml_node<lean::utf8_t> &node,
-		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const;
+		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const LEAN_OVERRIDE;
 	/// Loads an entity from the given xml node.
 	BE_ENTITYSYSTEM_API virtual void Load(Entity *entity, const rapidxml::xml_node<lean::utf8_t> &node,
-		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const;
+		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const LEAN_OVERRIDE;
 	/// Saves the given entity object to the given XML node.
 	BE_ENTITYSYSTEM_API virtual void Save(const Entity *entity, rapidxml::xml_node<lean::utf8_t> &node,
-		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue) const;
+		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue) const LEAN_OVERRIDE;
 };
 
 } // namespace

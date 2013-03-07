@@ -304,47 +304,32 @@ public:
 	}
 };
 
-const uint4 MeshImportSerializerID = beEntitySystem::GetSerializationParameters().Add("beScene.MeshImportSerializer");
-const uint4 MeshSerializerID = beEntitySystem::GetSerializationParameters().Add("beScene.MeshSerializer");
+struct InlineSerializationToken;
 
 } // namespace
 
 // Schedules the given mesh for inline serialization.
 void SaveMesh(const AssembledMesh *mesh, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue)
 {
-	MeshImportSerializer *pSerializer = parameters.GetValueDefault< MeshImportSerializer* >(beEntitySystem::GetSerializationParameters(), MeshImportSerializerID);
-
-	// Create serializer on first call
-	if (!pSerializer)
-	{
-		// NOTE: Serialization queue takes ownership
-		pSerializer = new MeshImportSerializer();
-		queue.AddSerializationJob(pSerializer);
-		parameters.SetValue< MeshImportSerializer* >(beEntitySystem::GetSerializationParameters(), MeshImportSerializerID, pSerializer);
-	}
-
-	// Schedule material for serialization
-	pSerializer->Add(mesh);
+	// Schedule mesh for serialization
+	bec::GetOrMake< MeshImportSerializer*, InlineSerializationToken >(
+			parameters, beEntitySystem::GetSerializationParameters(),
+			"beScene.MeshImportSerializer",
+			bec::SaveJobFactory<MeshImportSerializer>(queue)
+		)->Add(mesh);
 }
 
 // Schedules the given material for inline serialization.
 void SaveMesh(const RenderableMesh *mesh, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue)
 {
-	MeshSerializer *pSerializer = parameters.GetValueDefault< MeshSerializer* >(beEntitySystem::GetSerializationParameters(), MeshSerializerID);
+	// Schedule mesh for serialization
+	bec::GetOrMake< MeshSerializer*, InlineSerializationToken >(
+			parameters, beEntitySystem::GetSerializationParameters(),
+			"beScene.MeshSerializer",
+			bec::SaveJobFactory<MeshSerializer>(queue)
+		)->Add(mesh);
 
-	// Create serializer on first call
-	if (!pSerializer)
-	{
-		// NOTE: Serialization queue takes ownership
-		pSerializer = new MeshSerializer();
-		queue.AddSerializationJob(pSerializer);
-		parameters.SetValue< MeshSerializer* >(beEntitySystem::GetSerializationParameters(), MeshSerializerID, pSerializer);
-	}
-
-	// Schedule material for serialization
-	pSerializer->Add(mesh);
-
-	// Schedule meshes for serialization
+	// Schedule source meshes for serialization
 	if (const AssembledMesh *sourceMesh = mesh->GetSource())
 		SaveMesh(sourceMesh, parameters, queue);
 	else

@@ -88,25 +88,25 @@ private:
 	utf8_string m_type;
 	
 	/// Creates a serializable object from the given parameters.
-	GenericComponentSerializer::Serializable* CreateComponent(const Parameters &creationParameters, const ParameterSet &parameters) const
+	GenericComponentSerializer::Serializable* CreateComponent(const Parameters &creationParameters, const ParameterSet &parameters) const LEAN_OVERRIDE
 	{
 		return Create(creationParameters, parameters).detach();
 	}
 	/// Loads a serializable object from the given xml node.
 	GenericComponentSerializer::Serializable* LoadComponent(const rapidxml::xml_node<lean::utf8_t> &node,
-		ParameterSet &parameters, SerializationQueue<LoadJob> &queue) const
+		ParameterSet &parameters, SerializationQueue<LoadJob> &queue) const LEAN_OVERRIDE
 	{
 		return Load(node, parameters, queue).detach();
 	}
 	/// Loads a serializable object from the given xml node.
 	void LoadComponent(GenericComponentSerializer::Serializable *serializable, const rapidxml::xml_node<lean::utf8_t> &node,
-		ParameterSet &parameters, SerializationQueue<LoadJob> &queue) const
+		ParameterSet &parameters, SerializationQueue<LoadJob> &queue) const LEAN_OVERRIDE
 	{
 		Load(static_cast<Serializable*>(serializable), node, parameters, queue);
 	}
 	/// Saves the given serializable object to the given XML node.
 	void SaveComponent(const GenericComponentSerializer::Serializable *serializable, rapidxml::xml_node<lean::utf8_t> &node,
-		ParameterSet &parameters, SerializationQueue<SaveJob> &queue) const
+		ParameterSet &parameters, SerializationQueue<SaveJob> &queue) const LEAN_OVERRIDE
 	{
 		Save(static_cast<const Serializable*>(serializable), node, parameters, queue);
 	}

@@ -114,6 +114,26 @@ struct LoadTaskPlugin
 	}
 };
 
+/// Save job factory.
+template <class Job, class JobBase = beCore::SaveJob>
+struct SaveJobFactory
+{
+	beCore::SerializationQueue<JobBase> &queue;
+	
+	/// Constructor.
+	SaveJobFactory(beCore::SerializationQueue<JobBase> &queue)
+		: queue(queue) { }
+
+	/// Creates and queues a new job.
+	Job* operator ()(...) const
+	{
+		// NOTE: Serialization queue takes ownership
+		Job *job = new Job();
+		queue.AddSerializationJob(job);
+		return job;
+	}
+};
+
 } // namespace
 
 #endif

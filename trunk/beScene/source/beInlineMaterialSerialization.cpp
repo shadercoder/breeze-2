@@ -117,46 +117,30 @@ public:
 	}
 };
 
-const uint4 MaterialConfigSerializerID = beEntitySystem::GetSerializationParameters().Add("beScene.MaterialConfigSerializer");
-const uint4 MaterialSerializerID = beEntitySystem::GetSerializationParameters().Add("beScene.MaterialSerializer");
+struct InlineSerializationToken;
 
 } // namespace
 
 // Schedules the given material for inline serialization.
 void SaveMaterialConfig(const beg::MaterialConfig *pMaterial, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue)
 {
-	MaterialConfigSerializer *pSerializer = parameters.GetValueDefault< MaterialConfigSerializer* >(
-		beEntitySystem::GetSerializationParameters(), MaterialConfigSerializerID);
-
-	// Create serializer on first call
-	if (!pSerializer)
-	{
-		// NOTE: Serialization queue takes ownership
-		pSerializer = new MaterialConfigSerializer();
-		queue.AddSerializationJob(pSerializer);
-		parameters.SetValue< MaterialConfigSerializer* >(beEntitySystem::GetSerializationParameters(), MaterialConfigSerializerID, pSerializer);
-	}
-
 	// Schedule material for serialization
-	pSerializer->AddMaterial(pMaterial);
+	bec::GetOrMake< MaterialConfigSerializer*, InlineSerializationToken >(
+			parameters, beEntitySystem::GetSerializationParameters(),
+			"beScene.MaterialConfigSerializer",
+			bec::SaveJobFactory<MaterialConfigSerializer>(queue)
+		)->AddMaterial(pMaterial);
 }
 
 // Schedules the given material for inline serialization.
 void SaveMaterial(const beg::Material *pMaterial, beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue)
 {
-	MaterialSerializer *pSerializer = parameters.GetValueDefault< MaterialSerializer* >(beEntitySystem::GetSerializationParameters(), MaterialSerializerID);
-
-	// Create serializer on first call
-	if (!pSerializer)
-	{
-		// NOTE: Serialization queue takes ownership
-		pSerializer = new MaterialSerializer();
-		queue.AddSerializationJob(pSerializer);
-		parameters.SetValue< MaterialSerializer* >(beEntitySystem::GetSerializationParameters(), MaterialSerializerID, pSerializer);
-	}
-
 	// Schedule material for serialization
-	pSerializer->AddMaterial(pMaterial);
+	bec::GetOrMake< MaterialSerializer*, InlineSerializationToken >(
+			parameters, beEntitySystem::GetSerializationParameters(),
+			"beScene.MaterialSerializer",
+			bec::SaveJobFactory<MaterialSerializer>(queue)
+		)->AddMaterial(pMaterial);
 
 	// Schedule configurations for serialization
 	for (beg::Material::Configurations configs = pMaterial->GetConfigurations(); configs.Begin < configs.End; ++configs.Begin)

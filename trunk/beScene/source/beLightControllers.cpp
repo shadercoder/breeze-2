@@ -7,32 +7,28 @@
 
 #include <beEntitySystem/beEntities.h>
 
-#include "beScene/beResourceManager.h"
-#include "beScene/beEffectDrivenRenderer.h"
-#include "beScene/beLightMaterialCache.h"
-#include <beGraphics/beMaterialCache.h>
-
-#include "beScene/beRenderingPipeline.h"
-#include "beScene/bePipelinePerspective.h"
-#include "beScene/bePerspectivePool.h"
-#include "beScene/bePerspectiveStatePool.h"
-#include "beScene/beQueueStatePool.h"
-#include "beScene/beLightMaterial.h"
-#include "beScene/beLightEffectData.h"
-#include "beScene/beAbstractLightEffectDriver.h"
-#include "beScene/beRenderContext.h"
-
 #include <beCore/beReflectionProperties.h>
 #include <beCore/bePersistentIDs.h>
 
+#include "beScene/beRenderingPipeline.h"
+#include "beScene/bePipelinePerspective.h"
+#include "beScene/bePerspectiveStatePool.h"
+#include "beScene/beQueueStatePool.h"
+
+#include "beScene/bePerspectivePool.h"
+#include "beScene/bePipePool.h"
+
+#include "beScene/beLightMaterial.h"
+#include "beScene/beLightEffectData.h"
+#include "beScene/beAbstractLightEffectDriver.h"
+
+#include "beScene/beRenderContext.h"
 #include <beGraphics/Any/beAPI.h>
 #include <beGraphics/Any/beDevice.h>
 #include <beGraphics/Any/beBuffer.h>
 #include <beGraphics/Any/beTexture.h>
 #include <beGraphics/Any/beStateManager.h>
 #include <beGraphics/Any/beDeviceContext.h>
-
-#include <beGraphics/DX/beError.h>
 
 #include <beMath/beUtility.h>
 #include <beMath/beVector.h>
@@ -47,6 +43,8 @@
 
 #include <lean/functional/algorithm.h>
 #include <lean/io/numeric.h>
+
+#include <beGraphics/DX/beError.h>
 
 namespace beScene
 {
@@ -122,54 +120,6 @@ utf8_string LightInternals<LightController>::DefaultShadowStageName = "ShadowPip
 
 namespace beScene
 {
-
-// Sets the default light effect file.
-template <class LightController>
-BE_SCENE_API void SetLightDefaultEffect(const utf8_ntri &file)
-{
-	LightInternals<LightController>::DefaultEffectFile = file.to<utf8_string>();
-}
-
-// Gets the default mesh effect file.
-template <class LightController>
-BE_SCENE_API utf8_ntr GetLightDefaultEffect()
-{
-	return utf8_ntr(LightInternals<LightController>::DefaultEffectFile);
-}
-
-// Gets the default material for meshes.
-template <class LightController>
-BE_SCENE_API LightMaterial* GetLightDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer)
-{
-	utf8_string materialName = utf8_string(LightInternals<LightController>::ControllerType.Name) + ".DefaultMaterial";
-	beg::Material *material = resources.MaterialCache()->GetByName(materialName);
-
-	if (!material)
-		material = resources.MaterialCache()->NewByFile(LightInternals<LightController>::DefaultEffectFile, materialName);
-
-	return renderer.LightMaterials()->GetMaterial(material);
-}
-
-// Sets the default shadow stage for directional lights.
-template <class LightController>
-BE_SCENE_API void SetDefaultShadowStage(const utf8_ntri &name)
-{
-	LightInternals<LightController>::DefaultShadowStageName = name.to<utf8_string>();
-}
-
-// Gets the default shadow stage for directional lights.
-template <class LightController>
-BE_SCENE_API utf8_ntr GetDefaultShadowStage()
-{
-	return utf8_ntr(LightInternals<LightController>::DefaultShadowStageName);
-}
-
-// Gets the default shadow stage for directional lights.
-template <class LightController>
-BE_SCENE_API PipelineStageMask GetDefaultShadowStage(const RenderingPipeline &pipeline)
-{
-	return pipeline.GetStageID(LightInternals<LightController>::DefaultShadowStageName);
-}
 
 struct LightControllersBase::M
 {
@@ -388,6 +338,61 @@ struct MaterialSorter
 	}
 };
 
+/// Sort controllers by material and shader (moving null materials outwards).
+template <class LightControllers>
+void SortControllers(typename LightControllers::M::controllers_t &destControllers, const typename LightControllers::M::controllers_t &srcControllers)
+{
+	LEAN_FREE_PIMPL(typename LightControllers);
+	
+	uint4 controllerCount = (uint4) srcControllers.size();
+	
+	lean::scoped_ptr<uint4[]> sortIndices( new uint4[controllerCount] );
+	std::generate_n(&sortIndices[0], controllerCount, lean::increment_gen<uint4>(0));
+	std::sort(&sortIndices[0], &sortIndices[controllerCount], MaterialSorter<typename M::controllers_t>(srcControllers));
+	
+	destControllers.clear();
+	lean::append_swizzled(srcControllers, &sortIndices[0], &sortIndices[controllerCount], destControllers);
+}
+
+template <class LightControllers>
+void LinkControllersToUniqueMaterials(typename LightControllers::M::Data &data)
+{
+	LEAN_FREE_PIMPL(typename LightControllers);
+
+	const uint4 controllerCount = (uint4) data.controllers.size();
+	data.controllersToMaterials.resize(controllerCount);
+	data.uniqueMaterials.clear();
+	data.activeControllerCount = 0;
+	data.shadowControllerCount = 0;
+
+	const besc::LightMaterial *prevMaterial = nullptr;
+	uint4 materialIdx = 0;
+
+	for (uint4 internalIdx = 0; internalIdx < controllerCount; ++internalIdx)
+	{
+		typename M::Record &controller = data.controllers[internalIdx];
+		typename M::State &controllerState = data.controllers(M::state)[internalIdx];
+
+		// Ignore null & detached meshes at the back
+		if (!controller.Material || !controllerState.Attached)
+			break;
+
+		data.shadowControllerCount += controllerState.Config.Shadow;
+		++data.activeControllerCount;
+
+		// Add new unique material
+		if (prevMaterial != controller.Material)
+		{
+			materialIdx = (uint4) data.uniqueMaterials.size();
+			data.uniqueMaterials.push_back(controller.Material);
+			prevMaterial = controller.Material;
+		}
+
+		// Let controllers reference unique materials
+		data.controllersToMaterials[internalIdx] = materialIdx;
+	}
+}
+
 LightControllersBase::M::Data::Queue::Pass ConstructPass(const beGraphics::MaterialTechnique *material,
 	const AbstractLightEffectDriver *effectDriver, const QueuedPass *driverPass)
 {
@@ -398,6 +403,52 @@ LightControllersBase::M::Data::Queue::Pass ConstructPass(const beGraphics::Mater
 	pass.effectDriver = effectDriver;
 
 	return pass;
+}
+
+template <class LightControllers>
+void AddTechniquePasses(typename LightControllers::M::Data &data, uint4 materialIdx, besc::LightMaterial::Technique technique)
+{
+	LEAN_FREE_PIMPL(typename LightControllers);
+
+	besc::AbstractLightEffectDriver::PassRange passes = technique.TypedDriver()->GetPasses();
+
+	for (uint4 passIdx = 0, passCount = Size4(passes); passIdx < passCount; ++passIdx)
+	{
+		const besc::QueuedPass *pass = &passes[passIdx];
+		besc::PipelineQueueID queueID(pass->GetStageID(), pass->GetQueueID());
+		typename M::Data::Queue &queue = data.queues.GetQueue(queueID);
+
+		// Link material to beginning of pass range & insert pass
+		queue.materialsToPasses.resize( materialIdx + 1, (uint4) queue.passes.size() );
+		queue.passes.push_back( ConstructPass(technique.Technique, technique.TypedDriver(), pass) );
+	}
+}
+
+template <class LightControllers>
+void BuildQueues(typename LightControllers::M::Data &data)
+{
+	LEAN_FREE_PIMPL(typename LightControllers);
+
+	data.queues.Clear();
+
+	const uint4 materialCount = (uint4) data.uniqueMaterials.size();
+
+	// Build queues from meshes
+	for (uint4 materialIdx = 0; materialIdx < materialCount; ++materialIdx)
+	{
+		const besc::LightMaterial *material = data.uniqueMaterials[materialIdx];
+		besc::LightMaterial::TechniqueRange techniques = material->GetTechniques();
+
+		for (uint4 techniqueIdx = 0, techniqueCount = Size4(techniques); techniqueIdx < techniqueCount; ++techniqueIdx)
+			AddTechniquePasses<LightControllers>(data, materialIdx, techniques[techniqueIdx]);
+	}
+	
+	// Discard unused queues
+	data.queues.Shrink();
+
+	// IMPORTANT: Finish implicit materials to pass offset ranges
+	for (M::Data::Queue *it = data.queues.begin(), *itEnd = data.queues.end(); it < itEnd; ++it)
+		it->materialsToPasses.resize(materialCount + 1, (uint4) it->passes.size());
 }
 
 } // namespace
@@ -413,116 +464,37 @@ void LightControllers<LightController>::Commit()
 
 	typename M::Data &prevData = *m.data;
 	typename M::Data &data = *m.dataAux;
-
-	if (prevData.structureRevision == m.controllerRevision)
-		return;
-
-	uint4 controllerCount = (uint4) prevData.controllers.size();
-	data.controllers.clear();
-
-	// Sort controllers by material and shader (moving null materials outwards)
+	
+	if (prevData.structureRevision != m.controllerRevision)
 	{
-		lean::scoped_ptr<uint4[]> sortIndices( new uint4[controllerCount] );
-		std::generate_n(&sortIndices[0], controllerCount, lean::increment_gen<uint4>(0));
-		std::sort(&sortIndices[0], &sortIndices[controllerCount], MaterialSorter<typename M::controllers_t>(prevData.controllers));
-		lean::append_swizzled(prevData.controllers, &sortIndices[0], &sortIndices[controllerCount], data.controllers);
-	}
+		// Rebuild internal data structures in swap buffer
+		SortControllers<LightControllers>(data.controllers, prevData.controllers);
+		LinkControllersToUniqueMaterials<LightControllers>(data);
+		BuildQueues<LightControllers>(data);
 
-	data.activeControllerCount = 0;
-	data.shadowControllerCount = 0;
-	data.controllersToMaterials.resize(controllerCount);
-	data.uniqueMaterials.clear();
-
-	// Link controllers to materials
-	{
-		const LightMaterial *prevMaterial = nullptr;
-		uint4 materialIdx = 0;
-
-		for (uint4 internalIdx = 0; internalIdx < controllerCount; ++internalIdx)
+		if (data.activeControllerCount)
 		{
-			const typename M::Record &controller = data.controllers[internalIdx];
-			const typename M::State &controllerState = data.controllers(M::state)[internalIdx];
+			// Reallocate GPU buffers
+			const size_t FloatRowSize = sizeof(float) * 4;
 
-			// Ignore null & detached meshes at the back
-			if (!controller.Material || !controllerState.Attached)
-				break;
+			LEAN_STATIC_ASSERT_MSG(
+					sizeof(typename M::Constants) % FloatRowSize == 0,
+					"Size of light constant buffer required to be multiple of 4 floats"
+				);
 
-			data.shadowControllerCount += controllerState.Config.Shadow;
-
-			// Add new unique material
-			if (prevMaterial != controller.Material)
-			{
-				materialIdx = (uint4) data.uniqueMaterials.size();
-				data.uniqueMaterials.push_back(controller.Material);
-				prevMaterial = controller.Material;
-			}
-
-			// Let controllers reference unique materials
-			data.controllersToMaterials[internalIdx] = materialIdx;
-			++data.activeControllerCount;
+			data.lightConstantBuffer = beg::Any::CreateStructuredBuffer(m.device, D3D11_BIND_SHADER_RESOURCE,
+				sizeof(typename M::Constants), data.activeControllerCount, 0);
+			data.lightConstantSRV = beg::Any::CreateSRV(data.lightConstantBuffer, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+				0, sizeof(typename M::Constants) / FloatRowSize * data.activeControllerCount);
 		}
+
+		data.structureRevision = m.controllerRevision;
+		std::swap(m.data, m.dataAux);
+		M::FixControllerHandles(m.data->controllers);
+
+		prevData.lightConstantBuffer = nullptr;
+		prevData.lightConstantSRV = nullptr;
 	}
-
-	uint4 materialCount = (uint4) data.uniqueMaterials.size();
-	data.queues.Clear();
-
-	// Build queues from materials
-	for (uint4 matIdx = 0; matIdx < materialCount; ++matIdx)
-	{
-		const LightMaterial *material = data.uniqueMaterials[matIdx];
-		LightMaterial::TechniqueRange techniques = material->GetTechniques();
-
-		for (uint4 techniqueIdx = 0, techniqueCount = Size4(techniques); techniqueIdx < techniqueCount; ++techniqueIdx)
-		{
-			const AbstractLightEffectDriver *effectDriver = techniques[techniqueIdx].TypedDriver();
-			const beGraphics::MaterialTechnique *material = techniques[techniqueIdx].Technique;
-
-			AbstractLightEffectDriver::PassRange passes = effectDriver->GetPasses();
-
-			for (uint4 passIdx = 0, passCount = Size4(passes); passIdx < passCount; ++passIdx)
-			{
-				const QueuedPass *pass = &passes.Begin[passIdx];
-				PipelineQueueID queueID(pass->GetStageID(), pass->GetQueueID());
-				M::Data::Queue &queue = data.queues.GetQueue(queueID);
-
-				// Link to pass range
-				queue.materialsToPasses.resize( matIdx + 1, (uint4) queue.passes.size() );
-
-				// Insert pass
-				queue.passes.push_back( ConstructPass(material, effectDriver, pass) );
-			}
-		}
-	}
-
-	// Discard unused queues
-	data.queues.Shrink();
-
-	// IMPORTANT: Finish implicit materials to pass offset ranges
-	for (typename M::Data::Queue *it = data.queues.begin(), *itEnd = data.queues.end(); it < itEnd; ++it)
-		it->materialsToPasses.resize(materialCount + 1, (uint4) it->passes.size());
-
-	if (data.activeControllerCount)
-	{
-		// Reallocate GPU buffers
-		const size_t FloatRowSize = sizeof(float) * 4;
-
-		LEAN_STATIC_ASSERT_MSG(
-				sizeof(typename M::Constants) % FloatRowSize == 0,
-				"Size of light constant buffer required to be multiple of 4 floats"
-			);
-
-		data.lightConstantBuffer = beg::Any::CreateStructuredBuffer(m.device, D3D11_BIND_SHADER_RESOURCE,
-			sizeof(typename M::Constants), data.activeControllerCount, 0);
-		data.lightConstantSRV = beg::Any::CreateSRV(data.lightConstantBuffer, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
-			0, sizeof(typename M::Constants) / FloatRowSize * data.activeControllerCount);
-	}
-
-	data.structureRevision = m.controllerRevision;
-	std::swap(m.data, m.dataAux);
-	M::FixControllerHandles(m.data->controllers);
-
-	prevData.lightConstantBuffer = nullptr;
-	prevData.lightConstantSRV = nullptr;
 }
 
 struct LightControllersBase::M::PerspectiveState
@@ -1540,6 +1512,64 @@ const beCore::ComponentType* LightControllerBase<LightController>::GetType() con
 {
 	// IMPORTANT: Instantiate LightInternals::Plugin!
 	return LightInternals<LightController>::ControllerTypePlugin.Type;
+}
+
+} // namespace
+
+#include "beScene/beResourceManager.h"
+#include "beScene/beEffectDrivenRenderer.h"
+#include "beScene/beLightMaterialCache.h"
+#include <beGraphics/beMaterialCache.h>
+
+namespace beScene
+{
+
+// Sets the default light effect file.
+template <class LightController>
+BE_SCENE_API void SetLightDefaultEffect(const utf8_ntri &file)
+{
+	LightInternals<LightController>::DefaultEffectFile = file.to<utf8_string>();
+}
+
+// Gets the default mesh effect file.
+template <class LightController>
+BE_SCENE_API utf8_ntr GetLightDefaultEffect()
+{
+	return utf8_ntr(LightInternals<LightController>::DefaultEffectFile);
+}
+
+// Gets the default material for meshes.
+template <class LightController>
+BE_SCENE_API LightMaterial* GetLightDefaultMaterial(ResourceManager &resources, EffectDrivenRenderer &renderer)
+{
+	utf8_string materialName = utf8_string(LightInternals<LightController>::ControllerType.Name) + ".DefaultMaterial";
+	beg::Material *material = resources.MaterialCache()->GetByName(materialName);
+
+	if (!material)
+		material = resources.MaterialCache()->NewByFile(LightInternals<LightController>::DefaultEffectFile, materialName);
+
+	return renderer.LightMaterials()->GetMaterial(material);
+}
+
+// Sets the default shadow stage for directional lights.
+template <class LightController>
+BE_SCENE_API void SetDefaultShadowStage(const utf8_ntri &name)
+{
+	LightInternals<LightController>::DefaultShadowStageName = name.to<utf8_string>();
+}
+
+// Gets the default shadow stage for directional lights.
+template <class LightController>
+BE_SCENE_API utf8_ntr GetDefaultShadowStage()
+{
+	return utf8_ntr(LightInternals<LightController>::DefaultShadowStageName);
+}
+
+// Gets the default shadow stage for directional lights.
+template <class LightController>
+BE_SCENE_API PipelineStageMask GetDefaultShadowStage(const RenderingPipeline &pipeline)
+{
+	return pipeline.GetStageID(LightInternals<LightController>::DefaultShadowStageName);
 }
 
 } // namespace

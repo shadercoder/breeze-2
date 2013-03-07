@@ -17,7 +17,12 @@ class AbstractGenericControllerSerializer : public beEntitySystem::ControllerSer
 {
 protected:
 	/// Creates a controller.
-	virtual lean::scoped_ptr<Serializable, lean::critical_ref> CreateController() const = 0;
+	virtual lean::scoped_ptr<Controller, lean::critical_ref> CreateController(const beCore::ParameterSet &parameters) const = 0;
+	/// Creates a controller.
+	virtual lean::scoped_ptr<Controller, lean::critical_ref> CreateController(beCore::ParameterSet &parameters) const
+	{
+		return CreateController( const_cast<const beCore::ParameterSet&>(parameters) );
+	}
 
 public:
 	/// Constructor.
@@ -26,14 +31,14 @@ public:
 	BE_ENTITYSYSTEM_API ~AbstractGenericControllerSerializer();
 
 	/// Creates a serializable object from the given parameters.
-	BE_ENTITYSYSTEM_API virtual lean::scoped_ptr<Serializable, lean::critical_ref> Create(
+	BE_ENTITYSYSTEM_API virtual lean::scoped_ptr<Controller, lean::critical_ref> Create(
 		const beCore::Parameters &creationParameters, const beCore::ParameterSet &parameters) const LEAN_OVERRIDE;
 
 	/// Loads a mesh controller from the given xml node.
-	BE_ENTITYSYSTEM_API virtual lean::scoped_ptr<beEntitySystem::Controller, lean::critical_ref> Load(const rapidxml::xml_node<lean::utf8_t> &node,
+	BE_ENTITYSYSTEM_API virtual lean::scoped_ptr<Controller, lean::critical_ref> Load(const rapidxml::xml_node<lean::utf8_t> &node,
 		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::LoadJob> &queue) const LEAN_OVERRIDE;
 	/// Saves the given mesh controller to the given XML node.
-	BE_ENTITYSYSTEM_API virtual void Save(const beEntitySystem::Controller *pSerializable, rapidxml::xml_node<lean::utf8_t> &node,
+	BE_ENTITYSYSTEM_API virtual void Save(const Controller *pSerializable, rapidxml::xml_node<lean::utf8_t> &node,
 		beCore::ParameterSet &parameters, beCore::SerializationQueue<beCore::SaveJob> &queue) const LEAN_OVERRIDE;
 };
 
@@ -43,7 +48,7 @@ class GenericControllerSerializer : public AbstractGenericControllerSerializer
 {
 protected:
 	/// Creates a controller.
-	virtual lean::scoped_ptr<Serializable, lean::critical_ref> CreateController() const LEAN_OVERRIDE
+	virtual lean::scoped_ptr<beEntitySystem::Controller, lean::critical_ref> CreateController(const beCore::ParameterSet &parameters) const LEAN_OVERRIDE
 	{
 		return lean::make_scoped<Controller>();
 	}

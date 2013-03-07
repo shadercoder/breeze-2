@@ -104,6 +104,9 @@
     <ClInclude Include="header\beEntitySystem\beGenericControllerSerializer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\beEntitySystem\beGenericGroupControllerSerializer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\dllmain.cpp">
