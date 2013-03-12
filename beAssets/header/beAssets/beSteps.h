@@ -87,27 +87,30 @@ public:
 	beMath::fvec3 GetDeltaScaling() const { return m_config.deltaScaling; }
 
 	/// Synchronizes the scene with this controller.
-	BE_ASSETS_API void Commit(beEntitySystem::EntityHandle entity);
+	BE_ASSETS_API void Commit(beEntitySystem::EntityHandle entity) LEAN_OVERRIDE;
 	/// Synchronizes this controller with the controlled entity.
-	BE_ASSETS_API void Synchronize(beEntitySystem::EntityHandle entity);
+	BE_ASSETS_API void Synchronize(beEntitySystem::EntityHandle entity) LEAN_OVERRIDE;
+	
+	/// Gets an OPTIONAL parent entity for the children of this controller.
+	BE_ASSETS_API beEntitySystem::Entity* GetParent() const LEAN_OVERRIDE;
 
 	/// Attaches this controller.
-	BE_ASSETS_API void Attach(beEntitySystem::Entity *entity);
+	BE_ASSETS_API void Attach(beEntitySystem::Entity *entity) LEAN_OVERRIDE;
 	/// Detaches this controller.
-	BE_ASSETS_API void Detach(beEntitySystem::Entity *entity);
+	BE_ASSETS_API void Detach(beEntitySystem::Entity *entity) LEAN_OVERRIDE;
 
 	/// Clones this entity controller.
-	BE_ASSETS_API StepsController* Clone() const;
+	BE_ASSETS_API StepsController* Clone() const LEAN_OVERRIDE;
 	
 	/// Gets the reflection properties.
 	BE_ASSETS_API static Properties GetOwnProperties();
 	/// Gets the reflection properties.
-	BE_ASSETS_API Properties GetReflectionProperties() const;
+	BE_ASSETS_API Properties GetReflectionProperties() const LEAN_OVERRIDE;
 
 	/// Gets the controller type.
 	BE_ASSETS_API static const beCore::ComponentType* GetComponentType();
 	/// Gets the controller type.
-	BE_ASSETS_API const beCore::ComponentType* GetType() const;
+	BE_ASSETS_API const beCore::ComponentType* GetType() const LEAN_OVERRIDE;
 };
 
 } // namespace

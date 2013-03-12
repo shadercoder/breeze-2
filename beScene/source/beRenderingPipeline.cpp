@@ -80,6 +80,8 @@ RenderingPipeline::~RenderingPipeline()
 void RenderingPipeline::Prepare(PipelinePerspective &perspective, const Renderable *const *renderables, uint4 renderableCount,
 								PipelineStageMask overrideStageMask, bool bNoChildren) const
 {
+	PipelineState &state = perspective.GetPipelineState();
+
 	for (uint4 i = 0; i < renderableCount; ++i)
 		renderables[i]->Cull(perspective);
 
@@ -90,21 +92,24 @@ void RenderingPipeline::Prepare(PipelinePerspective &perspective, const Renderab
 	for (Impl::id_vector::const_iterator stageIt = m_impl->sortedStageIDs.begin();
 		stageIt != m_impl->sortedStageIDs.end(); ++stageIt)
 	{
-		if ((1 << *stageIt) & stageMask)
+		if (ComputeStageMask(*stageIt) & stageMask)
 			for (Impl::id_vector::const_iterator queueIt = m_impl->sortedQueueIDs.begin();
 				queueIt != m_impl->sortedQueueIDs.end(); ++queueIt)
 			{
 				PipelineQueueID queueID(*stageIt, *queueIt);
+				bool bQueueActive = false;
 
 				for (uint4 i = 0; i < renderableCount; ++i)
-					renderables[i]->Prepare(perspective, queueID, m_impl->stages[queueID.StageID].desc, m_impl->queues[queueID.QueueID].desc);
+					bQueueActive |= renderables[i]->Prepare(perspective, queueID,
+						m_impl->stages[queueID.StageID].desc, m_impl->queues[queueID.QueueID].desc);
+			
+				if (bQueueActive)
+					state.ActiveQueues[queueID.StageID] |= ComputeQueueMask(queueID.QueueID);
 			}
 	}
 
 	for (uint4 i = 0; i < renderableCount; ++i)
 		renderables[i]->Collect(perspective);
-	
-	;
 
 	if (!bNoChildren)
 		for (PipelinePerspective::PerspectiveRange perspectives = perspective.GetPerspectives(); perspectives; ++perspectives)
@@ -116,7 +121,7 @@ void RenderingPipeline::Optimize(PipelinePerspective &perspective, const Rendera
 								 PipelineStageMask overrideStageMask, bool bNoChildren) const
 {
 	PipelinePerspective::PerspectiveRange perspectives = perspective.GetPerspectives();
-
+	
 	if (!bNoChildren)
 		for (uint4 i = Size(perspectives); i-- > 0; )
 			Optimize(*perspectives.Begin[i], renderables, renderableCount);
@@ -128,7 +133,7 @@ void RenderingPipeline::Optimize(PipelinePerspective &perspective, const Rendera
 	for (Impl::id_vector::const_iterator stageIt = m_impl->sortedStageIDs.begin();
 		stageIt != m_impl->sortedStageIDs.end(); ++stageIt)
 	{
-		if ((1 << *stageIt) & stageMask)
+		if (ComputeStageMask(*stageIt) & stageMask)
 			for (Impl::id_vector::const_iterator queueIt = m_impl->sortedQueueIDs.begin();
 				queueIt != m_impl->sortedQueueIDs.end(); ++queueIt)
 			{
@@ -164,15 +169,17 @@ void RenderingPipeline::RenderStages(const PipelinePerspective &perspective, con
 	if (stageMask & NormalPipelineStagesOnly)
 		stageMask &= m_impl->normalStageMask;
 
+	const PipelineState &state = perspective.GetPipelineState();
+
 	for (Impl::id_vector::const_iterator stageIt = m_impl->sortedStageIDs.begin();
 		stageIt != m_impl->sortedStageIDs.end(); ++stageIt)
 	{
-		if ((1 << *stageIt) & stageMask)
+		if (ComputeStageMask(*stageIt) & stageMask)
 		{
 			const PipelineStageDesc &stageDesc = m_impl->stages[*stageIt].desc;
 
 			// Set stage
-			if (stageDesc.Setup)
+			if (stageDesc.Setup && (!stageDesc.Conditional || state.ActiveQueues[*stageIt]))
 				stageDesc.Setup->SetupRendering(*stageIt, InvalidRenderQueue, perspective, context);
 
 			// Render all queues
@@ -184,7 +191,7 @@ void RenderingPipeline::RenderStages(const PipelinePerspective &perspective, con
 				const RenderQueueDesc &queueDesc = m_impl->queues[queueID.QueueID].desc;
 
 				// Set up individual queues
-				if (queueDesc.Setup)
+				if (queueDesc.Setup && (!stageDesc.Conditional || state.ActiveQueues[queueID.StageID] & ComputeQueueMask(queueID.QueueID)))
 					queueDesc.Setup->SetupRendering(queueID.StageID, queueID.QueueID, perspective, context);
 
 				for (uint4 i = 0; i < renderableCount; ++i)
@@ -294,7 +301,7 @@ uint2 RenderingPipeline::AddStage(const utf8_ntri &stageName, const PipelineStag
 			IDByLayerCompare<Impl::Stage>(&stages[0]) );
 
 		if (desc.Normal)
-			m_impl->normalStageMask |= 1 << stageID;
+			m_impl->normalStageMask |= ComputeStageMask(stageID);
 
 		// Rebuild stage slot table
 		Impl::id_vector &stageSlots = m_impl->sortedStageSlots;

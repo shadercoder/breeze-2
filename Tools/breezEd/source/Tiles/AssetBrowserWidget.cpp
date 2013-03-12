@@ -127,7 +127,11 @@ public:
 			fvec3 moveCenter = newCenter - center;
 
 			for (CreateEntityCommand::EntityRange::const_iterator it = entities.begin(); it != entities.end(); ++it)
-				(*it)->SetPosition( (*it)->GetPosition() + moveCenter );
+			{
+				bees::Entity *entity = *it;
+				entity->SetPosition(entity->GetPosition() + moveCenter);
+				entity->NeedSync();
+			}
 		}
 	}
 

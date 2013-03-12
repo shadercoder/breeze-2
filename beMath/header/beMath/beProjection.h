@@ -9,6 +9,7 @@
 #include "beMath.h"
 #include "beMatrix.h"
 #include "bePlane.h"
+#include "beUtility.h"
 
 namespace beMath
 {
@@ -97,110 +98,33 @@ void extract_frustum(const matrix<Component, 4, 4> &viewProj, plane<Component, 3
 	planes[5] = normalize( frustum_top(viewProj) );
 }
 
-/*
-// Computes a camera ray from the given screen coordinates
-beMath::CRay beMath::ComputeScreenRay(float fX, float fY, const CMatrix &mView, const CMatrix &mProjection)
+/// Replaces the near plane by the given plane.
+template <class Component>
+matrix<Component, 4, 4> replace_near_plane(const matrix<Component, 4, 4> &proj, const plane<Component, 3> &clipPlane)
 {
-	CRay r;
+	matrix<Component, 4, 4> result(proj);
 
-	// Compute inverse of orthogonal camera matrix
-	CMatrix mViewInverse = Reverse(mView);
+	if (clipPlane.d() < 0.0f)
+	{
+		vector<Component, 4> farCorner = vec(
+				(sign0(clipPlane[0]) + proj[2][0]) / proj[0][0],
+				(sign0(clipPlane[1]) + proj[2][1]) / proj[1][1],
+				-1.0f,
+				(1.0f + proj[2][2]) / proj[3][2]
+			);
 
-	// Set origin to camera position
-	r.o.x = mViewInverse[3][0];
-	r.o.y = mViewInverse[3][1];
-	r.o.z = mViewInverse[3][2];
+		vector<Component, 4> viewPlane = vec(clipPlane[0], clipPlane[1], clipPlane[2], -clipPlane[3]);
+		plane<Component, 3> projPlane = viewPlane * (1.0f / dot(viewPlane, farCorner));
 
-	// Construct normal in view space
-	r.n()[0] = (fX * 2.0f - 1.0f) / mProjection[0][0];
-	r.n()[1] = -(fY * 2.0f - 1.0f) / mProjection[1][1];
-	r.n()[2] = 1.0f;
+		result[0][2] = projPlane[0];
+		result[1][2] = projPlane[1];
+		result[2][2] = projPlane[2];
+		result[3][2] = projPlane[3];
+	}
 
-	// Transform normal to world space
-	r.n = Normalize( Transform3(r.n, mViewInverse) );
-
-	return r;
-}
-*/
-
-/*
-/// Computes a projection matrix that contains the given plane as near plane
-beMath::CMatrix beMath::ObliqueProjectionMatrix(const CMatrix &mView, const CMatrix &mProjection, const CPlane &clipPlane)
-{
-	CMatrix mViewInverseTranspose = Transpose(Reverse(mView));
-
-	// Transform plane to view space
-	CVector4 vViewClipPlane = -clipPlane * mViewInverseTranspose;
-
-	// Check clip plane orientation
-	if(vViewClipPlane.w > -Tolerance)
-		return mProjection;
-
-	// Compute view-space corner point
-	CVector4 vFarCorner = CVector4(
-		Sign0(vViewClipPlane.x + mProjection[2][0]) / mProjection[0][0],
-		Sign0(vViewClipPlane.y + mProjection[2][1]) / mProjection[1][1],
-		-1.0f,
-		(1.0f + mProjection[2][2]) / mProjection[3][2] );
-	
-	// Scale clip plane
-	CVector4 vProjClipPlane = vViewClipPlane * (1.0f / Dot(vViewClipPlane, vFarCorner));
-
-	// Modify projection matrix
-	return CMatrix(mProjection[0][0], mProjection[0][1], vProjClipPlane.x, mProjection[0][3],
-		mProjection[1][0], mProjection[1][1], vProjClipPlane.y, mProjection[1][3],
-		mProjection[2][0], mProjection[2][1], vProjClipPlane.z, mProjection[2][3],
-		mProjection[3][0], mProjection[3][1], vProjClipPlane.w, mProjection[3][3]);
+	return result;
 }
 
-/// Computes the three tangent space vectors of a triangle
-void beMath::ComputeTangentSpace(const void *pVertex1, const void *pVertex2, const void *pVertex3, unsigned short nPositionOffset, unsigned short nTexCoordOffset,
-								 CVector *pTangent, CVector *pBinormal, CVector *pNormal)
-{
-	// Get positions and texture coordinates
-	const float *pVertex1_Position = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pVertex1) + nPositionOffset);
-	const float *pVertex2_Position = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pVertex2) + nPositionOffset);
-	const float *pVertex3_Position = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pVertex3) + nPositionOffset);
-
-	const float *pVertex1_TexCoord = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pVertex1) + nTexCoordOffset);
-	const float *pVertex2_TexCoord = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pVertex2) + nTexCoordOffset);
-	const float *pVertex3_TexCoord = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pVertex3) + nTexCoordOffset);
-
-	// Compute distances
-	float fDeltaX1 = pVertex2_Position[0] - pVertex1_Position[0];
-	float fDeltaX2 = pVertex3_Position[0] - pVertex1_Position[0];
-	float fDeltaY1 = pVertex2_Position[1] - pVertex1_Position[1];
-	float fDeltaY2 = pVertex3_Position[1] - pVertex1_Position[1];
-	float fDeltaZ1 = pVertex2_Position[2] - pVertex1_Position[2];
-	float fDeltaZ2 = pVertex3_Position[2] - pVertex1_Position[2];
-
-	float fDeltaU1 = pVertex2_TexCoord[0] - pVertex1_TexCoord[0];
-	float fDeltaU2 = pVertex3_TexCoord[0] - pVertex1_TexCoord[0];
-	float fDeltaV1 = pVertex2_TexCoord[1] - pVertex1_TexCoord[1];
-	float fDeltaV2 = pVertex3_TexCoord[1] - pVertex1_TexCoord[1];
-
-	// Compute tangent and binormal
-	float r = 1.0f / (fDeltaU1 * fDeltaV2 - fDeltaU2 * fDeltaV1);
-
-	CVector vTangent(
-		(fDeltaV2 * fDeltaX1 - fDeltaV1 * fDeltaX2) * r,
-		(fDeltaV2 * fDeltaY1 - fDeltaV1 * fDeltaY2) * r,
-		(fDeltaV2 * fDeltaZ1 - fDeltaV1 * fDeltaZ2) * r);
-
-	CVector vBinormal(
-		(fDeltaU1 * fDeltaX2 - fDeltaU2 * fDeltaX1) * r,
-		(fDeltaU1 * fDeltaY2 - fDeltaU2 * fDeltaY1) * r,
-		(fDeltaU1 * fDeltaZ2 - fDeltaU2 * fDeltaZ1) * r);
-
-	// Assign
-	if(pTangent)
-		(*pTangent) = Normalize(vTangent);
-	if(pBinormal)
-		(*pBinormal) = Normalize(vBinormal);
-	if(pNormal)
-		(*pNormal) = Normalize(Cross(vTangent, vBinormal));
-}
-*/
 } // namespace
 
 #endif

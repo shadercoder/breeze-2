@@ -21,6 +21,19 @@ namespace beEntitySystem
 class Entity;
 struct EntityHandle;
 
+/// Rules for (groups of) child entities.
+struct ChildEntityFlags
+{
+	/// Enumeration type.
+	enum T
+	{
+		None = 0x0,			///< No flags.
+
+		OpenGroup = 0x1,	///< Child entities may be added/removed via transferral of ownership.
+		Accessible = 0x2	///< Child entities may be treated like individual entities.
+	};
+};
+
 /// Entity controller interface.
 class LEAN_INTERFACE EntityController : public Controller
 {
@@ -41,6 +54,15 @@ public:
 	virtual void Attach(Entity *entity) = 0;
 	/// Detaches this controller from the given entity.
 	virtual void Detach(Entity *entity) noexcept = 0;
+
+	/// Gets an OPTIONAL parent entity for the children of this controller.
+	BE_ENTITYSYSTEM_API virtual Entity* GetParent() const;
+	/// Gets the rules for (child) entities owned by this controller.
+	BE_ENTITYSYSTEM_API virtual uint4 GetChildFlags() const;
+	/// The given child entity has been added (== owner about to be set to this).
+	BE_ENTITYSYSTEM_API virtual bool ChildAdded(Entity *entity);
+	/// The given child entity has been removed (== owner about to be unset from this).
+	BE_ENTITYSYSTEM_API virtual bool ChildRemoved(Entity *entity);
 
 	/// The controller has been added to the given entity.
 	BE_ENTITYSYSTEM_API virtual void Added(Entity *entity);

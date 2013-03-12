@@ -76,7 +76,7 @@ GBufferSpecular MakeSpecular(float3 color, float shininess, float fresnelR)
 }
 uint PackSpecular(GBufferSpecular specular)
 {
-	uint o = packcolor16_srgb(specular.Color);
+	uint o = packcolor16(sqrt(sqrt(specular.Color)));
 	uint4 p = (uint4) 
 		clamp(
 			float4(sqrt(specular.Shininess), sqrt(specular.FresnelR), specular.Metalness, sqrt(specular.FresnelM)) * 16.0f,
@@ -88,7 +88,9 @@ uint PackSpecular(GBufferSpecular specular)
 GBufferSpecular UnpackSpecular(uint v)
 {
 	GBufferSpecular o;
-	o.Color = unpackcolor16_srgb(v);
+	o.Color = unpackcolor16(v);
+	o.Color *= o.Color;
+	o.Color *= o.Color;
 	
 	float4 f = ( (v >> uint4(16, 20, 24, 28)) & 0xf ) / 15.0f;
 	f = saturate(f);

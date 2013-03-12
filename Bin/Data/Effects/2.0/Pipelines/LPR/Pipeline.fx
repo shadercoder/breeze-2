@@ -28,6 +28,7 @@ PipelineStage LightingPipelineStage
 <
 	int Layer = 30;
 	string Setup = "PipelineSetup";
+	bool Conditional = true;
 >;
 
 /// Default pipeline stage.
@@ -42,6 +43,7 @@ PipelineStage OverlayPipelineStage
 <
 	int Layer = 10000;
 	string Setup = "PipelineSetup";
+	bool Conditional = true;
 >;
 
 /// Default pipeline stage.
@@ -225,7 +227,6 @@ technique11 PipelineSetup <
 		bool bKeepColor0 = true;
 
 		string DepthStencil = "SceneDepthBuffer";
-//		bool bClearDepth = true; // TODO: Remove
 		bool bKeepDepthStencil = true;
 
 		string VSBindResources[] = VSDefaultResources;

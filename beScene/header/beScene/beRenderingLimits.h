@@ -99,14 +99,27 @@ const RenderQueueMask AllRenderQueues = ~NormalRenderQueuesOnly;
 /// Gets the stage mask from the given stage.
 LEAN_INLINE PipelineStageMask ComputeStageMask(PipelineStageID stageID)
 {
-	return (stageID != InvalidPipelineStage) ? (1U << stageID) : 0U;
+	return 1U << stageID;
 }
 
 /// Gets the queue mask from the given stage.
 LEAN_INLINE RenderQueueMask ComputeQueueMask(RenderQueueID queueID)
 {
-	return (queueID != InvalidRenderQueue) ? (1U << queueID) : 0U;
+	return 1U << queueID;
 }
+
+struct PipelineState
+{
+	RenderQueueMask ActiveQueues[MaxPipelineStageCount];
+
+	PipelineState()
+		: ActiveQueues() { }
+
+	void Reset()
+	{
+		memset(ActiveQueues, 0, sizeof(ActiveQueues));
+	}
+};
 
 } // namespace
 

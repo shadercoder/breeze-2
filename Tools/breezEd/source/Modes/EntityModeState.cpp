@@ -10,6 +10,8 @@
 #include "Interaction/ScaleInteraction.h"
 #include "Interaction/RotateInteraction.h"
 
+#include "Operations/EntityOperations.h"
+
 #include "Utility/Checked.h"
 
 // Constructor.
@@ -37,6 +39,11 @@ EntityModeState::EntityModeState(SceneDocument* pDocument, Editor *pEditor, QObj
 
 	assignProperty(mainWindow.actionObject_Transform, "enabled", true);
 	assignProperty(mainWindow.actionWorld_Transform, "enabled", true);
+
+	assignProperty(mainWindow.actionDuplicate, "enabled", true);
+	addConnection(mainWindow.actionDuplicate, SIGNAL(triggered(bool)), this, SLOT(duplicate()));
+	assignProperty(mainWindow.actionRemove, "enabled", true);
+	addConnection(mainWindow.actionRemove, SIGNAL(triggered(bool)), this, SLOT(remove()));
 }
 
 // Destructor.
@@ -103,6 +110,18 @@ void EntityModeState::enableScale(bool bEnable)
 		m_pDocument->pushInteraction(m_pScaleInteraction);
 	else
 		m_pDocument->removeInteraction(m_pScaleInteraction);
+}
+
+// Clones the selection.
+void EntityModeState::duplicate()
+{
+	DuplicateSelection(m_pDocument);
+}
+
+// Removes the selection.
+void EntityModeState::remove()
+{
+	RemoveSelection(m_pDocument);
 }
 
 #include "Plugins/AbstractPlugin.h"

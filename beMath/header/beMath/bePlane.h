@@ -32,14 +32,24 @@ LEAN_INLINE plane<Component, Dimension> mkplane(const class tuple<Tuple1, Compon
 template <class Component, size_t Dimension>
 LEAN_INLINE plane<Component, Dimension> mul(const matrix<Component, Dimension + 1, Dimension + 1> &left, const plane<Component, Dimension> &right)
 {
-	return plane<Component, Dimension>( mul(left, right.tpl()) );
+	vector<Component, Dimension + 1> v( right.tpl() );
+	v[Dimension] = -v[Dimension];
+	v = mul(left, v);
+	v[Dimension] = -v[Dimension];
+	// NOTE: Tuple construction!
+	return plane<Component, Dimension>(v);
 }
 
 /// Transforms the given plane.
 template <class Component, size_t Dimension>
 LEAN_INLINE plane<Component, Dimension> mul(const plane<Component, Dimension> &left, const matrix<Component, Dimension + 1, Dimension + 1> &right)
 {
-	return plane<Component, Dimension>( mul(left.tpl(), right) );
+	vector<Component, Dimension + 1> v( left.tpl() );
+	v[Dimension] = -v[Dimension];
+	v = mul(v, right);
+	v[Dimension] = -v[Dimension];
+	// NOTE: Tuple construction!
+	return plane<Component, Dimension>(v);
 }
 
 /// Computes the signed distance of the given point from the given plane.

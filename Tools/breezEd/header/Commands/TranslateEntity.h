@@ -35,11 +35,13 @@ public:
 		void undo() const
 		{
 			pEntity->SetPosition(prevPosition);
+			pEntity->NeedSync();
 		}
 		/// Applies the new state.
 		void redo() const
 		{
 			pEntity->SetPosition(position);
+			pEntity->NeedSync();
 		}
 	};
 	typedef std::vector<EntityState> entity_vector;

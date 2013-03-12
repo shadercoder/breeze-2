@@ -134,8 +134,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BEASSETS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>beAssetsInternal/StdAfx.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)header</AdditionalIncludeDirectories>
-      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -231,9 +231,8 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClCompile Include="source\beSteps.cpp" />
     <ClCompile Include="source\beSuspension.cpp" />
     <ClCompile Include="source\beTerrain.cpp" />
-    <ClCompile Include="source\beWaterControllers.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="source\beWaterControllers.cpp" />
+    <ClCompile Include="source\beWaterControllerSerializer.cpp" />
     <ClCompile Include="source\dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>

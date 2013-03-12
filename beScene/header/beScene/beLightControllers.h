@@ -157,8 +157,8 @@ public:
 	
 	/// Perform visiblity culling.
 	BE_SCENE_API void Cull(PipelinePerspective &perspective) const LEAN_OVERRIDE;
-	/// Prepares the given render queue for the given perspective.
-	BE_SCENE_API void Prepare(PipelinePerspective &perspective, PipelineQueueID queueID,
+	/// Prepares the given render queue for the given perspective, returning true if active.
+	BE_SCENE_API bool Prepare(PipelinePerspective &perspective, PipelineQueueID queueID,
 		const PipelineStageDesc &stageDesc, const RenderQueueDesc &queueDesc) const LEAN_OVERRIDE;
 	/// Prepares the collected render queues for the given perspective.
 	BE_SCENE_API void Collect(PipelinePerspective &perspective) const LEAN_OVERRIDE;

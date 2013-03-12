@@ -70,6 +70,18 @@ LEAN_INLINE matrix<Component, 3, 3> mat_transform3(
 	return result;
 }
 
+/// Normalizes the rows.
+template <class Component, size_t RowCount, size_t ColumnCount>
+LEAN_INLINE matrix<Component, RowCount, ColumnCount> normalize_rows(const matrix<Component, RowCount, ColumnCount> &operand)
+{
+	matrix<Component, RowCount, ColumnCount> result(uninitialized);
+
+	for (size_t i = 0; i < RowCount; ++i)
+		result[i] = normalize(operand[i]);
+
+	return result;
+}
+
 /// Constructs a transformation matrix from the given values.
 template <class Component, class Tuple1, class Tuple2>
 LEAN_INLINE matrix<Component, 3, 3> mat_transform(

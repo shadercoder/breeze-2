@@ -41,10 +41,10 @@ CreateEntityCommand::~CreateEntityCommand()
 // Removes the created entity.
 void CreateEntityCommand::undo()
 {
+	m_pDocument->setSelection(m_prevSelection);
+
 	for (entity_vector::const_iterator it = m_entities.begin(); it != m_entities.end(); ++it)
 		(*it)->Detach();
-
-	m_pDocument->setSelection(m_prevSelection);
 }
 
 // Adds the created entity.

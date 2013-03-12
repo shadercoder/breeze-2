@@ -560,6 +560,7 @@ protected:
 
 		// Update property
 		m_propertyProvider->SetProperty(m_propertyID, m_picker->color().cdata(), 4);
+		m_propertyProvider->ForcedChangeHint();
 
 		// Capture new property value
 		m_pCommand->capture();

@@ -121,7 +121,13 @@ void StepsController::Commit(beEntitySystem::EntityHandle entity)
 
 		// Create new steps
 		for (uint4 stepIdx = (uint4) m_steps.size(); stepIdx < additionalStepCount; ++stepIdx)
-			new_emplace(m_steps) Step( entity.Group->CloneEntity(entity, bees::Entities::AnonymousPersistentID, &filter) );
+		{
+			lean::scoped_ptr<bees::Entity> child( entity.Group->CloneEntity(entity, bees::Entities::AnonymousPersistentID, &filter) );
+			child->SetOwner(this, bees::EntityOwnerNotification::WithoutNotification);
+			if (!m_pEntity)
+				child->Detach();
+			new_emplace(m_steps) Step( child.detach() );
+		}
 	}
 
 	// Place steps
@@ -150,12 +156,21 @@ void StepsController::Synchronize(beEntitySystem::EntityHandle entity)
 		m_steps[0].entity->AddObserver(this);
 }
 
+// Gets an OPTIONAL parent entity for the children of this controller.
+bees::Entity* StepsController::GetParent() const
+{
+	return m_pEntity;
+}
+
 // Attaches this controller.
 void StepsController::Attach(beEntitySystem::Entity *entity)
 {
 	LEAN_ASSERT(!m_pEntity);
-	m_pEntity = entity;
+	
+	for (uint4 stepIdx = 0, stepCount = (uint4) m_steps.size(); stepIdx < stepCount; ++stepIdx)
+		m_steps[stepIdx].entity->Attach();
 
+	m_pEntity = entity;
 	entity->NeedCommit();
 }
 
@@ -163,6 +178,10 @@ void StepsController::Attach(beEntitySystem::Entity *entity)
 void StepsController::Detach(beEntitySystem::Entity *entity)
 {
 	LEAN_ASSERT(entity == m_pEntity);
+
+	for (uint4 stepIdx = 0, stepCount = (uint4) m_steps.size(); stepIdx < stepCount; ++stepIdx)
+		m_steps[stepIdx].entity->Detach();
+
 	m_pEntity = nullptr;
 }
 

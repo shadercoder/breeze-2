@@ -577,7 +577,7 @@ void MeshControllers::Cull(PipelinePerspective &perspective) const
 }
 
 // Prepares the given render queue for the given perspective.
-void MeshControllers::Prepare(PipelinePerspective &perspective, PipelineQueueID queueID,
+bool MeshControllers::Prepare(PipelinePerspective &perspective, PipelineQueueID queueID,
 							  const PipelineStageDesc &stageDesc, const RenderQueueDesc &queueDesc) const
 {
 	LEAN_STATIC_PIMPL_CONST();
@@ -585,7 +585,7 @@ void MeshControllers::Prepare(PipelinePerspective &perspective, PipelineQueueID 
 	const M::Data &data = *m.data;
 	
 	const M::Data::Queue *pDataQueue = data.queues.GetExistingQueue(queueID);
-	if (!pDataQueue) return;
+	if (!pDataQueue) return false;
 	const M::Data::Queue &dataQueue = *pDataQueue;
 	
 	if (!queueDesc.DepthSort)
@@ -604,10 +604,14 @@ void MeshControllers::Prepare(PipelinePerspective &perspective, PipelineQueueID 
 			for (uint4 passIdx = passStartIdx; passIdx < passEndIdx; ++passIdx)
 				stateQueue.visiblePasses.push_back( M::PerspectiveState::Queue::VisiblePass(visibleMeshLOD.controllerIdx, passIdx) );
 		}
+
+		// Check for queue passes
+		return !stateQueue.visiblePasses.empty();
 	}
 	else
 	{
 		PipelinePerspective::QueueHandle jobQueue = perspective.QueueRenderJobs(queueID);
+		size_t prevExtPassCount = state.externalPasses.size();
 
 		for (uint4 i = 0, count = (uint4) state.visibleLODs.size(); i < count; ++i)
 		{
@@ -625,7 +629,10 @@ void MeshControllers::Prepare(PipelinePerspective &perspective, PipelineQueueID 
 				perspective.AddRenderJob( jobQueue, OrderedRenderJob(this, externalPassIdx, *reinterpret_cast<const uint4*>(&distance)) );
 			}
 		}
-	}
+
+		// Check for NEW passes
+		return state.externalPasses.size() > prevExtPassCount;
+	} 
 }
 
 namespace

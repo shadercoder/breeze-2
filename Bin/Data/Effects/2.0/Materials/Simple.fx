@@ -25,7 +25,7 @@ cbuffer SetupConstants
 		String UIWidget = "Slider";
 		float UIMin = 0.0f;
 		float UIMax = 1.0f;
-	> = 0.2f;
+	> = 0.4f;
 
 	float Reflectance
 	<

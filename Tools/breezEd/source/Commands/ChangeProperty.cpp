@@ -48,13 +48,17 @@ void ChangePropertyCommand::capture()
 void ChangePropertyCommand::undo()
 {
 	m_pPropertyProvider->SetProperty(m_propertyID, m_previousData.property_type().type_info().type, m_previousData.data(), m_previousData.count());
+	m_pPropertyProvider->ForcedChangeHint();
 }
 
 // Changes the property.
 void ChangePropertyCommand::redo()
 {
 	if (!m_bIgnoreOnce)
+	{
 		m_pPropertyProvider->SetProperty(m_propertyID, m_data.property_type().type_info().type, m_data.data(), m_data.count());
+		m_pPropertyProvider->ForcedChangeHint();
+	}
 	else
 		m_bIgnoreOnce = false;
 }

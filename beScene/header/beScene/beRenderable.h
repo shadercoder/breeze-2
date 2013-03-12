@@ -26,8 +26,8 @@ class LEAN_INTERFACE Renderable
 public:
 	/// Perform visiblity culling.
 	virtual void Cull(PipelinePerspective &perspective) const = 0;
-	/// Prepares the given render queue for the given perspective.
-	virtual void Prepare(PipelinePerspective &perspective, PipelineQueueID queueID,
+	/// Prepares the given render queue for the given perspective, returning true if active.
+	virtual bool Prepare(PipelinePerspective &perspective, PipelineQueueID queueID,
 		const PipelineStageDesc &stageDesc, const RenderQueueDesc &queueDesc) const = 0;
 	/// Prepares the collected render queues for the given perspective.
 	BE_SCENE_API virtual void Collect(PipelinePerspective &perspective) const { }

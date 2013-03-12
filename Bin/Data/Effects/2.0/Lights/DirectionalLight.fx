@@ -212,6 +212,27 @@ float smoothmax(float a, float b) { return max(a, b); }
 
 #endif
 
+float tanSqFromCos(float cosAngle)
+{
+	float cosAngleSq = cosAngle * cosAngle;
+	return saturate(1.0f - cosAngleSq) * rcp(cosAngleSq);
+}
+
+float tanFromCos(float cosAngle)
+{
+	return sqrt(tanSqFromCos(cosAngle));
+}
+
+float approxTanFor0to1(float zeroToOne)
+{
+	return (zeroToOne * (PI / 2.0f)) * rcp(1.0f - 0.88f * zeroToOne * zeroToOne);
+}
+
+float Schlick(float cosAngle)
+{
+	return pow(saturate(1.0f - cosAngle), 5);
+}
+
 float OrenNayar(float3 camDir, float3 lightDir, float3 normal,
 				float roughness)
 {
@@ -243,7 +264,7 @@ float OrenNayar(float3 camDir, float3 lightDir, float3 normal,
 float KelemenKarlos(float3 camDir, float3 lightDir, float3 normal, 
 					float roughness)
 {
-	float variance = sq( max(roughness, 0.001f) * (PI / 2.0f));
+	float variance = sq( max(approxTanFor0to1(roughness), 0.001f) );
 
 	float cosLgt = dot(normal, lightDir);
 
@@ -251,12 +272,11 @@ float KelemenKarlos(float3 camDir, float3 lightDir, float3 normal,
 	halfVec += step(lengthsq(halfVec), 0.01f) * normal;
 	float3 halfDir = normalize(halfVec);
 	float cosHalf = dot(halfDir, normal);
-	float cosHalfSq = cosHalf * cosHalf;
-	float tanHalfSq = saturate(1.0f - cosHalfSq) * rcp(cosHalfSq);
+	float tanHalfSq = tanSqFromCos(cosHalf);
 
 	float ward = rcp(variance * PI * pow(cosHalf, 3)) * exp(-tanHalfSq * rcp(variance));
 
-	return saturate(cosLgt) * ward / ( lengthsq(halfVec) );
+	return saturate(cosLgt) * ward / lengthsq(halfVec);
 }
 
 float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
@@ -266,7 +286,7 @@ float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 	GBufferSpecular gbSpecular = ExtractSpecular( SceneSpecularTexture[p.Position.xy] );
 	
 	float3 diffuseColor = gbDiffuse.Color;
-	float3 specularColor = gbSpecular.Color;
+	float3 specularColor = gbSpecular.Color * (0.1f + 0.9f * gbSpecular.FresnelM); // / 5.0f; // * gbSpecular.Color;
 
 //	return diffuseColor;
 
@@ -288,6 +308,9 @@ float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 		alternateRoughness += 3.0f * saturate(0.15f - alternateRoughness);
 	}
 
+	float3 halfVec = camDir + alternateLightDir;
+	float3 halfDir = normalize(halfVec);
+
 	float orenNayar = OrenNayar(-camDir, -DirectionalLight[p.LightIdx].Dir, worldNormal, gbDiffuse.Roughness);
 	float kelemen = KelemenKarlos(-camDir, -alternateLightDir, worldNormal, alternateRoughness);
 
@@ -295,7 +318,7 @@ float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 	float cosAlternateAngle = dot(worldNormal, -alternateLightDir);
 	float cosCamAngle = dot(worldNormal, -camDir);
 
-	float reflectanceFresnel = pow(1.0f - saturate(cosAlternateAngle), 5);
+	float reflectanceFresnel = Schlick(dot(camDir, halfDir));
 	float3 specular = lerp(specularColor.xyz, 1.0f, reflectanceFresnel);
 	float3 alternateSpecular = kelemen * specular * rcp(1.0f + dot(specular, 27.0f)) * alternateIntensity * (1.0f - intensity) * gbSpecular.Shininess;
 	specular *= kelemen * intensity * (1.0f - alternateIntensity);
@@ -304,8 +327,8 @@ float4 PSMain(Pixel p, uniform bool bShadowed = true) : SV_Target0
 //	return float4(kelemen * specular * rcp(1.0f + dot(specular, 27.0f)), 1.0f);
 //	return float4(specular * rcp(0.001f + dot(specular, 27.0f)) * kelemen * DirectionalLight[p.LightIdx].SkyColor.xyz * gbSpecular.Shininess, 1.0f);
 
-	float3 diffuseFresnelCoeff = 21.0f * rcp(20.0f * (0.97f - 0.03f * specularColor.xyz))
-		* (1.0f - reflectanceFresnel) * (1.0f - pow(1.0f - saturate(cosCamAngle), 5));
+	float3 diffuseFresnelCoeff = 21.0f * rcp(20.0f * (1.0f - 0.97f * specularColor.xyz)) // (0.97f - 0.03f * specularColor.xyz)
+		* (1.0f - Schlick(cosAlternateAngle)) * (1.0f - Schlick(cosCamAngle));
 
 	// Angle fallof
 	float negIntensity = saturate(0.5f - 0.35f * cosAngle); // * AmbientTexture.SampleLevel(DefaultSampler, p.TexCoord, 0).a;

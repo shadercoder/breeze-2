@@ -113,6 +113,17 @@ uint4 MaterialConfig::GetPropertyID(const utf8_ntri &name) const
 	return static_cast<uint4>(-1);
 }
 
+// Gets the ID of the given property.
+uint4 MaterialConfig::GetPropertyID(const utf8_ntri &name, const PropertyDesc &desc) const
+{
+	for (properties_t::const_iterator it = m.properties.begin();
+		it != m.properties.end(); ++it)
+		if (it->name == name && it->desc.TypeDesc == desc.TypeDesc && it->desc.Count == desc.Count)
+			return static_cast<uint4>(it - m.properties.begin());
+
+	return static_cast<uint4>(-1);
+}
+
 // Gets the name of the given property.
 utf8_ntr MaterialConfig::GetPropertyName(uint4 id) const
 {

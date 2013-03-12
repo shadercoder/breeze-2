@@ -843,6 +843,7 @@
     <ClCompile Include="source\Binders\GenericPropertyBinder.cpp" />
     <ClCompile Include="source\Commands\ChangeProperty.cpp" />
     <ClCompile Include="source\Commands\CreateEntity.cpp" />
+    <ClCompile Include="source\Commands\RemoveEntity.cpp" />
     <ClCompile Include="source\Commands\RotateEntity.cpp" />
     <ClCompile Include="source\Commands\ScaleEntity.cpp" />
     <ClCompile Include="source\Commands\SetComponent.cpp" />
@@ -933,6 +934,7 @@
     <QtCompile Include="header\Docking\DockContainer.h" />
     <QtCompile Include="header\Docking\DockGroup.h" />
     <QtCompile Include="header\Docking\DockWidget.h" />
+    <ClInclude Include="header\Commands\RemoveEntity.h" />
     <ClInclude Include="header\Editor.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
