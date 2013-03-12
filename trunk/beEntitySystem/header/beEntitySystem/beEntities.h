@@ -53,11 +53,25 @@ public:
 	virtual bool Accept(const EntityController *controller) = 0;
 };
 
+/// Ownership transferral notification flags.
+struct EntityOwnerNotification
+{
+	enum T
+	{
+		WithNotification,	///< The specified owner will be called back when ownership is transferred.
+		WithoutNotification	///< The specified owner will not be called back when ownership is transferred.
+	};
+};
+
 /// Entity manager.
 class LEAN_INTERFACE Entities : public beCore::Shared, public Synchronized,
 	public beCore::UnRefCounted< beCore::RigidReflectedComponent< beCore::OptionalPropertyProvider< beCore::NoPropertyFeedbackProvider< beCore::ReflectedComponent > > > >
 {
 	LEAN_SHARED_SIMPL_INTERFACE_BEHAVIOR(Entities)
+
+protected:
+	// The given owned (child) entity has been removed.
+	BE_ENTITYSYSTEM_API static void ChildRemoved(EntityHandle entity, Entity *child);
 
 public:
 	class M;
@@ -174,6 +188,13 @@ public:
 	/// Gets whether the entity is serialized.
 	BE_ENTITYSYSTEM_API static bool GetSerialized(const EntityHandle entity);
 
+	/// Sets the owner of this entity.
+	BE_ENTITYSYSTEM_API static void SetOwner(EntityHandle entity, EntityController *owner, EntityOwnerNotification::T notification = EntityOwnerNotification::WithNotification);
+	/// The given owner releases the entity back into the wild.
+	BE_ENTITYSYSTEM_API static void UnsetOwner(EntityHandle entity, EntityController *owner, EntityOwnerNotification::T notification = EntityOwnerNotification::WithNotification);
+	/// Gets the owner of this entity.
+	BE_ENTITYSYSTEM_API static EntityController* GetOwner(const EntityHandle entity);
+
 	/// Attaches the entity.
 	BE_ENTITYSYSTEM_API static void Attach(EntityHandle entity);
 	/// Detaches the entity.
@@ -258,7 +279,7 @@ public:
 	LEAN_INLINE void NeedFlush() { Entities::NeedFlush(m_handle); }
 	/// Synchronizes the entity with its controllers.
 	LEAN_INLINE void Synchronize() { Entities::Synchronize(m_handle); }
-	
+
 	/// Transformation type.
 	typedef Entities::Transformation Transformation;
 
@@ -299,6 +320,13 @@ public:
 	/// Gets whether the entity is serialized.
 	LEAN_INLINE bool IsSerialized() const { return Entities::GetSerialized(m_handle); }
 
+	/// Sets the owner of this entity.
+	LEAN_INLINE void SetOwner(EntityController *owner, EntityOwnerNotification::T notification = EntityOwnerNotification::WithNotification) { Entities::SetOwner(m_handle, owner, notification); }
+	/// The given owner releases the entity back into the wild.
+	LEAN_INLINE void UnsetOwner(EntityController *owner, EntityOwnerNotification::T notification = EntityOwnerNotification::WithNotification) { Entities::UnsetOwner(m_handle, owner, notification); }
+	/// Gets the owner of this entity.
+	LEAN_INLINE EntityController* GetOwner() const { return Entities::GetOwner(m_handle); }
+
 	/// Attaches the entity.
 	LEAN_INLINE void Attach() { Entities::Attach(m_handle); }
 	/// Detaches the entity.
@@ -325,6 +353,9 @@ public:
 	BE_ENTITYSYSTEM_API void AddObserver(beCore::ComponentObserver *listener) LEAN_OVERRIDE;
 	/// Removes a property listener.
 	BE_ENTITYSYSTEM_API void RemoveObserver(beCore::ComponentObserver *pListener) LEAN_OVERRIDE;
+
+	/// Hints at externally imposed changes, such as changes via an editor UI.
+	BE_ENTITYSYSTEM_API void ForcedChangeHint() LEAN_OVERRIDE;
 
 	/// Gets the reflection properties.
 	BE_ENTITYSYSTEM_API static Properties GetOwnProperties();
@@ -353,6 +384,11 @@ LEAN_INLINE void release_ptr(const Entity *entity)
 	if (entity)
 		entity->Abandon();
 }
+
+/// Gets the first accessible entity (candidate or parent) for the given entity, null if none.
+BE_ENTITYSYSTEM_API Entity* FirstAccessibleEntity(Entity *pCandidate);
+/// Gets the next accessible parent entity for the given entity, null if none.
+BE_ENTITYSYSTEM_API Entity* NextAccessibleEntity(Entity *pChild);
 
 } // namespace
 

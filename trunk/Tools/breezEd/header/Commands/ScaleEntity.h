@@ -41,12 +41,14 @@ public:
 		{
 			pEntity->SetScaling(prevScaling);
 			pEntity->SetPosition(prevPosition);
+			pEntity->NeedSync();
 		}
 		/// Applies the new state.
 		void redo() const
 		{
 			pEntity->SetScaling(scaling);
 			pEntity->SetPosition(position);
+			pEntity->NeedSync();
 		}
 	};
 	typedef std::vector<EntityState> entity_vector;

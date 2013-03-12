@@ -110,7 +110,7 @@ public:
 	LEAN_INLINE ID3D11ShaderResourceView* GetTexture(uint4 n) const { return (m_pTextures) ? m_pTextures[n] : m_pTexture; }
 
 	/// Resets the texture's use count.
-	LEAN_INLINE void ResetUses() { m_uses = 0; }
+	LEAN_INLINE void ResetUses() { m_uses = m_references; }
 	/// Returns true, iff the texture has been in use at least once.
 	LEAN_INLINE bool WasUsed() { return (m_uses != 0); }
 

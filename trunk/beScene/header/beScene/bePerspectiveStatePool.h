@@ -111,6 +111,16 @@ public:
 		typename PerspectiveState::parent_type *parentEquityped = parent;
 		return *LEAN_ASSERT_NOT_NULL( static_cast<PerspectiveState*>( perspective.GetState(parentEquityped) ) );
 	}
+
+	typedef PerspectiveState*const* iterator;
+	typedef const PerspectiveState*const* const_iterator;
+	iterator begin() { return &this->Elements.data()->get(); }
+	const_iterator begin() const { return &this->Elements.data()->get(); }
+	iterator end() { return &this->Elements.data()->get() + this->Elements.size(); }
+	const_iterator end() const { return &this->Elements.data()->get() + this->Elements.size(); }
+	PerspectiveState& operator [](size_t pos) { return this->Pool[pos]; }
+	const PerspectiveState& operator [](size_t pos) const { return this->Pool[pos]; }
+	size_t size() const { return this->Elements.size(); }
 };
 
 } // namespace

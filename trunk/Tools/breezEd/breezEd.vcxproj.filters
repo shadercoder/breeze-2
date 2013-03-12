@@ -574,6 +574,9 @@
     <ClCompile Include="source\Modes\EntityModeState.cpp">
       <Filter>Source Files\Modes</Filter>
     </ClCompile>
+    <ClCompile Include="source\Commands\RemoveEntity.cpp">
+      <Filter>Source Files\Commands</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
@@ -719,6 +722,9 @@
     </ClInclude>
     <ClInclude Include="header\Operations\EntityOperations.h">
       <Filter>Source Files\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="header\Commands\RemoveEntity.h">
+      <Filter>Source Files\Commands</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

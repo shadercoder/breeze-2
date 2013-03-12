@@ -381,6 +381,9 @@ lean::com_ptr<const DepthStencilTextureTarget, true> TextureTargetPool::AcquireD
 		lean::com_ptr<ID3D11ShaderResourceView> pTextureView;
 
 		D3D11_TEXTURE2D_DESC descDX = ToAPI(desc, D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE, resFormat);
+		// Unsupported for DS!
+		descDX.MipLevels = 1;
+		descDX.MiscFlags = 0;
 
 		try
 		{

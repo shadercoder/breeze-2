@@ -24,6 +24,30 @@ void EntityController::Flush(const EntityHandle entity)
 {
 }
 
+// Gets an OPTIONAL parent entity for the children of this controller.
+Entity* EntityController::GetParent() const
+{
+	return nullptr;
+}
+
+// Gets the rules for (child) entities owned by this controller.
+uint4 EntityController::GetChildFlags() const
+{
+	return ChildEntityFlags::None;
+}
+
+// The given child entity has been added.
+bool EntityController::ChildAdded(Entity *entity)
+{
+	return false;
+}
+
+// The given child entity has been removed.
+bool EntityController::ChildRemoved(Entity *entity)
+{
+	return false;
+}
+
 // The controller has been added to the given entity.
 void EntityController::Added(Entity *entity)
 {

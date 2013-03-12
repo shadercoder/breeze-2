@@ -25,7 +25,7 @@ void SelectInteraction::step(float timeStep, InputProvider &input, const beScene
 {
 	if (input.buttonPressed(Qt::LeftButton, true))
 	{
-		beEntitySystem::Entity *pEntity = entityUnderCursor(*m_pDocument, input.relativePosition(), perspective);
+		beEntitySystem::Entity *pEntity = bees::FirstAccessibleEntity( entityUnderCursor(*m_pDocument, input.relativePosition(), perspective) );
 		
 		bool bMulti = input.keyPressed(Qt::Key_Shift);
 		bool bToggle = input.keyPressed(Qt::Key_Control);

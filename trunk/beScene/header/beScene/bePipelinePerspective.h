@@ -65,6 +65,8 @@ public:
 	typedef lean::simple_vector<OrderedQueue, lean::containers::vector_policies::semipod> queues_t;
 
 private:
+	PipelineState m_state;
+
 	perspectives_t m_children;
 
 	queues_t m_orderedQueues;
@@ -126,6 +128,10 @@ public:
 
 	/// Gets a stage mask.
 	LEAN_INLINE PipelineStageMask GetStageMask() const { return m_stageMask; }
+	/// Gets the pipeline state.
+	LEAN_INLINE PipelineState& GetPipelineState() { return m_state; }
+	/// Gets the pipeline state.
+	LEAN_INLINE const PipelineState& GetPipelineState() const { return m_state; }
 };
 
 } // namespace

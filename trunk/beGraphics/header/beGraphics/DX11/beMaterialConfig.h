@@ -135,6 +135,8 @@ public:
 	BE_GRAPHICS_DX11_API uint4 GetPropertyCount() const;
 	/// Gets the ID of the given property.
 	BE_GRAPHICS_DX11_API uint4 GetPropertyID(const utf8_ntri &name) const;
+	/// Gets the ID of the given property.
+	BE_GRAPHICS_DX11_API uint4 GetPropertyID(const utf8_ntri &name, const PropertyDesc &desc) const;
 	/// Gets the name of the given property.
 	BE_GRAPHICS_DX11_API utf8_ntr GetPropertyName(uint4 id) const;
 	/// Gets the type of the given property.

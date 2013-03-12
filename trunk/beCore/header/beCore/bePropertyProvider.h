@@ -126,6 +126,9 @@ public:
 	virtual void AddObserver(ComponentObserver *listener) = 0;
 	/// Removes a property listener.
 	virtual void RemoveObserver(ComponentObserver *pListener) = 0;
+
+	/// Hints at externally imposed changes, such as changes via an editor UI.
+	BE_CORE_API virtual void ForcedChangeHint() { }
 };
 
 /// Simple property listener callback implementation.

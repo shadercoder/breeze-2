@@ -15,6 +15,9 @@
     <Filter Include="Source Files\State">
       <UniqueIdentifier>{23b9f28a-36a2-4625-b6a1-52fcb92872ff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Controllers">
+      <UniqueIdentifier>{e7ef6f82-877b-43b6-b531-ea7f529a0259}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -47,12 +50,6 @@
     <ClInclude Include="header\beEntitySystem\beAttachable.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\beEntitySystem\beController.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="header\beEntitySystem\beEntityController.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="header\beEntitySystem\beEntityGroup.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -66,9 +63,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="header\beEntitySystem\beSimulation.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="header\beEntitySystem\beSimulationController.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="header\beEntitySystem\beSynchronized.h">
@@ -89,9 +83,6 @@
     <ClInclude Include="header\beEntitySystem\beEntities.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\beEntitySystem\beWorldControllers.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="header\beEntitySystem\beSerialization.h">
       <Filter>Source Files\Serialization</Filter>
     </ClInclude>
@@ -101,11 +92,26 @@
     <ClInclude Include="header\beEntitySystem\beAnimatedController.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\beEntitySystem\beEntityController.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beEntitySystem\beController.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beEntitySystem\beEntityGroupController.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
     <ClInclude Include="header\beEntitySystem\beGenericControllerSerializer.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Serialization</Filter>
     </ClInclude>
     <ClInclude Include="header\beEntitySystem\beGenericGroupControllerSerializer.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beEntitySystem\beWorldControllers.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="header\beEntitySystem\beSimulationController.h">
+      <Filter>Source Files\Controllers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -151,12 +157,6 @@
     <ClCompile Include="source\beEntities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\beEntityController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\beWorldControllers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\beSerializationTasks.cpp">
       <Filter>Source Files\Serialization</Filter>
     </ClCompile>
@@ -169,8 +169,17 @@
     <ClCompile Include="source\beAnimatedController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\beEntityController.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beEntityGroupController.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
     <ClCompile Include="source\beGenericControllerSerializer.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beWorldControllers.cpp">
+      <Filter>Source Files\Controllers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

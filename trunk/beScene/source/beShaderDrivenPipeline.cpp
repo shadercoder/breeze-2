@@ -29,7 +29,10 @@ PipelineStageDesc GetStageDesc(ID3DX11Effect *pEffect, ID3DX11EffectVariable *pS
 	BOOL bNormal = TRUE;
 	pStage->GetAnnotationByName("Normal")->AsScalar()->GetBool(&bNormal);
 
-	return PipelineStageDesc(layer, bNormal != FALSE);
+	BOOL bConditional = FALSE;
+	pStage->GetAnnotationByName("Conditional")->AsScalar()->GetBool(&bConditional);
+
+	return PipelineStageDesc(layer, bNormal != FALSE, nullptr, bConditional != FALSE);
 }
 
 /// Tries to read the description of the given stage from the given effect.
@@ -52,7 +55,10 @@ RenderQueueDesc GetQueueDesc(ID3DX11Effect *pEffect, ID3DX11EffectVariable *pQue
 	BOOL bDepthSort = FALSE;
 	pQueue->GetAnnotationByName("DepthSort")->AsScalar()->GetBool(&bDepthSort);
 
-	return RenderQueueDesc(layer, bDepthSort != FALSE);
+	BOOL bConditional = TRUE;
+	pQueue->GetAnnotationByName("Conditional")->AsScalar()->GetBool(&bConditional);
+
+	return RenderQueueDesc(layer, bDepthSort != FALSE, nullptr, bConditional != FALSE);
 }
 
 /// Tries to read the description of the given queue from the given effect.

@@ -131,6 +131,8 @@ void PipelinePerspective::AddRenderJob(QueueHandle queue, const OrderedRenderJob
 // Clears all pipeline stages and render queues.
 void PipelinePerspective::ClearRenderJobs()
 {
+	m_state.Reset();
+
 	m_activeOrderedQueues = 0;
 	for (queues_t::iterator it = m_orderedQueues.begin(); it != m_orderedQueues.end(); ++it)
 		it->jobs.clear();

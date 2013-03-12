@@ -138,6 +138,7 @@ public:
 				movePlane = mkplane(perspective.CamLook, pEntity->GetPosition());
 
 			pEntity->SetPosition( rayOrig + rayDir * intersect(movePlane, rayOrig, rayDir) );
+			pEntity->NeedSync();
 		}
 	}
 

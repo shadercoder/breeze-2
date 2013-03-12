@@ -95,11 +95,9 @@ struct LightInternals
 	struct ShadowStateBase
 	{
 		uint4 ControllerIdx;
-		bool Active;
 
 		ShadowStateBase(uint4 controllerIdx)
-			: ControllerIdx(controllerIdx),
-			Active(true) { }
+			: ControllerIdx(controllerIdx) { }
 	};
 	struct ShadowState : ShadowStateBase { };
 
@@ -557,7 +555,7 @@ struct LightControllers<LightController>::M::PerspectiveState : public LightCont
 	typedef lean::simple_vector<float, lean::vector_policies::inipod> distances_t;
 	typedef lean::simple_vector<ShadowConstants, lean::vector_policies::inipod> shadow_constants_t;
 	typedef lean::simple_vector<ShadowState, lean::vector_policies::semipod> shadow_state_t;
-	typedef lean::simple_vector<uint4, lean::vector_policies::inipod> offsets_t;
+	typedef lean::simple_vector<uint1, lean::vector_policies::inipod> active_t;
 	typedef lean::simple_vector<beg::TextureViewHandle, lean::vector_policies::inipod> shadow_textures_t;
 
 	uint4 structureRevision;
@@ -570,7 +568,7 @@ struct LightControllers<LightController>::M::PerspectiveState : public LightCont
 	shadow_constants_t shadowConstants;
 	shadow_textures_t shadowTextures;
 
-	offsets_t shadowStateOffsets;
+	active_t shadowsActive;
 	shadow_state_t shadowState;
 
 	lean::com_ptr<beg::API::Buffer> shadowConstantBuffer;
@@ -589,7 +587,7 @@ struct LightControllers<LightController>::M::PerspectiveState : public LightCont
 		this->queues.Reset();
 		this->externalPasses.clear();
 		
-		std::fill(this->shadowStateOffsets.begin(), this->shadowStateOffsets.end(), -1);
+		std::fill(this->shadowsActive.begin(), this->shadowsActive.end(), 0);
 		this->shadowState.clear();
 	}
 
@@ -604,7 +602,7 @@ struct LightControllers<LightController>::M::PerspectiveState : public LightCont
 
 			this->shadowConstants.resize(data.shadowControllerCount);
 			this->shadowTextures.resize(data.shadowControllerCount);
-			this->shadowStateOffsets.resize(data.shadowControllerCount);
+			this->shadowsActive.resize(data.shadowControllerCount);
 
 			// Reallocate GPU buffers
 			const size_t FloatRowSize = sizeof(float) * 4;
@@ -677,7 +675,7 @@ void LightControllers<LightController>::Cull(PipelinePerspective &perspective) c
 
 // Prepares the given render queue for the given perspective.
 template <class LightController>
-void LightControllers<LightController>::Prepare(PipelinePerspective &perspective, PipelineQueueID queueID,
+bool LightControllers<LightController>::Prepare(PipelinePerspective &perspective, PipelineQueueID queueID,
 												const PipelineStageDesc &stageDesc, const RenderQueueDesc &queueDesc) const
 {
 	LEAN_STATIC_PIMPL_CONST();
@@ -685,7 +683,7 @@ void LightControllers<LightController>::Prepare(PipelinePerspective &perspective
 	const typename M::Data &data = *m.data;
 	
 	const typename M::Data::Queue *pDataQueue = data.queues.GetExistingQueue(queueID);
-	if (!pDataQueue) return;
+	if (!pDataQueue) return false;
 	const typename M::Data::Queue &dataQueue = *pDataQueue;
 	
 	// Prepare shadows for _rendered_ light passes
@@ -697,18 +695,18 @@ void LightControllers<LightController>::Prepare(PipelinePerspective &perspective
 		// Make sure *something* is rendered
 		if (dataQueue.materialsToPasses[visibleMaterial.materialIdx] < dataQueue.materialsToPasses[visibleMaterial.materialIdx + 1])
 		{
-			uint4 &shadowStateOffset = state.shadowStateOffsets[visibleMaterial.controllerIdx];
+			uint1 &shadowActive = state.shadowsActive[visibleMaterial.controllerIdx];
 
 			// Add missing shadow
-			if (shadowStateOffset == -1)
-				shadowStateOffset = AddShadow(
+			if (!shadowActive)
+				AddShadow(
 						state.shadowState, typename M::PerspectiveState::ShadowStateBase(visibleMaterial.controllerIdx),
 						data.controllers(M::state)[visibleMaterial.controllerIdx].Config,
 						perspective, *m.perspectivePool
 					);
 			
 			// Mark shadows of visible lights as active
-			state.shadowState[shadowStateOffset].Active = true;
+			shadowActive = true;
 		}
 	}
 
@@ -728,10 +726,13 @@ void LightControllers<LightController>::Prepare(PipelinePerspective &perspective
 			for (uint4 passIdx = passStartIdx; passIdx < passEndIdx; ++passIdx)
 				stateQueue.visiblePasses.push_back( typename M::PerspectiveState::Queue::VisiblePass(visibleMaterial.controllerIdx, passIdx) );
 		}
+
+		return !stateQueue.visiblePasses.empty();
 	}
 	else
 	{
 		PipelinePerspective::QueueHandle jobQueue = perspective.QueueRenderJobs(queueID);
+		size_t prevExtPassCount = state.externalPasses.size();
 
 		for (uint4 i = 0, count = (uint4) state.visibleMaterials.size(); i < count; ++i)
 		{
@@ -749,6 +750,8 @@ void LightControllers<LightController>::Prepare(PipelinePerspective &perspective
 				perspective.AddRenderJob( jobQueue, OrderedRenderJob(this, externalPassIdx, *reinterpret_cast<const uint4*>(&distance)) );
 			}
 		}
+
+		return state.externalPasses.size() > prevExtPassCount;
 	}
 }
 
@@ -767,7 +770,7 @@ void LightControllers<LightController>::Collect(PipelinePerspective &perspective
 	{
 		typename M::PerspectiveState::ShadowState &shadowState = *it;
 
-		if (shadowState.Active)
+		if (state.shadowsActive[shadowState.ControllerIdx])
 			// Update active shadows
 			PrepareShadow(data.controllers(M::state)[shadowState.ControllerIdx].Config,
 				data.controllers(M::constants)[shadowState.ControllerIdx],
@@ -780,7 +783,7 @@ void LightControllers<LightController>::Collect(PipelinePerspective &perspective
 
 	if (inactiveShadowCount)
 		for (typename M::PerspectiveState::shadow_state_t::iterator it = state.shadowState.end(), itEnd = state.shadowState.end(); it-- != itEnd; )
-			if (!it->Active)
+			if (!state.shadowsActive[it->ControllerIdx])
 				state.shadowState.erase(it);
 }
 

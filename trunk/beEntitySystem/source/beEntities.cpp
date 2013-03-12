@@ -66,10 +66,12 @@ public:
 	{
 		utf8_string Name;
 		uint8 PersistentID;
+		EntityController *pOwner;
 
 		Registry(utf8_ntri name, uint8 persistentID)
 			: Name(name.to<utf8_string>()),
-			PersistentID(persistentID) { }
+			PersistentID(persistentID),
+			pOwner(nullptr) { }
 	};
 
 	typedef beCore::Range<uint4> EntityControllers;
@@ -331,24 +333,29 @@ void Entities::RemoveEntity(Entity *pEntity)
 	if (!pEntity || !pEntity->Handle().Group)
 		return;
 
-	BE_STATIC_PIMPL_HANDLE(pEntity->Handle());
+	EntityHandle entity = pEntity->Handle();
+	BE_STATIC_PIMPL_HANDLE(entity);
 
-	uint4 internalIdx  = pEntity->Handle().Index;
-	uint8 persistentID = m.entities[internalIdx].PersistentID;
+	{
+		const M::Registry &reg = m.entities[entity.Index];
 
-	// Remove persistent entity
-	m.persistentIDs->UnsetReference(persistentID, pEntity);
+		if (reg.pOwner)
+			SetOwner(entity, nullptr);
+
+		// Remove persistent entity
+		m.persistentIDs->UnsetReference(reg.PersistentID, pEntity);
+	}
 
 	// Detach & remove controllers first
-	RemoveControllers(pEntity->Handle(), nullptr, 0, true);
-	LEAN_ASSERT(Size(m.entities(M::controllers)[internalIdx]) == 0);
+	RemoveControllers(entity, nullptr, 0, true);
+	LEAN_ASSERT(Size(m.entities(M::controllers)[entity.Index]) == 0);
 
-	m.entities.erase(internalIdx);
+	m.entities.erase(entity.Index);
 	// NOTE: Does not throw
 	m.handles.free(pEntity);
 
 	// Fix subsequent handles
-	for (const size_t entityCount = m.entities.size(); internalIdx < entityCount; ++internalIdx)
+	for (uint4 internalIdx = entity.Index, entityCount = (uint4) m.entities.size(); internalIdx < entityCount; ++internalIdx)
 		m.entities(M::reflected)[internalIdx]->Handle().SetIndex(internalIdx);
 
 	// IDs no longer match entities
@@ -873,6 +880,61 @@ bool Entities::GetSerialized(const EntityHandle entity)
 	return m.entities(M::state)[entity.Index].Serialized;
 }
 
+// The given owned (child) entity has been removed.
+void Entities::ChildRemoved(EntityHandle entity, Entity *child)
+{
+	BE_STATIC_PIMPL_HANDLE(entity);
+
+	// Inform all controllers
+	for (M::EntityControllers controllers = m.entities(M::controllers)[entity.Index];
+		controllers; ++controllers)
+		m.controllerPool[controllers.Begin]->ChildRemoved(child);
+}
+
+// Sets the owner of this entity.
+void Entities::SetOwner(EntityHandle entity, EntityController *pOwner, EntityOwnerNotification::T notification)
+{
+	BE_STATIC_PIMPL_HANDLE(entity);
+	M::Registry &reg = m.entities[entity.Index];
+
+	if (pOwner != reg.pOwner)
+	{
+		Entity *childEntity = m.entities(M::reflected)[entity.Index];
+
+		if (reg.pOwner && reg.pOwner->ChildRemoved(childEntity))
+			reg.pOwner = nullptr;
+		
+		if (pOwner && !reg.pOwner)
+			if (notification == EntityOwnerNotification::WithoutNotification || pOwner->ChildAdded(childEntity))
+				reg.pOwner = pOwner;
+	}
+}
+
+// The OWNER releases the entity back into the wild.
+void Entities::UnsetOwner(EntityHandle entity, EntityController *owner, EntityOwnerNotification::T notification)
+{
+	BE_STATIC_PIMPL_HANDLE(entity);
+	M::Registry &reg = m.entities[entity.Index];
+
+	// TODO: ASSERTEXCEPT: Release assert -> exception?
+	LEAN_ASSERT_DEBUG(owner && reg.pOwner == owner);
+
+	if (owner && reg.pOwner == owner)
+	{
+		Entity *childEntity = m.entities(M::reflected)[entity.Index];
+
+		if (notification == EntityOwnerNotification::WithoutNotification || owner->ChildRemoved(childEntity))
+			reg.pOwner = nullptr;
+	}
+}
+
+// Gets the owner of this entity.
+EntityController* Entities::GetOwner(const EntityHandle entity)
+{
+	BE_STATIC_PIMPL_HANDLE_CONST(entity);
+	return m.entities[entity.Index].pOwner;
+}
+
 // Attaches the entity.
 void Entities::Attach(EntityHandle entity)
 {
@@ -1001,6 +1063,42 @@ void Entity::RemoveObserver(beCore::ComponentObserver *pListener)
 {
 	BE_FREE_STATIC_PIMPL_HANDLE(Entities, m_handle);
 	m.entities(M::observers)[m_handle.Index].RemoveObserver(pListener);
+}
+
+// Hints at externally imposed changes, such as changes via an editor UI.
+void Entity::ForcedChangeHint()
+{
+	NeedSync();
+}
+
+// Gets the first accessible entity (candidate or parent) for the given entity, null if none.
+Entity* FirstAccessibleEntity(Entity *pCandidate)
+{
+	for (bool foundAccessible = false; pCandidate && !foundAccessible; )
+	{
+		foundAccessible = true;
+
+		if (bees::EntityController *owner = pCandidate->GetOwner())
+		{
+			foundAccessible = (owner->GetChildFlags() & bees::ChildEntityFlags::Accessible) != 0;
+
+			if (!foundAccessible)
+				pCandidate = owner->GetParent();
+		}
+	}
+
+	return pCandidate;
+}
+
+// Gets the next accessible parent entity for the given entity, null if none.
+Entity* NextAccessibleEntity(Entity *pChild)
+{
+	if (pChild)
+	{
+		if (bees::EntityController *owner = pChild->GetOwner())
+			return FirstAccessibleEntity(owner->GetParent());
+	}
+	return nullptr;
 }
 
 } // namespace

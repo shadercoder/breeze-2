@@ -41,12 +41,14 @@ public:
 		{
 			pEntity->SetOrientation(prevOrientation);
 			pEntity->SetPosition(prevPosition);
+			pEntity->NeedSync();
 		}
 		/// Applies the new state.
 		void redo() const
 		{
 			pEntity->SetOrientation(orientation);
 			pEntity->SetPosition(position);
+			pEntity->NeedSync();
 		}
 
 	};

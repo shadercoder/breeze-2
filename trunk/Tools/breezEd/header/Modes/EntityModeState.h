@@ -52,6 +52,11 @@ public Q_SLOTS:
 	void enableRotate(bool bEnable = true);
 	/// Enables the scale tool.
 	void enableScale(bool bEnable = true);
+
+	/// Clones the selection.
+	void duplicate();
+	/// Removes the selection.
+	void remove();
 };
 
 #endif

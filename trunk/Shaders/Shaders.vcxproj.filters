@@ -36,11 +36,116 @@
     <Filter Include="Header Files\Utility">
       <UniqueIdentifier>{c5cdf7cc-6012-40b3-bc28-6212a8244f2a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Trash">
+      <UniqueIdentifier>{236d6e1b-0bb0-400f-b3c1-5906302372e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Trash\Pipelines">
+      <UniqueIdentifier>{547ac65e-2c1c-4931-8b81-6d5f988e45b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Trash\Materials">
+      <UniqueIdentifier>{82e11e59-fc84-4ddd-ae1b-c5a2c09acbd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Trash\Pipelines\Path">
+      <UniqueIdentifier>{99e2e279-7d92-4f87-af22-9db8a9e57139}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Trash\Materials\Path">
+      <UniqueIdentifier>{412ae474-6358-473f-a0bc-69e6ec85f9e3}</UniqueIdentifier>
+    </Filter>
     <Filter Include="2.0\Modifiers">
       <UniqueIdentifier>{0dccfe09-dea1-4aac-aa90-bf743bf3a1a0}</UniqueIdentifier>
     </Filter>
     <Filter Include="2.0\Hooks">
       <UniqueIdentifier>{52efb0ff-bb5d-436a-9f12-0b5569d471e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing">
+      <UniqueIdentifier>{82dd562a-2e04-420e-8d9d-f71cd06b8277}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete">
+      <UniqueIdentifier>{4455be8a-e2fb-431a-920a-b067d5c2f55c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Ortho Casting">
+      <UniqueIdentifier>{283c1bbf-8581-4a78-9a49-a0862ca8ad08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Ortho Casting\Atmospherics">
+      <UniqueIdentifier>{55361e05-bbad-47a5-9b92-e7b785add700}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Ortho Casting\Pipeline">
+      <UniqueIdentifier>{bbc1f6b8-e9f4-441a-8887-c5f4d9f05766}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Ortho Casting\Prototypes">
+      <UniqueIdentifier>{e32b9b18-d5b4-45b2-a7fc-251374a14287}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Ortho Casting\Utility">
+      <UniqueIdentifier>{7a0f7af5-bd03-40c9-b28a-db1d042d27c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Ortho Casting\Hardwired">
+      <UniqueIdentifier>{93ab091e-0f56-4d9f-a7b4-ae814df28eab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Ortho Casting\Materials">
+      <UniqueIdentifier>{b31ef9a6-0e2d-43bd-b47f-aae9381f9f64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Tracing">
+      <UniqueIdentifier>{05355bc3-3e7e-4df4-b2af-42d7f4afb5c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Tracing\Materials">
+      <UniqueIdentifier>{7afc6676-7a65-46a9-99d8-03c660e23a1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Tracing\Hardwired">
+      <UniqueIdentifier>{a85ceb73-1049-4eb9-9692-37ea49273550}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Tracing\Lights">
+      <UniqueIdentifier>{77cd6fea-05d0-4950-a3cc-36e7a19a5d64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Tracing\Atmospherics">
+      <UniqueIdentifier>{d799b944-ddf0-4fbb-97e3-d459736e727e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Tracing\Pipeline">
+      <UniqueIdentifier>{e48bfffe-bb20-458e-a721-d08d89896a33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Casting">
+      <UniqueIdentifier>{1a6b859c-83cf-4363-86ec-5f01abb68190}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Casting\Hardwired">
+      <UniqueIdentifier>{6b80b16b-9d9e-47ae-a889-1a5fd82c8863}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Casting\Materials">
+      <UniqueIdentifier>{dfb34dd6-6d74-41ea-ba02-98da586c16f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Casting\Prototypes">
+      <UniqueIdentifier>{b16fdcdb-3849-4e2e-ae4c-670a7a876468}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Casting\Utility">
+      <UniqueIdentifier>{ba4befc4-a710-4bc3-832d-19591e81f54d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Casting\Atmospheric">
+      <UniqueIdentifier>{1058fa3c-ac4c-4bea-922f-f6717ec7e544}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Obsolete\Casting\Pipeline">
+      <UniqueIdentifier>{59f8a54f-9f8d-4572-a746-7b9787a34275}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Uniform Casting">
+      <UniqueIdentifier>{34e78c8e-2fde-4482-b145-2cd3feb3c199}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Uniform Casting\Hardwired">
+      <UniqueIdentifier>{82cdfaec-1e5d-4c22-a7c5-c676ce29fd66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Uniform Casting\Materials">
+      <UniqueIdentifier>{903c1132-1368-470d-8b67-45036d819ed3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Uniform Casting\Prototypes">
+      <UniqueIdentifier>{1dd41f95-1aa3-4580-9662-1ab99636d4da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Uniform Casting\Utility">
+      <UniqueIdentifier>{e7c54146-3bbe-4314-bb7f-d67c3ed652d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Uniform Casting\Pipeline">
+      <UniqueIdentifier>{f62b84ec-b8a7-4d8f-880d-ac8c76e8a1db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Uniform Casting\Atmospherics">
+      <UniqueIdentifier>{09f96756-e8cc-4d65-9b9a-abe2bcb32294}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracing\Uniform Casting\Lights">
+      <UniqueIdentifier>{0ddda851-15c0-4062-add3-6bd055c91c05}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\External">
       <UniqueIdentifier>{a37e8579-8c8e-48cd-8544-db484d2a2082}</UniqueIdentifier>
@@ -140,6 +245,30 @@
     <None Include="..\Bin\Data\Effects\2.0\Processing\Scrambler.fx">
       <Filter>2.0\Processing</Filter>
     </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Grass.fx">
+      <Filter>Trash\Materials\Path</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Marker.fx">
+      <Filter>Trash\Materials\Path</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Simple.fx">
+      <Filter>Trash\Materials\Path</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\StretchTextured.fx">
+      <Filter>Trash\Materials\Path</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Path\Textured.fx">
+      <Filter>Trash\Materials\Path</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Geometry.fx">
+      <Filter>Trash\Pipelines\Path</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Pipeline.fx">
+      <Filter>Trash\Pipelines\Path</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Scene.fx">
+      <Filter>Trash\Pipelines\Path</Filter>
+    </None>
     <None Include="..\Bin\Data\Effects\2.0\Engine\BindPoints.fx">
       <Filter>Header Files\Engine</Filter>
     </None>
@@ -164,11 +293,194 @@
     <None Include="..\Bin\Data\Effects\2.0\Utility\Bits.fx">
       <Filter>Header Files\Utility</Filter>
     </None>
+    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Rays.fx">
+      <Filter>Trash\Pipelines\Path</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Pipelines\Path\Ray.fx">
+      <Filter>Trash\Pipelines\Path</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Hardwired\DistanceFieldConverter.fx">
+      <Filter>Tracing\Obsolete\Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Hardwired\RayBundles.fx">
+      <Filter>Tracing\Obsolete\Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Materials\Textured.fx">
+      <Filter>Tracing\Obsolete\Casting\Materials</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Prototypes\SceneApprox.fx">
+      <Filter>Tracing\Obsolete\Casting\Prototypes</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Prototypes\ConservativeDebug.fx">
+      <Filter>Tracing\Obsolete\Casting\Prototypes</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Hardwired\MemCopy.fx">
+      <Filter>Tracing\Obsolete\Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Hardwired\RayGen.fx">
+      <Filter>Tracing\Obsolete\Tracing\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Hardwired\RayHierarchy.fx">
+      <Filter>Tracing\Obsolete\Tracing\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Utility\Conservative.fx">
+      <Filter>Tracing\Obsolete\Casting\Utility</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Materials\Textured.fx">
+      <Filter>Tracing\Obsolete\Tracing\Materials</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Lights\DirectionalLight.fx">
+      <Filter>Tracing\Obsolete\Tracing\Lights</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Atmospherics\Sky.fx">
+      <Filter>Tracing\Obsolete\Tracing\Atmospherics</Filter>
+    </None>
     <None Include="..\Bin\Data\Effects\2.0\Utility\Hilbert.fx">
       <Filter>Header Files\Utility</Filter>
     </None>
+    <None Include="..\Bin\Data\Effects\Casting\Atmospherics\Sky.fx">
+      <Filter>Tracing\Obsolete\Casting\Atmospheric</Filter>
+    </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\Fur.fx">
       <Filter>2.0\Materials</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Hardwired\DistanceFieldConverter.fx">
+      <Filter>Tracing\Uniform Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Hardwired\MemCopy.fx">
+      <Filter>Tracing\Uniform Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Hardwired\RayBundles.fx">
+      <Filter>Tracing\Uniform Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Materials\Textured.fx">
+      <Filter>Tracing\Uniform Casting\Materials</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Utility\Conservative.fx">
+      <Filter>Tracing\Uniform Casting\Utility</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Prototypes\ConservativeDebug.fx">
+      <Filter>Tracing\Uniform Casting\Prototypes</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Prototypes\SceneApprox.fx">
+      <Filter>Tracing\Uniform Casting\Prototypes</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Pipelines\Casting\Config.fx">
+      <Filter>Tracing\Uniform Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Pipelines\Casting\Pipeline.fx">
+      <Filter>Tracing\Uniform Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Pipelines\Casting\Ray.fx">
+      <Filter>Tracing\Uniform Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Pipelines\Casting\RaySet.fx">
+      <Filter>Tracing\Uniform Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Pipelines\Casting\Scene.fx">
+      <Filter>Tracing\Uniform Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Pipelines\Casting\SceneApprox.fx">
+      <Filter>Tracing\Uniform Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Pipelines\Casting\Config.fx">
+      <Filter>Tracing\Obsolete\Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Pipelines\Casting\SceneApprox.fx">
+      <Filter>Tracing\Obsolete\Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Pipelines\Casting\Pipeline.fx">
+      <Filter>Tracing\Obsolete\Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Pipelines\Casting\Ray.fx">
+      <Filter>Tracing\Obsolete\Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Pipelines\Casting\RaySet.fx">
+      <Filter>Tracing\Obsolete\Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Casting\Pipelines\Casting\Scene.fx">
+      <Filter>Tracing\Obsolete\Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Pipelines\Tracing\Bundles.fx">
+      <Filter>Tracing\Obsolete\Tracing\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Pipelines\Tracing\Scene.fx">
+      <Filter>Tracing\Obsolete\Tracing\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Pipelines\Tracing\Config.fx">
+      <Filter>Tracing\Obsolete\Tracing\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Pipelines\Tracing\Pipeline.fx">
+      <Filter>Tracing\Obsolete\Tracing\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Pipelines\Tracing\Ray.fx">
+      <Filter>Tracing\Obsolete\Tracing\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\Tracing\Pipelines\Tracing\RayHierarchy.fx">
+      <Filter>Tracing\Obsolete\Tracing\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Pipelines\Casting\VoxelRep.fx">
+      <Filter>Tracing\Uniform Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Hardwired\VoxelRep.fx">
+      <Filter>Tracing\Uniform Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Hardwired\RayGrid.fx">
+      <Filter>Tracing\Uniform Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Hardwired\RayGen.fx">
+      <Filter>Tracing\Uniform Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Atmospherics\Sky.fx">
+      <Filter>Tracing\Uniform Casting\Atmospherics</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Atmospherics\Sky.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Atmospherics</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Hardwired\RayGen.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Hardwired\RayGrid.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Hardwired\VoxelRep.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Utility\Conservative.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Utility</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Prototypes\SceneApprox.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Prototypes</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Pipelines\Casting\Config.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Pipelines\Casting\Pipeline.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Pipelines\Casting\Ray.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Pipelines\Casting\RaySet.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Pipelines\Casting\Scene.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Pipelines\Casting\VoxelRep.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Pipeline</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Materials\Textured.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Materials</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\OrthoCasting\Hardwired\Debug.fx">
+      <Filter>Tracing\Obsolete\Ortho Casting\Hardwired</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Lights\DirectionalLight.fx">
+      <Filter>Tracing\Uniform Casting\Lights</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\UniformCasting\Pipelines\Casting\CompactRay.fx">
+      <Filter>Tracing\Uniform Casting\Pipeline</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Modifiers\Wind.fx">
       <Filter>2.0\Modifiers</Filter>
@@ -176,14 +488,26 @@
     <None Include="..\Bin\Data\Effects\2.0\Hooks\Transform.fx">
       <Filter>2.0\Hooks</Filter>
     </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\Textured_Hooking.fx">
+      <Filter>2.0\Materials</Filter>
+    </None>
     <None Include="..\Bin\Data\Effects\2.0\Materials\Bump.fx">
       <Filter>2.0\Materials</Filter>
     </None>
     <None Include="..\Bin\Data\Effects\2.0\Utility\Color.fx">
       <Filter>Header Files\Utility</Filter>
     </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\GrassMarched.fx">
+      <Filter>2.0\Materials</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Materials\GrassPatterns.fx">
+      <Filter>2.0\Materials</Filter>
+    </None>
     <None Include="..\Bin\Data\Effects\2.0\Processing\FXAA.fx">
       <Filter>2.0\Processing</Filter>
+    </None>
+    <None Include="..\Bin\Data\Effects\2.0\Atmospherics\Water.fx">
+      <Filter>2.0\Atmospherics</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

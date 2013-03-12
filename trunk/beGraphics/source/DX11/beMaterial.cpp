@@ -972,8 +972,7 @@ struct Material::ReflectionBinding : public beCore::ResourceAsRefCounted< beCore
 
 		Binding &binding = propertySources[id];
 
-		binding.sourceIdx = pTargetSource->GetPropertyID(data.properties[id].name);
-		// TODO: Check desc?
+		binding.sourceIdx = pTargetSource->GetPropertyID(data.properties[id].name, data.properties[id].desc);
 		if (binding.sourceIdx == -1)
 			// TODO: Move desc to effect config
 			binding.sourceIdx = pTargetSource->AddProperty(data.properties[id].name, data.properties[id].desc);

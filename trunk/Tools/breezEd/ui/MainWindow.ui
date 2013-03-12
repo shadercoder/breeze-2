@@ -103,6 +103,9 @@
     <addaction name="actionPaste"/>
     <addaction name="actionCut"/>
     <addaction name="separator"/>
+    <addaction name="actionDuplicate"/>
+    <addaction name="actionRemove"/>
+    <addaction name="separator"/>
     <addaction name="actionDeselect"/>
     <addaction name="actionSelect_All"/>
     <addaction name="separator"/>
@@ -733,6 +736,33 @@
    </property>
    <property name="toolTip">
     <string>Select type of components to browse</string>
+   </property>
+  </action>
+  <action name="actionRemove">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/edit/delete</normaloff>:/breezEd/icons/edit/delete</iconset>
+   </property>
+   <property name="text">
+    <string>Remove</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
+  </action>
+  <action name="actionDuplicate">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/breezEd.qrc">
+     <normaloff>:/breezEd/icons/edit/copy</normaloff>:/breezEd/icons/edit/copy</iconset>
+   </property>
+   <property name="text">
+    <string>Duplicate</string>
    </property>
   </action>
  </widget>

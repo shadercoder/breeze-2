@@ -159,6 +159,7 @@
     <ClInclude Include="header\beMath\beAAB.h" />
     <ClInclude Include="header\beMath\beAABDef.h" />
     <ClInclude Include="header\beMath\beAABFwd.h" />
+    <ClInclude Include="header\beMath\beBits.h" />
     <ClInclude Include="header\beMath\beComparisonOperators.h" />
     <ClInclude Include="header\beMath\beConstants.h" />
     <ClInclude Include="header\beMath\beIntersect.h" />

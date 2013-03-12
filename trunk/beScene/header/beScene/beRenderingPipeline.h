@@ -25,17 +25,20 @@ class PipelineProcessor;
 /// Pipeline stage description.
 struct PipelineStageDesc
 {
-	int4 Layer;		///< Layer index.
-	bool Normal;	///< Part of normal rendering.
+	int4 Layer;										///< Layer index.
+	bool Normal;									///< Part of normal rendering.
+	bool Conditional;								///< Only setup if active.
 	lean::resource_ptr<const QueueSetup> Setup;		///< Queue setup handler.
 
 	/// Constructor.
 	LEAN_INLINE explicit PipelineStageDesc(
 		int4 layer,
 		bool bNormal = true,
-		const QueueSetup *pSetup = nullptr)
+		const QueueSetup *pSetup = nullptr,
+		bool bConditional = false)
 			: Layer(layer),
 			Normal(bNormal),
+			Conditional(bConditional),
 			Setup(pSetup)  { }
 };
 
@@ -44,15 +47,18 @@ struct RenderQueueDesc
 {
 	int4 Layer;										///< Layer index.
 	bool DepthSort;									///< Depth sort flag.
+	bool Conditional;								///< Only setup if active.
 	lean::resource_ptr<const QueueSetup> Setup;		///< Queue setup handler.
 
 	/// Constructor.
 	LEAN_INLINE explicit RenderQueueDesc(
 		int4 layer,
 		bool bDepthSort = false,
-		const QueueSetup *pSetup = nullptr)
+		const QueueSetup *pSetup = nullptr,
+		bool bConditional = true)
 			: Layer(layer),
 			DepthSort(bDepthSort),
+			Conditional(bConditional),
 			Setup(pSetup) { }
 };
 

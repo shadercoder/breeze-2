@@ -12,6 +12,9 @@
     <Filter Include="Source Files\Controllers">
       <UniqueIdentifier>{c67d5994-8956-4a62-af02-8aeef07f9570}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Serialization">
+      <UniqueIdentifier>{bf8af5ba-dac1-4f08-9b07-87b7cf5e1f7e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -66,6 +69,9 @@
     </ClCompile>
     <ClCompile Include="source\beWaterControllers.cpp">
       <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="source\beWaterControllerSerializer.cpp">
+      <Filter>Source Files\Serialization</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

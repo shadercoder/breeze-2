@@ -201,6 +201,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClInclude Include="header\beEntitySystem\beControllerSerializer.h" />
     <ClInclude Include="header\beEntitySystem\beEntityController.h" />
     <ClInclude Include="header\beEntitySystem\beEntityGroup.h" />
+    <ClInclude Include="header\beEntitySystem\beEntityGroupController.h" />
     <ClInclude Include="header\beEntitySystem\beEntitySerialization.h" />
     <ClInclude Include="header\beEntitySystem\beEntitySerializer.h" />
     <ClInclude Include="header\beEntitySystem\beEntitySystem.h" />
@@ -229,6 +230,7 @@ copy    "$(TargetDir)$(TargetName).lib"    "$(SolutionDir)global\$(TargetName).l
     <ClCompile Include="source\beEntities.cpp" />
     <ClCompile Include="source\beEntityController.cpp" />
     <ClCompile Include="source\beEntityGroup.cpp" />
+    <ClCompile Include="source\beEntityGroupController.cpp" />
     <ClCompile Include="source\beEntitySerialization.cpp" />
     <ClCompile Include="source\beEntitySerializer.cpp" />
     <ClCompile Include="source\beEntitySystem.cpp" />
